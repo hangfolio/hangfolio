@@ -1,0 +1,21 @@
+---
+// GitHub Pages serves this file for every missing path under the site, so every link is
+// base-prefixed through url(). TODO(M4): pages.notFound overrides and links to the other pages.
+import { site } from 'virtual:hangfolio/site';
+import Page from '../layouts/Page.astro';
+import { pageTitle } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+---
+<Page
+  title={pageTitle(site, 'Page not found')}
+  description="This page does not exist."
+  path="/404.html"
+  noindex
+  heading="Page not found"
+  lede="There is no page at this address. It may have moved, or the link may have a typo."
+>
+  <ul class="links">
+    <li><a href={url('/')}>Home</a></li>
+    {site.cv && <li><a href={url(site.cv)}>CV (PDF)</a></li>}
+  </ul>
+</Page>

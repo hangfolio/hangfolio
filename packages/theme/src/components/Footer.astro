@@ -1,0 +1,67 @@
+---
+// Site footer: the profile links and advanced.footer.links from site.yaml, then the copyright
+// line and the month the site was built. TODO(M4, M6): Contact and RSS links once those pages exist.
+import { site } from 'virtual:hangfolio/site';
+import { normalizeLinks } from '../lib/links.ts';
+import { localeTag } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+
+const footer = site.advanced?.footer ?? {};
+const links = [
+  ...normalizeLinks(site.links).filter((link) => link.footer).map((link) => ({ label: link.label, href: link.url })),
+  ...(footer.links ?? []),
+];
+
+// "Last updated" is the month the site was built and deployed, in advanced.timezone
+const timeZone = site.advanced?.timezone ?? 'UTC';
+const now = new Date();
+const updated = now.toLocaleDateString(localeTag(site), { month: 'long', year: 'numeric', timeZone });
+const year = now.toLocaleDateString(localeTag(site), { year: 'numeric', timeZone });
+---
+<footer class="foot">
+  {links.length > 0 && (
+    <nav aria-label="Elsewhere" class="row">
+      {links.map((link) => <a href={url(link.href)}>{link.label}</a>)}
+    </nav>
+  )}
+  <p class="small"><span>© {year} {site.name}</span>{footer.showUpdated !== false && <span>Last updated {updated}</span>}</p>
+</footer>
+
+<style>
+  .foot {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 1.375rem;
+    font-size: .9375rem;
+  }
+
+  .row a {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .small {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem 1.25rem;
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--faint);
+  }
+
+  @media (max-width: 720px) {
+    .row a {
+      min-height: 2.75rem;
+    }
+  }
+</style>

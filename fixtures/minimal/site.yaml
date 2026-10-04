@@ -1,0 +1,18 @@
+# fixtures/minimal: a small fictional site that exercises the M1 shell (header, footer, theme
+# toggle, base-safe links). Wren Halloway and everything below are invented.
+name: "Wren Halloway"
+tagline: "I study how replicated logs recover after partial failures."
+role: "Postdoctoral researcher in distributed systems"
+affiliation: { name: "Institute of Example Studies", url: "https://example.org" }
+email: "wren@halloway.test"
+location: "Harbor Point"
+cv: "/files/cv.pdf"
+
+links:
+  - "https://github.com/hangfolio"
+  - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }
+  - { url: "https://bsky.app/", footer: false }
+
+advanced:
+  footer:
+    links: [{ label: "Colophon", href: "/colophon.txt" }]

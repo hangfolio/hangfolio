@@ -1,0 +1,92 @@
+---
+// Site header: the brand (a link home), the primary navigation and the theme toggle.
+import { site } from 'virtual:hangfolio/site';
+import ThemeToggle from './ThemeToggle.astro';
+import { availablePages, navItems } from '../lib/nav.ts';
+import { url } from '../lib/url.ts';
+
+interface Props {
+  /** The nav key of the current page */
+  current?: string;
+}
+
+const { current } = Astro.props;
+const brand = site.advanced?.brand ?? new URL(import.meta.env.SITE).hostname;
+const nav = navItems(site, availablePages(site));
+---
+<header class="hdr">
+  <a href={url('/')} class="quiet home">{brand}</a>
+  <nav class="nav" aria-label="Primary">
+    {nav.map((item) => (
+      <a href={url(item.href)} class="quiet" aria-current={item.key !== undefined && item.key === current ? 'page' : undefined}>{item.label}</a>
+    ))}
+  </nav>
+  <ThemeToggle />
+</header>
+
+<style>
+  .hdr {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: 1.5rem;
+    row-gap: .25rem;
+    padding: .5rem 0;
+  }
+
+  .home {
+    font-family: var(--mono);
+    font-size: .875rem;
+    font-weight: 500;
+    letter-spacing: .01em;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0 1.375rem;
+    font-size: .9375rem;
+  }
+
+  .nav a {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .nav a[aria-current='page'] {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+  }
+
+  @media (max-width: 720px) {
+    .hdr {
+      grid-template-columns: 1fr auto;
+    }
+
+    .nav {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-content: flex-start;
+      gap: 0 1rem;
+      font-size: .875rem;
+    }
+
+    .nav a {
+      min-height: 2.75rem;
+      padding: 0 .5rem;
+      margin: 0 -.5rem;
+    }
+
+    .hdr > :global(.tgl) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+</style>

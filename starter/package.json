@@ -1,0 +1,17 @@
+{
+  "name": "hangfolio-starter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "hangfolio dev",
+    "build": "hangfolio build",
+    "check": "hangfolio check",
+    "preview": "hangfolio preview"
+  },
+  "dependencies": {
+    "hangfolio": "0.0.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

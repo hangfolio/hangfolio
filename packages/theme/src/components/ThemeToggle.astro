@@ -1,0 +1,164 @@
+---
+// Light/dark switch. No saved choice follows the OS; see the script below and layouts/Base.astro.
+---
+<button type="button" class="tgl" data-theme-toggle aria-label="Switch to dark theme" title="Switch to dark theme">
+  <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"></path></svg>
+  <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"></path></svg>
+</button>
+
+<style>
+  .tgl {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--rule-strong);
+    cursor: pointer;
+  }
+
+  .tgl:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tgl svg {
+    display: block;
+    grid-area: 1 / 1;
+  }
+
+  /* Show the moon in light mode (go dark) and the sun in dark mode (go light) */
+  .sun {
+    visibility: hidden;
+  }
+
+  :global(html[data-theme="dark"]) .sun {
+    visibility: visible;
+  }
+
+  :global(html[data-theme="dark"]) .moon {
+    visibility: hidden;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-theme="light"])) .sun {
+      visibility: visible;
+    }
+
+    :global(html:not([data-theme="light"])) .moon {
+      visibility: hidden;
+    }
+  }
+</style>
+
+<script>
+  /*
+   * The visitor's choice lives in localStorage "theme" ("light" or "dark"); no saved
+   * choice means "follow the OS". A click flips the resolved theme; flipping back to
+   * the OS theme forgets the choice, so the page follows the OS again.
+   *
+   * Fires document "themechange" with detail { theme: "light"|"dark", preference:
+   * "system"|"light"|"dark", source: "toggle"|"system"|"storage"|"restore" } whenever
+   * the resolved theme may have changed. The /meet calendar embed listens for it.
+   *
+   * The theme-color meta follows the --bg token of whichever palette is showing.
+   */
+  const root = document.documentElement;
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+  const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+  type Theme = 'light' | 'dark';
+  type Preference = Theme | 'system';
+
+  const systemTheme = (): Theme => (media.matches ? 'dark' : 'light');
+
+  function preference(): Preference {
+    const theme = root.getAttribute('data-theme');
+    return theme === 'light' || theme === 'dark' ? theme : 'system';
+  }
+
+  function resolved(): Theme {
+    const p = preference();
+    return p === 'system' ? systemTheme() : p;
+  }
+
+  function render() {
+    const next = resolved() === 'dark' ? 'light' : 'dark';
+    const label = `Switch to ${next} theme`;
+    buttons.forEach((button) => {
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
+    });
+    const bg = getComputedStyle(root).getPropertyValue('--bg').trim();
+    if (themeColor && bg) {
+      themeColor.content = bg;
+    }
+  }
+
+  function notify(source: string) {
+    document.dispatchEvent(
+      new CustomEvent('themechange', { detail: { theme: resolved(), preference: preference(), source } }),
+    );
+  }
+
+  function apply(p: Preference, source: string) {
+    if (p === 'system') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', p);
+    }
+    render();
+    notify(source);
+  }
+
+  function saved(): Preference | null {
+    try {
+      const theme = localStorage.getItem('theme');
+      return theme === 'light' || theme === 'dark' ? theme : 'system';
+    } catch {
+      return null;
+    }
+  }
+
+  buttons.forEach((button) =>
+    button.addEventListener('click', () => {
+      const next: Theme = resolved() === 'dark' ? 'light' : 'dark';
+      const p: Preference = next === systemTheme() ? 'system' : next;
+      try {
+        if (p === 'system') {
+          localStorage.removeItem('theme');
+        } else {
+          localStorage.setItem('theme', p);
+        }
+      } catch {}
+      apply(p, 'toggle');
+    }),
+  );
+
+  // The OS theme changed: "system" now resolves differently
+  media.addEventListener('change', () => {
+    render();
+    notify('system');
+  });
+
+  // Keep other open tabs in sync
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'theme' || e.key === null) {
+      apply(e.newValue === 'light' || e.newValue === 'dark' ? e.newValue : 'system', 'storage');
+    }
+  });
+
+  // A page restored from the back/forward cache may predate a choice made on another page
+  window.addEventListener('pageshow', (e) => {
+    const s = saved();
+    if (e.persisted && s && s !== preference()) {
+      apply(s, 'restore');
+    }
+  });
+
+  render();
+</script>

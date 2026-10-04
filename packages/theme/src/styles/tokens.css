@@ -1,0 +1,65 @@
+:root {
+  --bg: #f5f7fa;
+  --fg: #121826;
+  --muted: #4b5567;
+  --faint: #5f6a7c;
+  --rule: #d8dee7;
+  --rule-strong: #b6c0cd;
+  --tint: #e9eef5;
+  --accent: #2c5aa0;
+  --accent-strong: #1d3f75;
+  --btn-bg: #2c5aa0;
+  --btn-bg-hover: #1d3f75;
+  --btn-fg: #ffffff;
+  --well: #eceff4;
+  --well-line: #d5dbe4;
+  --line-ink: #7c879a;
+
+  --serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --sans: 'IBM Plex Sans', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+@media screen {
+  html[data-theme="dark"] {
+    --bg: #0e1219;
+    --fg: #e2e7ef;
+    --muted: #9aa5b6;
+    --faint: #8a95a7;
+    --rule: #222a36;
+    --rule-strong: #364152;
+    --tint: #161c26;
+    --accent: #8fb2ea;
+    --accent-strong: #b8cff4;
+    --btn-bg: #8fb2ea;
+    --btn-bg-hover: #b8cff4;
+    --btn-fg: #0e1219;
+    --well: #131922;
+    --well-line: #263040;
+    --line-ink: #5e6a7e;
+    color-scheme: dark;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg: #0e1219;
+    --fg: #e2e7ef;
+    --muted: #9aa5b6;
+    --faint: #8a95a7;
+    --rule: #222a36;
+    --rule-strong: #364152;
+    --tint: #161c26;
+    --accent: #8fb2ea;
+    --accent-strong: #b8cff4;
+    --btn-bg: #8fb2ea;
+    --btn-bg-hover: #b8cff4;
+    --btn-fg: #0e1219;
+    --well: #131922;
+    --well-line: #263040;
+    --line-ink: #5e6a7e;
+    color-scheme: dark;
+  }
+}

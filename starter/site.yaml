@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/site.json
+# Your site's settings. Change the text inside the quotes; keep the spacing.
+# Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/site-yaml.md
+
+name: "Rowan Vale"                                   # example: your name
+tagline: "I build storage systems that stay correct when machines fail."   # example
+role: "PhD student in Computer Science"              # example
+affiliation: { name: "Example University", url: "https://example.edu" }   # example
+email: "rowan@example.edu"                           # example
+location: "Port Alder, WA"                           # example: change or delete
+# pronouns: "she/her"                                # optional: remove the # to show
+
+links:                                               # example: replace with yours
+  - "https://github.com/hangfolio"
+  - "https://scholar.google.com/"
+  - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }
+  - { url: "https://www.linkedin.com/", contact: false }

@@ -1,0 +1,17 @@
+---
+// The home page. TODO(M3): the hero and the sections from content/home.yaml.
+import { site } from 'virtual:hangfolio/site';
+import Page from '../layouts/Page.astro';
+import { affiliationOf, pageTitle } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+
+const affiliation = affiliationOf(site);
+const whoami = [site.role, affiliation?.name, site.location].filter(Boolean).join(' · ');
+---
+<Page title={pageTitle(site)} path="/" ogType="profile" heading={site.name} lede={site.tagline}>
+  {whoami && <p class="kicker">{whoami}</p>}
+  <ul class="links">
+    <li><a href={url(`mailto:${site.email}`)}>{site.email}</a></li>
+    {site.cv && <li><a href={url(site.cv)}>CV (PDF)</a></li>}
+  </ul>
+</Page>

@@ -1,0 +1,595 @@
+/*
+ * Base styles and shared classes. The tokens they use (colours and font stacks) are in
+ * tokens.css, which Base.astro loads first.
+ *
+ * Theme: with no data-theme on <html> the page follows the OS. A saved choice sets
+ * html[data-theme="light"|"dark"] before first paint (the inline script in Base.astro).
+ * tokens.css lists the dark values twice, once for each way dark mode can apply, and only
+ * for screens, so printing always uses the light palette.
+ */
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 1rem;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  hanging-punctuation: first;
+}
+
+h1, h2, h3, h4, p, ul, ol, figure, dl, dd, blockquote, pre {
+  margin: 0;
+}
+
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--mono);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+a {
+  color: var(--accent);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .22em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+a:hover {
+  color: var(--accent-strong);
+  text-decoration-color: currentColor;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+main:focus {
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: .625rem 1rem;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 1rem;
+  color: var(--btn-fg);
+}
+
+/* ---------- Link styles ---------- */
+
+.quiet {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.quiet:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+.soft {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.soft:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .625rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 600;
+  font-size: .9375rem;
+  letter-spacing: .01em;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--btn-bg-hover);
+  color: var(--btn-fg);
+}
+
+/* ---------- Page shell ---------- */
+
+.wrap {
+  max-width: 47rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+  padding-top: 1.25rem;
+  padding-bottom: 3rem;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 5.5rem;
+}
+
+/* ---------- Shared blocks ---------- */
+
+/* Section heading: small caps label, a hairline, an optional link */
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.75rem;
+}
+
+.sec-head::after {
+  content: "";
+  order: 1;
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.sec-head > a {
+  order: 2;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  font-size: .875rem;
+}
+
+.eyebrow {
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.kicker {
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+/* Marginalia layout: dates and labels hang in the left margin on wide screens */
+.hang {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: .375rem;
+}
+
+.hang > .m {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .75rem;
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.hang > .m.label {
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.hang > .m .n {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+/* Row of plain links under an item */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.25rem;
+  font-size: .9375rem;
+}
+
+.links a {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.links.mono {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  gap: .25rem 1rem;
+}
+
+/* Terminal-style well */
+.well {
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
+  max-width: 34rem;
+  padding: .75rem 1rem;
+  border: 1px solid var(--well-line);
+  border-radius: 4px;
+  background: var(--well);
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.6;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.well .c {
+  color: var(--faint);
+}
+
+.chip {
+  font-family: var(--mono);
+  font-size: .75rem;
+  line-height: 1.5;
+  color: var(--muted);
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  padding: 0 .375rem;
+  white-space: nowrap;
+}
+
+.inline-code {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  color: var(--muted);
+  background: var(--tint);
+  padding: .125rem .5rem;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+}
+
+/* Architecture figure: an ArchDiagram plus its caption */
+.arch {
+  display: flex;
+  flex-direction: column;
+  gap: .625rem;
+  min-width: 0;
+}
+
+.arch figcaption {
+  max-width: 40rem;
+  font-size: .875rem;
+  line-height: 1.55;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.arch figcaption strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.arch figcaption code {
+  font-size: .8125rem;
+  color: var(--fg);
+}
+
+/* ---------- Interior pages ---------- */
+
+.page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* sit closer to the body than the page's section gap */
+  margin-bottom: -2.5rem;
+}
+
+.page-head h1 {
+  font-family: var(--serif);
+  font-size: 2.75rem;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -.018em;
+  text-wrap: balance;
+}
+
+.page-head .lede {
+  max-width: 38rem;
+  font-family: var(--serif);
+  font-size: 1.375rem;
+  line-height: 1.4;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.page-head .meta {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  color: var(--faint);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+}
+
+/* Long-form text from Markdown */
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+  min-width: 0;
+}
+
+.prose > * {
+  min-width: 0;
+}
+
+.prose h2 {
+  margin-top: 1.75rem;
+  font-family: var(--serif);
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+
+.prose h3 {
+  margin-top: 1rem;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.prose h4 {
+  margin-top: .75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.prose ul,
+.prose ol {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  padding-left: 1.25rem;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li::marker {
+  color: var(--faint);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose blockquote {
+  padding-left: 1rem;
+  border-left: 2px solid var(--rule-strong);
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+}
+
+.prose :not(pre) > code {
+  font-size: .875em;
+  padding: .0625rem .3125rem;
+  border-radius: 3px;
+  background: var(--tint);
+}
+
+.prose pre {
+  padding: .875rem 1rem;
+  border: 1px solid var(--well-line);
+  border-radius: 4px;
+  background: var(--well) !important;
+  color: var(--fg) !important;
+  font-size: .8125rem;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+.prose hr {
+  width: 100%;
+  height: 1px;
+  margin: 1rem 0;
+  border: 0;
+  background: var(--rule);
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9375rem;
+}
+
+.prose th,
+.prose td {
+  padding: .5rem .75rem .5rem 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  font-weight: 600;
+}
+
+.prose figure {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.prose figcaption {
+  font-size: .875rem;
+  color: var(--muted);
+}
+
+/* ---------- Wide screens: hang margin notes ---------- */
+
+@media (min-width: 1120px) {
+  .hang {
+    grid-template-columns: 8rem minmax(0, 1fr);
+    column-gap: 2rem;
+    margin-left: -10rem;
+    align-items: baseline;
+  }
+
+  .hang > .m {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .125rem;
+    text-align: right;
+  }
+
+  /* Date ranges stack in the margin: start on one line, "– end" on the next */
+  .hang > .m .range > span {
+    display: block;
+  }
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 720px) {
+  body {
+    font-size: 1rem;
+  }
+
+  .wrap {
+    padding: 0 1.25rem;
+  }
+
+  .page {
+    gap: 4rem;
+  }
+
+  .shell {
+    gap: 3rem;
+  }
+
+  .links a {
+    min-height: 2.75rem;
+  }
+
+  .page-head {
+    margin-bottom: -1.5rem;
+  }
+
+  .page-head h1 {
+    font-size: 2.125rem;
+  }
+
+  .page-head .lede {
+    font-size: 1.1875rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media print {
+  .hdr nav,
+  .tgl,
+  .skip {
+    display: none !important;
+  }
+
+  .hang {
+    margin-left: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Code blocks: Shiki writes the light colors inline and the dark ones as --shiki-dark */
+@media screen {
+  html[data-theme="dark"] .astro-code,
+  html[data-theme="dark"] .astro-code span {
+    color: var(--shiki-dark) !important;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .astro-code,
+  html:not([data-theme="light"]) .astro-code span {
+    color: var(--shiki-dark) !important;
+  }
+}
