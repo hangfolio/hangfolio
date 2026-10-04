@@ -1,0 +1,8 @@
+internal/
+node_modules/
+dist/
+.astro/
+.DS_Store
+*.log
+# throwaway spike projects; their results live in docs/decisions/
+spikes/

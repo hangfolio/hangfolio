@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Blocks a push when the commits being pushed contain a term from the owner's denylist
+# (one term per line; lines starting with # are comments). Matching is case-insensitive
+# on fixed strings, over commit messages, author and committer lines, file paths and
+# added lines (binary files included). Turn it on with: git config core.hooksPath .githooks
+set -euo pipefail
+export LC_ALL=C # match bytes, so binary content cannot trip multibyte errors
+
+denylist="${HANGFOLIO_DENYLIST:-$HOME/.config/hangfolio/denylist}"
+remote="${1:-}"
+say() { printf 'hangfolio pre-push: %s\n' "$*" >&2; }
+trap 'say "push blocked: the denylist scan failed (see the error above)."' ERR
+
+if [ ! -f "$denylist" ] || [ ! -r "$denylist" ]; then
+  say "push blocked: the denylist $denylist is missing or unreadable."
+  say "Create it (one term per line, # for comments), then push again."
+  exit 1
+fi
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/hangfolio-pre-push.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+# Trimmed, non-blank, non-comment lines. A blank pattern would match everything.
+tr -d '\r' < "$denylist" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' |
+  { grep -v -e '^#' -e '^$' || true; } > "$tmp/terms"
+if [ ! -s "$tmp/terms" ]; then
+  say "push blocked: the denylist $denylist has no terms."
+  exit 1
+fi
+
+is_zero() { case $1 in *[!0]*) return 1 ;; esac; }
+mark=$'\001' # starts git's marker lines below; never the first byte of a diff line
+
+# Collect the commits (and annotated tags) that the remote does not have yet.
+: > "$tmp/commits"
+: > "$tmp/tags"
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  is_zero "$local_sha" && continue # deleting a remote ref sends no content
+  if [ "$(git cat-file -t "$local_sha")" = tag ]; then
+    { printf '%sT %s\n' "$mark" "$local_sha"; git cat-file -p "$local_sha"; } >> "$tmp/tags"
+  fi
+  if ! is_zero "$remote_sha" && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
+    git rev-list "$local_sha" --not "$remote_sha" >> "$tmp/commits"
+  else # new branch, or the remote moved: scan everything no remote-tracking ref has
+    git rev-list "$local_sha" --not --remotes="$remote" >> "$tmp/commits"
+  fi
+done
+sort -u -o "$tmp/commits" "$tmp/commits"
+[ -s "$tmp/commits" ] || [ -s "$tmp/tags" ] || exit 0
+
+pushed_log() { git log --no-walk --stdin --no-color --no-show-signature "$@" < "$tmp/commits"; }
+
+# Flatten everything to scan into $tmp/text, one line per scanned line, and record
+# where each line came from on the same line number of $tmp/where.
+{
+  if [ -s "$tmp/commits" ]; then
+    pushed_log --no-patch --format="${mark}M %H%n%an <%ae>%n%cn <%ce>%n%B"
+    pushed_log --format="${mark}D %H" --patch -U0 --root --text --no-ext-diff --no-textconv \
+      --no-relative --diff-merges=first-parent --src-prefix=a/ --dst-prefix=b/
+  fi
+  cat "$tmp/tags"
+} | tr '\000' ' ' | awk -v mark="$mark" -v where="$tmp/where" '
+  function emit(from, text) { print from > where; print text }
+  index($0, mark) == 1 {
+    kind = substr($1, 2); sha = substr($2, 1, 12); hunk = 0
+    from = (kind == "T" ? "tag " sha : sha " commit")
+    next
+  }
+  kind != "D"                    { emit(from, $0); next }
+  /^diff --git /                 { hunk = 0; emit(sha " paths", substr($0, 12)); next }
+  /^@@/                          { hunk = 1; next }
+  !hunk && /^\+\+\+ /            { file = substr($0, 5); sub(/^b\//, "", file); next }
+  hunk && /^\+/                  { emit(sha " " file, substr($0, 2)) }
+' > "$tmp/text"
+
+status=0
+grep -a -n -i -F -f "$tmp/terms" "$tmp/text" > "$tmp/hits" || status=$?
+[ "$status" -eq 1 ] && exit 0
+if [ "$status" -ne 0 ]; then
+  say "push blocked: the denylist scan failed (grep exit $status)."
+  exit 1
+fi
+
+say "push blocked: the commits being pushed contain terms from $denylist:"
+awk -v max=50 '
+  FILENAME == ARGV[1] { term[++n] = tolower($0); next }
+  FILENAME == ARGV[2] { from[FNR] = $0; next }
+  {
+    split($0, f, ":"); line = f[1]; text = substr($0, length(line) + 2); low = tolower(text)
+    for (t = 1; t <= n; t++) if ((at = index(low, term[t])) > 0) break
+    excerpt = substr(text, at > 40 ? at - 40 : 1, 120)
+    gsub(/[^[:print:]]/, "?", excerpt)
+    if (++shown <= max) printf "  %s: %s\n", from[line], excerpt
+  }
+  END { if (shown > max) printf "  ... and %d more\n", shown - max }
+' "$tmp/terms" "$tmp/where" "$tmp/hits" >&2
+say "Remove the terms from these commits (amend or rebase them), then push again."
+exit 1
