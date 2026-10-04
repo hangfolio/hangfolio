@@ -9,9 +9,28 @@ affiliation: { name: "Example University", url: "https://example.edu" }   # exam
 email: "rowan@example.edu"                           # example
 location: "Port Alder, WA"                           # example: change or delete
 # pronouns: "she/her"                                # optional: remove the # to show
+avatar: "/example/avatar.jpg"                        # example: upload yours to public/images/
+cv: "/example/cv.pdf"                                # example: upload yours to public/files/
 
 links:                                               # example: replace with yours
   - "https://github.com/hangfolio"
   - "https://scholar.google.com/"
   - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }
   - { url: "https://www.linkedin.com/", contact: false }
+
+availability:                                        # example: edit or delete the whole block
+  headline: "Open to research internships · Summer 2027."
+  detail: "Returning to the PhD afterwards."
+  contact: "I'm looking for a **Summer 2027** research internship, then returning to my PhD."
+  emailSubject: "Summer 2027 internship"
+  until: 2027-06-01
+
+booking:                                             # example: edit or delete the whole block
+  calcom: "rowan-vale/30min"
+
+# ---------- optional, rarely needed ----------
+# theme: { accent: "#2c5aa0" }
+# nav: [research, projects, writing, cv, booking]
+# pages: { experience: { path: "/experience" }, meet: false }
+# redirects: [{ from: "/about.html", to: "/" }]
+# url: "https://example.com"     # pins canonical URLs; normally detected from GitHub Pages

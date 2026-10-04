@@ -1,10 +1,9 @@
 // The header navigation (SPEC 5.3 `nav`). A key stands for a page and shows only when that page
 // exists; {label, href} items always show. Without `nav`, every available page shows, in key order.
+import { NAV_KEYS } from '../schema/site.ts';
 import type { SiteYaml } from './site.ts';
 
 export type NavItem = { key?: string; label: string; href: string };
-
-export const NAV_KEYS = ['research', 'projects', 'publications', 'experience', 'writing', 'cv', 'booking', 'contact'];
 
 /** The keys whose page exists. TODO(M3, M4): add each page as it is built and has content. */
 export function availablePages(site: SiteYaml): Set<string> {

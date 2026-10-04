@@ -1,0 +1,1 @@
+site.yaml:3:1 E101 Put a space after the colon: location: Harbor Point

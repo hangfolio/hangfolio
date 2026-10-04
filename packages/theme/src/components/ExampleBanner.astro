@@ -1,0 +1,36 @@
+---
+// The site-wide notice in demo mode (SPEC 5.2): this is the example, not anyone's real site.
+import { banner } from 'virtual:hangfolio/site';
+---
+<div class="xbanner" role="note">
+  <p>{banner.text}{banner.link && <> <a href={banner.link.href}>{banner.link.label}</a></>}</p>
+</div>
+
+<style>
+  .xbanner {
+    background: var(--tint);
+    border-bottom: 1px solid var(--rule);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: .8125rem;
+    line-height: 1.5;
+    padding: .625rem 1.25rem;
+    text-align: center;
+  }
+
+  .xbanner p {
+    max-width: 60rem;
+    margin: 0 auto;
+  }
+
+  .xbanner a {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  @media print {
+    .xbanner {
+      border-bottom-color: #000;
+    }
+  }
+</style>

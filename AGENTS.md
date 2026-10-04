@@ -36,7 +36,12 @@ hangfolio itself lives in its own GitHub organization, `hangfolio`, which avoids
 - `npm install`: install the workspace.
 - `npm run build`: runs `npm run -ws --if-present build`; must exit 0.
 - `npm test`: the theme's unit tests (`packages/theme/test/*.test.ts`, run by `node --test`).
-- `npm run test:e2e`: builds `fixtures/minimal` at base `/` and `/hangfolio`, checks the output, and runs the theme-toggle tests in the installed Chrome (set `CHROME_PATH` if it is not at the macOS default).
+- `npm run schema -w packages/theme`: rewrites the JSON Schemas in `packages/theme/schema/` from the zod schemas in `packages/theme/src/schema/` (the build does this too). They are committed, and `npm test` fails while they are stale.
+- `npm run starter-values -w packages/theme`: rewrites `packages/theme/starter-values.json` (the example values and entry hashes that example mode compares against) from `starter/`. The build does this too; it is committed, and `npm test` fails while it is stale. Run it after any change to `starter/`.
+- `npm run test:golden`: the golden messages for every case in `fixtures/broken` (also part of `npm test`). `UPDATE_GOLDEN=1 npm run test:golden` rewrites them; review the diff.
+- `npm run test:starter-scenario`: copies the starter into `.tmp/`, changes `site.yaml` in steps and checks example mode (also part of `npm run test:e2e`). End-to-end tests put their site copies in `.tmp/` (gitignored) so they resolve `hangfolio` from the workspace.
+- `npx hangfolio check` (inside a fixture or the starter): the same checks the build runs, with file:line messages; `--github` adds annotations and a job summary.
+- `npm run test:e2e`: builds `fixtures/minimal` and `fixtures/empty` at base `/` and `/hangfolio`, checks the output, runs the starter scenario, and runs the theme-toggle and dev-overlay tests in the installed Chrome (set `CHROME_PATH` if it is not at the macOS default).
 - `npx hangfolio dev --ignore-lock` (inside a fixture): a foreground dev server. Without `--ignore-lock`, Astro moves `dev` and `preview` into the background when it detects a coding agent; stop those with `npx hangfolio dev stop` or `npx hangfolio preview stop`.
 - `npx changeset`: record a change to the published package.
 - `git config core.hooksPath .githooks`: turn on the pre-push hook in a fresh clone.

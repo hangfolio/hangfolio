@@ -1,0 +1,2 @@
+content/news.yaml:5:7 W403 This news item is an example, so it's hidden. Remove example: true from line 5 to publish it.
+content/news.yaml:6:7 W403 This news item is an example, so it's hidden. Remove example: true from line 6 to publish it.

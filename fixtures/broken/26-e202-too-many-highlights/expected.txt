@@ -1,0 +1,1 @@
+content/home.yaml:2:3 E202 highlights.items can have at most 4 items.

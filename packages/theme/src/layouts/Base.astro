@@ -12,9 +12,12 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import tokensCss from '../styles/tokens.css?raw';
-import { build, site } from 'virtual:hangfolio/site';
+import { build, demo, help, site } from 'virtual:hangfolio/site';
+import DevChecks from '../components/DevChecks.astro';
+import ExampleBanner from '../components/ExampleBanner.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { checkError, currentDevState, DROP_STALE_OVERLAY } from '../lib/dev-checks.ts';
 import { siteGraph } from '../lib/jsonld.ts';
 import { siteDescription } from '../lib/site.ts';
 import { parseTokens } from '../lib/tokens.ts';
@@ -45,10 +48,18 @@ const {
   ogType = 'website',
   ogImage = site.ogImage ?? site.avatar,
   keywords = site.seo?.keywords?.join(', '),
-  noindex = false,
+  noindex: noindexPage = false,
   article,
   schema = [],
 } = Astro.props;
+
+// The example site is never indexed (SPEC 5.2).
+const noindex = noindexPage || demo;
+
+// In `hangfolio dev`, errors from the checks show as Astro's error overlay on every page.
+const dev = import.meta.env.DEV ? await currentDevState() : undefined;
+if (dev && dev.errors.length > 0) throw checkError(dev, help);
+const devIssues = (dev?.others ?? []).filter((issue) => !issue.page || issue.page === path);
 
 const canonical = absUrl(path);
 const image = ogImage ? absUrl(ogImage) : undefined;
@@ -57,7 +68,7 @@ const graph = siteGraph(site, personImage ? absUrl(personImage) : undefined, sch
 const { light } = parseTokens(tokensCss);
 ---
 <!doctype html>
-<html lang={site.advanced?.lang ?? 'en'}>
+<html lang={site.advanced.lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -68,7 +79,7 @@ const { light } = parseTokens(tokensCss);
     <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
     {!noindex && <link rel="canonical" href={canonical} />}
 
-    <meta property="og:locale" content={site.advanced?.locale ?? 'en_US'} />
+    <meta property="og:locale" content={site.advanced.locale} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -108,6 +119,7 @@ const { light } = parseTokens(tokensCss);
   </head>
   <body>
     <a class="skip" href={url('#main')}>Skip to content</a>
+    {demo && <ExampleBanner />}
     <div class="wrap shell">
       <Header current={nav} />
       <main id="main" class="page" tabindex="-1">
@@ -115,5 +127,7 @@ const { light } = parseTokens(tokensCss);
       </main>
       <Footer />
     </div>
+    {devIssues.length > 0 && <DevChecks issues={devIssues} />}
+    {dev && <script is:inline set:html={DROP_STALE_OVERLAY} />}
   </body>
 </html>

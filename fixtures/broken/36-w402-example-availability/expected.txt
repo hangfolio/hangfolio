@@ -1,0 +1,1 @@
+site.yaml:3:1 W402 The availability box is still the example, so it's hidden. Edit it or delete the block.

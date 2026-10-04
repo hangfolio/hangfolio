@@ -1,0 +1,1 @@
+content/projects/tidepool.md:2:1 W403 This project is an example, so it's hidden. Delete line 2 to publish it.

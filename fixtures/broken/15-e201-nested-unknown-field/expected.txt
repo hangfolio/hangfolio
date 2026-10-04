@@ -1,0 +1,1 @@
+site.yaml:5:3 E201 Unknown field 'detial' in availability. Did you mean 'detail'?

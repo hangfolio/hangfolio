@@ -1,0 +1,1 @@
+site.yaml:2:1 E401 email uses example.com, a placeholder domain only the example site may use. Write your own address.

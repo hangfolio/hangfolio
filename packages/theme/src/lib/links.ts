@@ -1,7 +1,5 @@
-// site.yaml `links`: each one a bare URL or {url, label?, id?, hero?, contact?, footer?} (SPEC 5.3).
-// TODO(M2): the site schema normalises these with validation; the shell uses this until then.
-
-export type Link = { url: string; label: string; id: string; hero: boolean; contact: boolean; footer: boolean };
+// Helpers for link labels and ids. The site schema (src/schema/) normalises site.yaml `links`
+// with them: a bare URL gets its label from the host, and an id from the label (SPEC 5.1).
 
 const HOST_LABELS: Record<string, string> = {
   'github.com': 'GitHub',
@@ -13,16 +11,20 @@ const HOST_LABELS: Record<string, string> = {
   'bsky.app': 'Bluesky',
 };
 
-/** The label for a bare URL: a known site's name, otherwise the host. */
+/** The label for a bare URL: a known site's name, Email or Phone, otherwise the host. */
 export function inferLabel(href: string): string {
   try {
-    const host = new URL(href).hostname.replace(/^www\./, '');
-    return HOST_LABELS[host] ?? host;
+    const parsed = new URL(href);
+    if (parsed.protocol === 'mailto:') return 'Email';
+    if (parsed.protocol === 'tel:') return 'Phone';
+    const host = parsed.hostname.replace(/^www\./, '');
+    return HOST_LABELS[host] ?? (host || href);
   } catch {
     return href;
   }
 }
 
+/** Lowercase letters and digits joined by dashes: "Google Scholar" becomes google-scholar. */
 export function slug(text: string): string {
   return text
     .normalize('NFKD')
@@ -30,21 +32,4 @@ export function slug(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
-
-export function normalizeLinks(raw: unknown): Link[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
-    const entry = typeof item === 'string' ? { url: item } : item;
-    if (!entry || typeof entry.url !== 'string') return [];
-    const label = entry.label ?? inferLabel(entry.url);
-    return [{
-      url: entry.url,
-      label,
-      id: entry.id ?? slug(label),
-      hero: entry.hero ?? true,
-      contact: entry.contact ?? true,
-      footer: entry.footer ?? true,
-    }];
-  });
 }

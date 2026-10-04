@@ -1,0 +1,2 @@
+content/news.yaml:2:5 E204 date must look like 2026-08 or 2026-08-14. You wrote '2026-13-02'.
+content/news.yaml:4:5 E204 date must look like 2026-08 or 2026-08-14. You wrote 'Aug 2025'. Did you mean 2025-08?

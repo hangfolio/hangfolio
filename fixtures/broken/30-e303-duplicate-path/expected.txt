@@ -1,0 +1,1 @@
+site.yaml:4:17 E303 pages.experience.path is also the address of the projects page ('/projects'); give each page its own path.

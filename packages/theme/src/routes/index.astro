@@ -1,17 +1,29 @@
 ---
 // The home page. TODO(M3): the hero and the sections from content/home.yaml.
 import { site } from 'virtual:hangfolio/site';
+import Monogram from '../components/Monogram.astro';
 import Page from '../layouts/Page.astro';
-import { affiliationOf, pageTitle } from '../lib/site.ts';
+import { pageTitle } from '../lib/site.ts';
 import { url } from '../lib/url.ts';
 
-const affiliation = affiliationOf(site);
-const whoami = [site.role, affiliation?.name, site.location].filter(Boolean).join(' · ');
+const whoami = [site.role, site.affiliation?.name, site.location].filter(Boolean).join(' · ');
 ---
 <Page title={pageTitle(site)} path="/" ogType="profile" heading={site.name} lede={site.tagline}>
+  <Fragment slot="eyebrow">
+    {site.avatar ? <img class="avatar" src={url(site.avatar)} alt={site.avatarAlt} width="96" height="96" /> : <Monogram />}
+  </Fragment>
   {whoami && <p class="kicker">{whoami}</p>}
   <ul class="links">
     <li><a href={url(`mailto:${site.email}`)}>{site.email}</a></li>
     {site.cv && <li><a href={url(site.cv)}>CV (PDF)</a></li>}
   </ul>
 </Page>
+
+<style>
+  .avatar {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+</style>

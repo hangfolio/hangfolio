@@ -1,0 +1,56 @@
+{
+  "$comment": "Generated from starter/ by scripts/starter-values.mjs. Do not edit.",
+  "identity": {
+    "name": "Rowan Vale",
+    "email": "rowan@example.edu"
+  },
+  "site": {
+    "tagline": "I build storage systems that stay correct when machines fail.",
+    "role": "PhD student in Computer Science",
+    "affiliation": {
+      "name": "Example University",
+      "url": "https://example.edu"
+    },
+    "email": "rowan@example.edu",
+    "location": "Port Alder, WA",
+    "links": [
+      "https://github.com/hangfolio",
+      "https://scholar.google.com/",
+      "https://orcid.org/0000-0002-1825-0097",
+      "https://www.linkedin.com/"
+    ],
+    "availability": {
+      "headline": "Open to research internships · Summer 2027."
+    },
+    "booking": {
+      "calcom": "rowan-vale/30min"
+    }
+  },
+  "entries": {
+    "home": [
+      "f945cd95ad1ed1dd"
+    ],
+    "projects": [
+      "6a96a705e1ab69e1"
+    ],
+    "publications": [
+      "6e6a72802299a72c"
+    ],
+    "writing": [
+      "ab2e2a1f6b1beb40"
+    ],
+    "experience": [
+      "6ac5bc7eda881a31",
+      "88dd83681fd72dc3",
+      "91e00958fdcae4b9",
+      "f89845b454129539"
+    ],
+    "news": [
+      "ca05bfb49a263516",
+      "e2099dae630de975"
+    ],
+    "bib": [
+      "8016be90f4f61376"
+    ]
+  }
+}

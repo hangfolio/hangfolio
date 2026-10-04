@@ -1,0 +1,1 @@
+content/news.yaml:1:1 E202 This file must be key: value lines, like items: …, not a list or a single value.

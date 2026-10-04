@@ -62,7 +62,7 @@ for (const pagesUrl of SITES) {
         assert.match(html, new RegExp(`<a href="${base}/files/cv.pdf" class="quiet"[^>]*>CV</a>`), `${file}: nav`);
         assert.match(html, /<button type="button" class="tgl" data-theme-toggle aria-label="Switch to dark theme"/, `${file}: toggle`);
         assert.match(html, /<footer class="foot"[^>]*>/, `${file}: footer`);
-        assert.match(html, /<a href="https:\/\/github\.com\/hangfolio"[^>]*>GitHub<\/a>/, `${file}: footer link`);
+        assert.match(html, /<a href="https:\/\/github\.com\/hangfolio\/hangfolio"[^>]*>GitHub<\/a>/, `${file}: footer link`);
         assert.match(html, new RegExp(`<a href="${base}/colophon.txt"[^>]*>Colophon</a>`), `${file}: footer.links`);
         assert.match(html, /© \d{4} Wren Halloway/, `${file}: copyright`);
         assert.match(html, /<meta name="theme-color" content="#f5f7fa">/, `${file}: theme-color`);

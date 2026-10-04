@@ -1,0 +1,1 @@
+content/news.yaml:2:46 W601 /my-site/projects already includes your base path. Write /projects.

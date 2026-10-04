@@ -1,0 +1,4 @@
+name: "Juniper Ash"
+email: "juniper@ash.test"
+card:
+  googleWallet: { issuerId: "3388000000012345678" }

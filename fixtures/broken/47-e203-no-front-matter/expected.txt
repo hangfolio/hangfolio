@@ -1,0 +1,5 @@
+content/projects/harbor.md:1:1 E203 This file has no front matter, so it is missing title and summary. Start the file with the block below.
+    ---
+    title: "…"
+    summary: "…"
+    ---

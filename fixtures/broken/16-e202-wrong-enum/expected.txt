@@ -1,0 +1,1 @@
+content/experience.yaml:5:5 E202 section must be one of professional, research, teaching, education, programs, earlier. You wrote 'industry'.

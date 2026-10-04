@@ -4,5 +4,7 @@ dist/
 .astro/
 .DS_Store
 *.log
+# sites the end-to-end tests copy and change (they must sit inside the workspace to find hangfolio)
+.tmp/
 # throwaway spike projects; their results live in docs/decisions/
 spikes/

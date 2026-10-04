@@ -1,0 +1,1 @@
+content/writing/gauges.md:5:1 E202 minutes must be a number. You wrote 'five'.

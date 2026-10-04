@@ -1,0 +1,1 @@
+site.yaml:3:17 E202 nav item 2 must be one of research, projects, publications, experience, writing, cv, booking, contact. You wrote 'writting'. Did you mean 'writing'?

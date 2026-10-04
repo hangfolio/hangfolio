@@ -1,0 +1,4 @@
+astro.config.mjs:1:1 N701 astro.config.mjs has no hangfolio-plumbing line, so it may have been edited. Replace everything in it with the text below.
+    // Site plumbing. Do not edit.  hangfolio-plumbing: 1
+    import { defineSiteConfig } from 'hangfolio/config';
+    export default defineSiteConfig();

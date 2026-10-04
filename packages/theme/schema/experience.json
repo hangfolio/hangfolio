@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/hangfolio@1/schema/experience.json",
+  "title": "hangfolio: content/experience.yaml",
+  "type": "object",
+  "properties": {
+    "entries": {
+      "description": "Shown in this order within each section.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "section": {
+            "type": "string",
+            "enum": [
+              "professional",
+              "research",
+              "teaching",
+              "education",
+              "programs",
+              "earlier"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "org": {
+            "type": "string",
+            "minLength": 1
+          },
+          "short": {
+            "description": "A shorter organisation name for the home page.",
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+              },
+              {
+                "type": "integer",
+                "minimum": 1000,
+                "maximum": 9999
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "const": "present"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$"
+              },
+              {
+                "type": "integer",
+                "minimum": 1000,
+                "maximum": 9999
+              }
+            ]
+          },
+          "expected": {
+            "default": false,
+            "description": "Adds \"(expected)\" after the dates.",
+            "type": "boolean"
+          },
+          "when": {
+            "description": "Text instead of dates, e.g. [\"Spring 2025\"].",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "bullets": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "desc": {
+            "description": "A paragraph instead of bullets.",
+            "type": "string",
+            "minLength": 1
+          },
+          "home": {
+            "description": "A one-line summary; shows the entry on the home page.",
+            "type": "string",
+            "minLength": 1
+          },
+          "homeLine": {
+            "description": "Education and programs: the home page line.",
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "years": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "text",
+              "years"
+            ],
+            "additionalProperties": false
+          },
+          "gallery": {
+            "type": "object",
+            "properties": {
+              "caption": {
+                "type": "string",
+                "minLength": 1
+              },
+              "images": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "thumb": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "full": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "alt": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "width": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "height": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "thumb",
+                    "full",
+                    "alt",
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "images"
+            ],
+            "additionalProperties": false
+          },
+          "example": {
+            "default": false,
+            "description": "While true, this entry is the example and stays hidden on your site.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "section",
+          "role",
+          "org"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,44 +1,33 @@
-// The content collections, read from the site's content/ folder. A site's src/content.config.ts
-// re-exports them (SPEC 4.2). TODO(M2): the schemas move to src/schema/ with the lenient
-// shorthands; M4 renders writing and adds the other collections.
+// The content collections, read from the site's content/ folder with the schemas in src/schema/
+// (SPEC 5). A site's src/content.config.ts re-exports them (SPEC 4.2). Every file and folder is
+// optional; a missing one gives an empty collection. Outside demo mode, entries marked
+// `example: true` never reach the pages (SPEC 5.2 rule 3); the checks list them as W403.
 import { defineCollection } from 'astro:content';
-import { glob, type Loader } from 'astro/loaders';
-import { z } from 'astro/zod';
+import { glob } from 'astro/loaders';
+import { hideExamples, isExample, optional, tolerant } from './lib/loaders.ts';
+import { yamlFile } from './lib/yaml-file.ts';
+import { experience, home, news, post, project, projectsGroups, publication } from './schema/index.ts';
 
-// Every content folder is optional (SPEC 5.1), so Astro's warnings about a missing or empty
-// folder are dropped. The glob loader still watches the folder, so creating it in dev works.
-function optional(loader: Loader): Loader {
-  const quiet = /does not exist|No files found/;
-  return {
-    ...loader,
-    load: (context) =>
-      loader.load({
-        ...context,
-        logger: new Proxy(context.logger, {
-          get(target, key) {
-            if (key === 'warn') return (message: string) => quiet.test(message) || target.warn(message);
-            const value = Reflect.get(target, key);
-            return typeof value === 'function' ? value.bind(target) : value;
-          },
-        }),
-      }),
-  };
-}
+const markdown = (folder: string, options: Partial<Parameters<typeof glob>[0]> = {}) =>
+  hideExamples(tolerant(optional(glob({ pattern: '*.{md,mdx}', base: `./content/${folder}`, ...options }))));
 
-// SPEC 5.9
-const writing = defineCollection({
-  loader: optional(glob({ pattern: '*.{md,mdx}', base: './content/writing' })),
-  schema: z.object({
-    title: z.string(),
-    date: z.coerce.date(),
-    updated: z.coerce.date().optional(),
-    description: z.string(),
-    excerpt: z.string().optional(),
-    tags: z.array(z.string()).default([]),
-    draft: z.boolean().default(false),
-    example: z.boolean().default(false),
-    minutes: z.number().int().positive().optional(),
-  }),
+/** A YAML file's list without its example entries. */
+const withoutExamples = (list: string) => (data: Record<string, unknown>) => ({
+  ...data,
+  [list]: (data[list] as unknown[]).filter((item) => !isExample(item)),
 });
 
-export const collections = { writing };
+export const collections = {
+  writing: defineCollection({ loader: markdown('writing'), schema: post }),
+  projects: defineCollection({ loader: markdown('projects'), schema: project }),
+  // Ids are the file names exactly, because BibTeX keys are case-sensitive.
+  publications: defineCollection({
+    loader: markdown('publications', { generateId: ({ entry }) => entry.replace(/\.mdx?$/, '') }),
+    schema: publication,
+  }),
+  // One entry each, named after the file: getEntry('home', 'home').
+  home: defineCollection({ loader: yamlFile('content/home.yaml', (data) => (isExample(data) ? undefined : data)), schema: home }),
+  projectGroups: defineCollection({ loader: yamlFile('content/projects.yaml'), schema: projectsGroups }),
+  experience: defineCollection({ loader: yamlFile('content/experience.yaml', withoutExamples('entries')), schema: experience }),
+  news: defineCollection({ loader: yamlFile('content/news.yaml', withoutExamples('items')), schema: news }),
+};

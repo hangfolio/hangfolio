@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { inferLabel, normalizeLinks } from '../src/lib/links.ts';
+import { inferLabel, slug } from '../src/lib/links.ts';
 import { navItems, availablePages } from '../src/lib/nav.ts';
 import type { SiteYaml } from '../src/lib/site.ts';
 
@@ -16,20 +16,14 @@ test('labels are inferred from the host (SPEC 5.1)', () => {
   assert.equal(inferLabel('https://x.com/someone'), 'X');
   assert.equal(inferLabel('https://bsky.app/profile/someone'), 'Bluesky');
   assert.equal(inferLabel('https://blog.example.org/'), 'blog.example.org');
+  assert.equal(inferLabel('mailto:someone@example.org'), 'Email');
+  assert.equal(inferLabel('tel:+15550100'), 'Phone');
 });
 
-test('links: bare URLs and objects, with defaults and ids', () => {
-  const links = normalizeLinks([
-    'https://github.com/someone',
-    { url: 'https://orcid.org/0000-0002-1825-0097', label: 'ORCID iD' },
-    { url: 'https://www.linkedin.com/in/someone', contact: false, id: 'li' },
-  ]);
-  assert.deepEqual(links, [
-    { url: 'https://github.com/someone', label: 'GitHub', id: 'github', hero: true, contact: true, footer: true },
-    { url: 'https://orcid.org/0000-0002-1825-0097', label: 'ORCID iD', id: 'orcid-id', hero: true, contact: true, footer: true },
-    { url: 'https://www.linkedin.com/in/someone', label: 'LinkedIn', id: 'li', hero: true, contact: false, footer: true },
-  ]);
-  assert.deepEqual(normalizeLinks(undefined), []);
+test('slugs: lowercase letters and digits joined by dashes', () => {
+  assert.equal(slug('Google Scholar'), 'google-scholar');
+  assert.equal(slug('Café Lab — 2026'), 'cafe-lab-2026');
+  assert.equal(slug('🌊'), '');
 });
 
 test('nav: only pages that exist, in order, plus explicit {label, href} items', () => {

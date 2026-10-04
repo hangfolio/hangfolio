@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { current } = Astro.props;
-const brand = site.advanced?.brand ?? new URL(import.meta.env.SITE).hostname;
+const brand = site.advanced.brand ?? new URL(import.meta.env.SITE).hostname;
 const nav = navItems(site, availablePages(site));
 ---
 <header class="hdr">

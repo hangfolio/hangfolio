@@ -1,0 +1,7 @@
+highlights:
+  items:
+    - { value: "1", what: "result 1" }
+    - { value: "2", what: "result 2" }
+    - { value: "3", what: "result 3" }
+    - { value: "4", what: "result 4" }
+    - { value: "5", what: "result 5" }

@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
 # fixtures/minimal: a small fictional site that exercises the M1 shell (header, footer, theme
 # toggle, base-safe links). Wren Halloway and everything below are invented.
 name: "Wren Halloway"
@@ -9,8 +10,8 @@ location: "Harbor Point"
 cv: "/files/cv.pdf"
 
 links:
-  - "https://github.com/hangfolio"
-  - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }
+  - "https://github.com/hangfolio/hangfolio"
+  - { url: "https://hangfolio.github.io/", label: "Notes" }
   - { url: "https://bsky.app/", footer: false }
 
 advanced:

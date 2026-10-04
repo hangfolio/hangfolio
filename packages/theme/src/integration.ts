@@ -1,12 +1,21 @@
-// The hangfolio Astro integration: injects every page, gives pages the site settings as
-// virtual:hangfolio/site, restarts dev when site.yaml changes, and fixes output file names.
+// The hangfolio Astro integration: checks site.yaml and content/ before every build and dev
+// session, injects every page, gives pages the site settings as virtual:hangfolio/site, restarts
+// dev when site.yaml changes, and tidies the output (file names, example files).
 import { existsSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
+import { sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
+import { AstroError } from 'astro/errors';
+import { exampleBanner } from './lib/banner.ts';
+import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
 import { ROUTES } from './lib/routes.ts';
 import type { SiteYaml } from './lib/site.ts';
+import { terminalReport, wantsColor } from './validate/format.ts';
+import { counts, docsUrl, severity, validateSite, type Report } from './validate/index.ts';
 
-type Options = { site: SiteYaml; siteFile: string; urlFormat: 'preserve' | 'directory' };
+type Options = { root: string; site: SiteYaml; siteFile: string; urlFormat: 'preserve' | 'directory' };
 
 const VIRTUAL_ID = 'virtual:hangfolio/site';
 
@@ -17,20 +26,48 @@ const ICONS = [
   { file: 'apple-touch-icon.png', rel: 'apple-touch-icon' },
 ];
 
-export default function hangfolio({ site, siteFile, urlFormat }: Options): AstroIntegration {
+export default function hangfolio({ root, site, siteFile, urlFormat }: Options): AstroIntegration {
   let publicDir: URL;
+  let report: Report | undefined;
+  const print = (r: Report) => process.stdout.write(`\n${terminalReport(r, { color: wantsColor(process.stdout, process.env) })}\n`);
+
   return {
     name: 'hangfolio',
     hooks: {
-      'astro:config:setup': ({ config, injectRoute, addWatchFile, updateConfig }) => {
+      'astro:config:setup': async ({ command, config, injectRoute, addWatchFile, updateConfig }) => {
         addWatchFile(siteFile);
         for (const { pattern, entry } of ROUTES) {
           injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
         }
+        if (command !== 'preview') {
+          report = await validateSite(root, { mode: command === 'dev' ? 'dev' : 'build' });
+          print(report);
+          const { errors } = counts(report.issues);
+          if (errors > 0 && command === 'build') {
+            const what = errors === 1 ? 'an error' : `${errors} errors`;
+            const error = new AstroError(`hangfolio check found ${what} in site.yaml or content/ (listed above), so nothing was built.`, 'Fix the lines it names and build again.');
+            error.stack = ''; // the list above says where; a stack trace into the theme would not help
+            throw error;
+          }
+          if (command === 'dev') {
+            const refresh = async () => {
+              const next = await validateSite(root, { mode: 'dev' });
+              if (signature(next) !== signature(report)) print(next);
+              report = next;
+              return devStateOf(next);
+            };
+            setDevState(devStateOf(report), refresh);
+          }
+        }
         const icons = ICONS.filter((icon) => existsSync(new URL(icon.file, config.publicDir)));
-        const source =
-          `export const site = ${JSON.stringify(site)};\n` +
-          `export const build = ${JSON.stringify({ urlFormat, icons })};\n`;
+        const values = {
+          site: report?.visible ?? site,
+          build: { urlFormat, icons },
+          demo: report?.demo ?? false,
+          banner: exampleBanner(process.env),
+          help: docsUrl(),
+        };
+        const source = Object.entries(values).map(([name, value]) => `export const ${name} = ${JSON.stringify(value)};\n`).join('');
         updateConfig({
           vite: {
             plugins: [
@@ -46,7 +83,25 @@ export default function hangfolio({ site, siteFile, urlFormat }: Options): Astro
       'astro:config:done': ({ config }) => {
         publicDir = config.publicDir;
       },
+      // In dev, a change under content/ or public/ runs the checks again before the next page
+      // render, and reloads the page if the result changed. A site.yaml change restarts dev.
+      'astro:server:setup': ({ server }) => {
+        const watched = [`${root}${sep}content${sep}`, `${root}${sep}public${sep}`];
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        server.watcher.on('all', (_event: string, path: string) => {
+          if (!watched.some((dir) => path.startsWith(dir))) return;
+          markDevStateStale();
+          clearTimeout(timer);
+          timer = setTimeout(async () => {
+            const before = signature(report);
+            await currentDevState();
+            if (signature(report) !== before) server.ws.send({ type: 'full-reload', path: '*' });
+          }, 150);
+        });
+      },
       'astro:build:done': async ({ assets, dir, logger }) => {
+        // Example files leave the build once site.yaml is the owner's (SPEC 5.2 rule 4).
+        if (report && !report.demo) await rm(fileURLToPath(new URL('example/', dir)), { recursive: true, force: true });
         if (urlFormat !== 'preserve') return;
         const patterns = ROUTES.filter((route) => route.dir).map((route) => route.pattern);
         await relocateDirRoutes({ patterns, assets, dir, publicDir, logger });
@@ -54,3 +109,10 @@ export default function hangfolio({ site, siteFile, urlFormat }: Options): Astro
     },
   };
 }
+
+function devStateOf(report: Report) {
+  const errors = report.issues.filter((issue) => severity(issue.code) === 'error');
+  return { root: report.root, errors, others: report.issues.filter((issue) => severity(issue.code) !== 'error') };
+}
+
+const signature = (report?: Report) => JSON.stringify(report?.issues ?? null);

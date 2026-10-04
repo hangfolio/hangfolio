@@ -1,6 +1,6 @@
 // A Sätteri hast plugin (Astro 7's Markdown and MDX processor; S1): root-relative href and src
 // values written in content go through url(). A value that already starts with the base is left
-// alone, so nothing is prefixed twice (SPEC 7.2). TODO(M2): warn W601 when that happens.
+// alone, so nothing is prefixed twice (SPEC 7.2); the checks warn W601 with its file and line.
 import type { SatteriProcessorOptions } from '@astrojs/markdown-satteri';
 import { url } from './url.ts';
 

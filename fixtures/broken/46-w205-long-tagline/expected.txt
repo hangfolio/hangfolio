@@ -1,0 +1,1 @@
+site.yaml:3:1 W205 tagline is 266 characters. It reads best under 220; put the rest in content/home.yaml as intro.

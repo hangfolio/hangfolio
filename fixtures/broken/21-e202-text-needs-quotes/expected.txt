@@ -1,0 +1,1 @@
+content/home.yaml:3:7 E202 value must be text, so put it in quotes: value: "40"

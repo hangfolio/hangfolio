@@ -1,0 +1,14 @@
+{
+  "name": "hangfolio-fixture-empty",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "hangfolio dev",
+    "build": "hangfolio build",
+    "check": "hangfolio check",
+    "preview": "hangfolio preview"
+  },
+  "dependencies": {
+    "hangfolio": "0.0.0"
+  }
+}

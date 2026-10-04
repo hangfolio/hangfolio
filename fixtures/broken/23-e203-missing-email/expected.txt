@@ -1,0 +1,1 @@
+site.yaml E203 'email' is required. Add a line: email: "you@university.edu"

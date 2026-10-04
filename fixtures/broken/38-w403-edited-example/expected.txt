@@ -1,0 +1,1 @@
+content/projects/tidepool.md:2:1 W403 You edited this example, but it still says example: true, so it's hidden. Delete line 2 to publish it.

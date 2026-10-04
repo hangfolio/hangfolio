@@ -1,0 +1,4 @@
+name: "Juniper Ash"
+email: "juniper@ash.test"
+pages:
+  experience: { path: "/projects" }

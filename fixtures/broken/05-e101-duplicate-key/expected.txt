@@ -1,0 +1,1 @@
+content/writing/first-post.md:5:1 E101 'title' is already set on line 2. Keep one of them.

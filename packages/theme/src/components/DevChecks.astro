@@ -1,0 +1,74 @@
+---
+// `hangfolio dev` only: the warnings and notices from the checks, and the examples they hide, in a
+// small panel that starts closed. Errors show as Astro's error overlay instead (lib/dev-checks.ts).
+import type { Issue } from '../validate/issue.ts';
+
+interface Props {
+  issues: Issue[];
+}
+
+const { issues } = Astro.props;
+const hidden = issues.filter((i) => ['W402', 'W403', 'W404'].includes(i.code)).length;
+const warnings = issues.filter((i) => i.code.startsWith('W')).length - hidden;
+const notices = issues.filter((i) => i.code.startsWith('N')).length;
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+const parts = [warnings && plural(warnings, 'warning'), notices && plural(notices, 'notice'), hidden && `${plural(hidden, 'example')} hidden`].filter(Boolean);
+const where = (i: Issue) => (i.file ? `${i.file}${i.line ? `:${i.line}` : ''}` : '');
+---
+<details class="devchecks" data-hangfolio-dev>
+  <summary>hangfolio · {parts.join(' · ')}</summary>
+  <ul>
+    {issues.map((issue) => (
+      <li><code>{where(issue)}</code> <strong>{issue.code}</strong> {issue.message}</li>
+    ))}
+  </ul>
+  <p>Shown only in local preview. <code>npm run check</code> prints the same list.</p>
+</details>
+
+<style>
+  .devchecks {
+    position: fixed;
+    left: .75rem;
+    bottom: .75rem;
+    z-index: 1000;
+    max-width: min(40rem, calc(100vw - 1.5rem));
+    max-height: 60vh;
+    overflow: auto;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--rule-strong);
+    border-radius: .5rem;
+    box-shadow: 0 .25rem 1rem rgb(0 0 0 / .12);
+    font-family: var(--mono);
+    font-size: .75rem;
+    line-height: 1.5;
+  }
+
+  .devchecks summary {
+    cursor: pointer;
+    padding: .375rem .75rem;
+  }
+
+  .devchecks ul {
+    margin: 0;
+    padding: 0 .75rem;
+    list-style: none;
+  }
+
+  .devchecks li {
+    padding: .375rem 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .devchecks p {
+    margin: 0;
+    padding: .375rem .75rem .5rem;
+    color: var(--muted);
+  }
+
+  @media print {
+    .devchecks {
+      display: none;
+    }
+  }
+</style>

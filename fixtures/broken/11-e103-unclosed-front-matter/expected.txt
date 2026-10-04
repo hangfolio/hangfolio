@@ -1,0 +1,1 @@
+content/projects/harbor.md:1:1 E103 The block starting with --- needs a closing --- line.

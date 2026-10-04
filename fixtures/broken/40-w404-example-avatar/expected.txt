@@ -1,0 +1,2 @@
+site.yaml:3:1 W404 avatar is the example photo (/example/avatar.jpg), so your initials are shown instead. Upload your photo to public/images/ and set avatar, or delete the line.
+public/example W404 public/example/ holds the example files, so it's left out of your site. Delete the folder when you no longer need it.

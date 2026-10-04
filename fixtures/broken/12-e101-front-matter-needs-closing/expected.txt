@@ -1,0 +1,1 @@
+content/writing/tides.md:6:1 E101 This line isn't YAML. Does the front matter above need its closing --- line?

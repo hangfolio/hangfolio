@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/hangfolio@1/schema/post.json",
+  "title": "hangfolio: content/writing/<slug>.md (front matter)",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "date": {
+      "description": "For example 2026-08-14.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt ].*)?$"
+    },
+    "updated": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}([Tt ].*)?$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "For search results and the feed."
+    },
+    "excerpt": {
+      "description": "The teaser in post lists. Default: description.",
+      "type": "string",
+      "minLength": 1
+    },
+    "tags": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "draft": {
+      "default": false,
+      "description": "true: not built (the file is still public in the repository).",
+      "type": "boolean"
+    },
+    "example": {
+      "default": false,
+      "description": "While true, this post is the example and stays hidden on your site.",
+      "type": "boolean"
+    },
+    "minutes": {
+      "description": "Pins \"N min read\".",
+      "type": "integer",
+      "exclusiveMinimum": 0
+    }
+  },
+  "required": [
+    "title",
+    "date",
+    "description"
+  ],
+  "additionalProperties": false
+}

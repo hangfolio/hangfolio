@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/experience.json
+# Each entry with example: true stays hidden on your site. Delete "example: true, " to publish it.
+entries:
+  - { example: true, section: research, role: "Graduate Research Assistant", org: "Example University", location: "Port Alder, WA", start: 2025-01, end: present, bullets: ["Built a fault-injection harness for key-value stores."], home: "Fault injection for storage engines." }
+  - { example: true, section: professional, role: "Software Engineering Intern", org: "Example Corp", start: 2024-06, end: 2024-08, bullets: ["Cut API latency from 3s to 300ms with a read-through cache."], home: "Cache layer for the orders API." }
+  - { example: true, section: teaching, role: "Teaching Assistant, Distributed Systems", org: "Example University", when: ["Fall 2025"], bullets: ["Ran weekly labs for 60 students."] }
+  - { example: true, section: education, role: "PhD, Computer Science", org: "Example University", start: 2025-01, end: 2029-05, expected: true, homeLine: { text: "PhD, CS, Example University", years: "2025 – 2029 (expected)" } }

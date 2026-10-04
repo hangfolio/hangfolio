@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/home.json
+example: true   # ← delete this line once the text below is yours (it stays hidden while this line is here)
+intro: "PhD student at [Example University](https://example.edu), advised by [Dr. Ada Advisor](https://example.edu/~ada). Before that I built storage at Example Corp."
+now: "a crash-consistency checker and a cache paper."
+highlights:
+  items:
+    - { value: "up to 40%", what: "lower p99 latency", source: "[Bounded staleness](/publications#vale2024bounded), EXC ’24" }
+    - { value: "12/12", what: "seeded crash bugs found", source: "[Tidepool](/projects/tidepool/)" }
+    - { value: "3s → 300ms", what: "API latency", source: "[Example Corp](/experience)" }
+research:
+  problem: "Caches at the edge serve stale data with no bound on how stale."
+  approach:
+    - { title: "Bounded staleness", chip: "EXC ’24", text: "A lease protocol that caps staleness at a configured bound." }
+    - { title: "Crash replay", chip: "In preparation", text: "Replaying crash points to find lost writes." }
+  status: "One paper published; one in preparation."
+  featured: vale2024bounded
+  teaching: "TA, Distributed Systems (Fall 2025)"

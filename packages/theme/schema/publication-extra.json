@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/hangfolio@1/schema/publication-extra.json",
+  "title": "hangfolio: content/publications/<key>.md (front matter)",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "in-preparation"
+        },
+        "example": {
+          "default": false,
+          "description": "While true, this item is the example and stays hidden on your site.",
+          "type": "boolean"
+        },
+        "order": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authors": {
+          "description": "Names, or { name, url }.",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "url": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "margin": {
+          "description": "Margin text, e.g. \"Go · Java\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "chip": {
+          "description": "For example \"Venue 2027 · in preparation\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "status",
+        "order",
+        "title",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "published"
+        },
+        "example": {
+          "default": false,
+          "description": "While true, these extras are the example and stay hidden on your site.",
+          "type": "boolean"
+        },
+        "featured": {
+          "default": false,
+          "description": "Feature the paper on the home page (or set selected = {true} in BibTeX).",
+          "type": "boolean"
+        },
+        "links": {
+          "description": "Added after the links from BibTeX.",
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "url": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "profile": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "profile"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "equal": {
+          "default": [],
+          "description": "Surnames of the authors who contributed equally (marked *).",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "authorNote": {
+          "default": "*Equal contribution",
+          "type": "string",
+          "minLength": 1
+        },
+        "anchor": {
+          "description": "The entry's #id. Default: the BibTeX key.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][\\w-]*$"
+        },
+        "bibtexAnchor": {
+          "description": "The BibTeX block's #id. Default: bibtex-<anchor>.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][\\w-]*$"
+        },
+        "venueDetail": {
+          "type": "string",
+          "minLength": 1
+        },
+        "place": {
+          "description": "For example \"Lisbon, May 13–17, 2024\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "tag": {
+              "default": "Data",
+              "type": "string",
+              "minLength": 1
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        "schema": {
+          "description": "JSON-LD fields that replace the generated ones.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

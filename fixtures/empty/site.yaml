@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
+# fixtures/empty: only the two fields every site needs (SPEC 5.1). It must build green, with every
+# optional section hidden and an initials monogram for the avatar. Sol Brennan is invented.
+name: "Sol Brennan"
+email: "sol@brennan.test"

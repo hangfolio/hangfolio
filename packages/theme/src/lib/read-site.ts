@@ -1,18 +1,22 @@
-// Reads site.yaml for defineSiteConfig().
-// TODO(M2): replace the shape check below with the zod schema and file:line errors.
+// Reads site.yaml for defineSiteConfig(), which needs a few settings before Astro starts (url,
+// advanced.urlFormat and trailingSlash). Mistakes are the validator's job: the integration runs it
+// next and reports each one with file:line (src/validate/). So a file with problems gives the
+// settings of a placeholder site here instead of an error without a line number.
 import { existsSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
+import { site as siteSchema } from '../schema/site.ts';
 import type { SiteYaml } from './site.ts';
 
-export function readSiteYaml(file: string): SiteYaml {
-  if (!existsSync(file)) {
-    throw new Error(`hangfolio: no site.yaml in ${file.replace(/site\.yaml$/, '')}. Every site needs one next to package.json.`);
+const PLACEHOLDER = { name: 'Your name', email: 'you@example.invalid' };
+
+export function readSiteConfig(file: string): { site: SiteYaml; valid: boolean } {
+  if (existsSync(file)) {
+    try {
+      const result = siteSchema.safeParse(parse(readFileSync(file, 'utf8')));
+      if (result.success) return { site: result.data, valid: true };
+    } catch {
+      // a YAML syntax error; the validator reports it
+    }
   }
-  const data = parse(readFileSync(file, 'utf8'));
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    throw new Error('hangfolio: site.yaml must be a list of "key: value" settings, starting with name: and email:.');
-  }
-  const missing = ['name', 'email'].filter((key) => typeof data[key] !== 'string' || !data[key].trim());
-  if (missing.length > 0) throw new Error(`hangfolio: site.yaml needs ${missing.join(' and ')}.`);
-  return data;
+  return { site: siteSchema.parse(PLACEHOLDER), valid: false };
 }
