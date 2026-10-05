@@ -1,0 +1,12 @@
+# Questions go to Discussions; only the bug form opens an issue.
+blank_issues_enabled: false
+contact_links:
+  - name: Help with your site
+    url: https://github.com/hangfolio/hangfolio/discussions/new?category=q-a
+    about: Setting up, editing, or a red run you don't understand? Ask in Discussions, with a link to your repository.
+  - name: Ideas and feature requests
+    url: https://github.com/hangfolio/hangfolio/discussions/new?category=ideas
+    about: Suggest a feature or a change in Discussions first.
+  - name: Report a security vulnerability
+    url: https://github.com/hangfolio/hangfolio/security/advisories/new
+    about: Privately, please. Don't open a public issue.

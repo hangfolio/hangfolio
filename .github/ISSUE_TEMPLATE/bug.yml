@@ -1,0 +1,59 @@
+name: Bug report
+description: The theme, a check or the deploy did something wrong.
+title: "Bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Questions about setting up or editing your own site go to [Discussions](https://github.com/hangfolio/hangfolio/discussions), and every message code is explained in [troubleshooting](https://github.com/hangfolio/hangfolio/blob/main/docs/troubleshooting.md).
+
+        Everything here is public. Security problems go through [a private report](https://github.com/hangfolio/hangfolio/security/advisories/new) instead.
+  - type: input
+    id: site-url
+    attributes:
+      label: Your site's address
+      description: Where the site is published, or would be.
+      placeholder: https://username.github.io/
+    validations:
+      required: true
+  - type: input
+    id: repo-url
+    attributes:
+      label: Your repository
+      placeholder: https://github.com/username/username.github.io
+    validations:
+      required: true
+  - type: input
+    id: run-url
+    attributes:
+      label: The failing Actions run
+      description: Open the **Actions** tab, click the red **Deploy site** run and copy its address. If nothing failed, link the latest run.
+      placeholder: https://github.com/username/username.github.io/actions/runs/123456789
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you saw, and the message if there was one.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: hangfolio version
+      description: The `hangfolio` line in your `package.json`, if you know it.
+      placeholder: 0.1.0
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      description: Only for problems with how a page looks or behaves.
+      placeholder: Safari on iPhone, Firefox on Windows…
