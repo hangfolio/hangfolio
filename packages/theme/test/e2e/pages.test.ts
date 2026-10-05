@@ -242,7 +242,7 @@ describe('fixtures/owner-like: the reference design’s paths and ids', () => {
     assert.match(page('index.html'), /<a href="\/work-experience">Full history<\/a>/);
     assert.equal(canonicalOf(page('work-experience.html')), 'https://u.github.io/work-experience');
     assert.match(page('work-experience.html'), /<title>Work Experience \| Kasia Morrow<\/title>/);
-    assert.match(mainOf(page('work-experience.html')), /<h1>Work Experience<\/h1><p class="lede">Engineering and research work at Northlake/);
+    assert.match(mainOf(page('work-experience.html')), /<h1>Work Experience<\/h1><p class="lede">Industry roles, lab work and teaching, most recent first\.<\/p>/);
     assert.match(mainOf(page('projects.html')), /<section id="research" class="group" aria-labelledby="research-h"><div class="sec-head"><h2 id="research-h" class="eyebrow">Research<\/h2>/);
   });
 
