@@ -47,9 +47,10 @@ for (const dir of SITES) {
 
     before(async () => {
       const dist = buildSite(dir, 'https://u.github.io/hangfolio');
-      // "" is the home page; the others are served without .html, as GitHub Pages does.
+      // "" is the home page; the others are served without .html, as GitHub Pages does. An .html
+      // file without a <head> is no page (a search engine's verification file).
       pages = listFiles(dist)
-        .filter((file) => file.endsWith('.html'))
+        .filter((file) => file.endsWith('.html') && /<head[\s>]/i.test(readFileSync(join(dist, file), 'utf8')))
         .map((file) => file.replace(/(^|\/)index\.html$/, '$1').replace(/\.html$/, ''));
       site = await serve(dist, '/hangfolio');
       browser = await chromium.launch({ executablePath: CHROME });
