@@ -1,0 +1,593 @@
+# Reusable workflow: builds a hangfolio site (SPEC 8.2). Every site's .github/workflows/deploy.yml
+# calls it as hangfolio/hangfolio/.github/workflows/build.yml@v1 and then calls deploy.yml when the
+# `deploy` output is 'true'. Everything in the github context (repository, event, ref, token,
+# run_number) belongs to the CALLER, so every job below runs against the site's repository.
+#
+# Jobs: `preflight` reads the GitHub Pages settings and decides whether this run publishes, `build`
+# checks and builds the site (always, so content errors show before Pages is set up), and
+# `setup-needed` fails with the one step that is missing. On a site's first run (run_number 1)
+# that step goes into a green "Welcome" summary instead, so a new copy starts green.
+#
+# Scripts get every ${{ }} value through env, never inline. Actions are pinned by SHA.
+name: Build site
+
+on:
+  workflow_call:
+    inputs:
+      site-url:
+        description: Pins the canonical URL (for example https://example.com). Leave empty to use what GitHub Pages reports.
+        type: string
+        default: ''
+    secrets:
+      GOOGLE_WALLET_KEY:
+        description: Optional. Reserved for a Google Wallet pass; this version only records whether it is set.
+        required: false
+    outputs:
+      deploy:
+        description: "'true' when this run built the site for publishing; the caller then runs deploy.yml"
+        value: ${{ jobs.build.outputs.deploy }}
+      page-url:
+        description: The address GitHub Pages serves the site at, or empty when Pages is not set up
+        value: ${{ jobs.build.outputs.page-url }}
+
+permissions: {}
+
+jobs:
+  preflight:
+    name: Check GitHub Pages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # the workflow files and package-lock.json
+      pages: read # GET /repos/{repo}/pages (S4)
+    outputs:
+      intent: ${{ steps.facts.outputs.intent }}
+      first-run: ${{ steps.facts.outputs.first-run }}
+      node-version: ${{ steps.facts.outputs.node-version }}
+      lockfile: ${{ steps.facts.outputs.lockfile }}
+      wallet-key: ${{ steps.facts.outputs.wallet-key }}
+      build-type: ${{ steps.pages.outputs.build-type }}
+      state: ${{ steps.report.outputs.state }}
+      ready: ${{ steps.report.outputs.ready }}
+      site-url: ${{ steps.report.outputs.site-url }}
+      setup-message: ${{ steps.report.outputs.setup-message }}
+      setup-error: ${{ steps.report.outputs.setup-error }}
+    steps:
+      # Cone mode also brings every file at the top of the repository (package-lock.json among them).
+      - name: Check out the workflow files and package-lock.json
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/workflows
+          persist-credentials: false
+
+      - name: Set up Node for the checks
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      - name: Work out what this run does
+        id: facts
+        shell: node {0}
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RUN_NUMBER: ${{ github.run_number }}
+          # Only true or false ever leaves this step; the secret itself is never read here.
+          HAS_WALLET_KEY: ${{ secrets.GOOGLE_WALLET_KEY != '' }}
+        run: |
+          const fs = require('fs');
+          const env = process.env;
+          const put = (name, value) => fs.appendFileSync(env.GITHUB_OUTPUT, `${name}=${value}\n`);
+
+          // Only a push or a manual run on the default branch (main, master, ...) publishes.
+          // Pull requests, Dependabot and other branches get a check build.
+          const intent = ['push', 'workflow_dispatch'].includes(env.EVENT_NAME) && env.REF === `refs/heads/${env.DEFAULT_BRANCH}`;
+          // S5: run 1 of this workflow file is the new copy's "Initial commit"; a re-run keeps run_number 1.
+          const firstRun = env.RUN_NUMBER === '1';
+
+          // Node: the highest of 24 and 22 that the theme's engines.node allows, as package-lock.json
+          // records it. A range that allows neither goes to setup-node as it is.
+          const lockfile = fs.existsSync('package-lock.json');
+          let range = '';
+          try {
+            const packages = JSON.parse(fs.readFileSync('package-lock.json', 'utf8')).packages || {};
+            let theme = packages['node_modules/hangfolio'];
+            if (theme && theme.link && theme.resolved) theme = packages[theme.resolved]; // a workspace, as in the engine's repository
+            range = String((theme && theme.engines && theme.engines.node) || '').trim();
+          } catch {}
+          const nodeVersion = pickNode(range);
+
+          put('intent', intent);
+          put('first-run', firstRun);
+          put('lockfile', lockfile);
+          put('node-version', nodeVersion);
+          put('wallet-key', env.HAS_WALLET_KEY === 'true');
+          console.log(`event=${env.EVENT_NAME} ref=${env.REF} default branch=${env.DEFAULT_BRANCH} publishes=${intent}`);
+          console.log(`run ${env.RUN_NUMBER}${firstRun ? ' (first run)' : ''}; theme engines.node "${range || 'not found'}" -> Node ${nodeVersion}`);
+
+          function pickNode(text) {
+            const sets = text ? parseRange(text) : null;
+            if (!sets) return '24';
+            for (const major of [24, 22]) {
+              const latest = [major, 999, 999]; // setup-node installs the newest release of the major
+              if (sets.some((set) => set.every(([op, v]) => compare(op, latest, v)))) return String(major);
+            }
+            return text;
+          }
+
+          // The part of npm's semver ranges that engines fields use: ||, spaces (and), a - b,
+          // ^, ~, >=, >, <=, <, =, x and * wildcards and partial versions. null when it can't parse.
+          function parseRange(text) {
+            const sets = [];
+            for (const part of text.split('||')) {
+              const set = [];
+              const hyphen = /^\s*(\S+)\s+-\s+(\S+)\s*$/.exec(part);
+              const tokens = hyphen ? [`>=${hyphen[1]}`, `<=${hyphen[2]}`] : part.trim().replace(/(>=|<=|>|<|=|\^|~>?)\s+/g, '$1').split(/\s+/).filter(Boolean);
+              for (const token of tokens) {
+                const [, op = '=', rest] = /^(>=|<=|>|<|=|\^|~>?)?(.*)$/.exec(token);
+                const v = version(rest);
+                if (!v) return null;
+                set.push(...expand(op, v));
+              }
+              sets.push(set);
+            }
+            return sets;
+          }
+          function version(text) {
+            const m = /^v?(\d+|[xX*])?(?:\.(\d+|[xX*]))?(?:\.(\d+|[xX*]))?(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.exec(text);
+            if (!m) return null;
+            const parts = [m[1], m[2], m[3]].map((p) => (p === undefined || /^[xX*]$/.test(p) ? null : Number(p)));
+            const wild = parts.indexOf(null); // 22.x.5 means 22.x
+            return wild === -1 ? parts : parts.map((p, i) => (i < wild ? p : null));
+          }
+          function expand(op, [a, b, c]) {
+            const low = [a || 0, b || 0, c || 0];
+            if (a === null) return op === '<' || op === '>' ? [['<', [0, 0, 0]]] : [];
+            if (op === '^') return [['>=', low], ['<', a > 0 || b === null ? [a + 1, 0, 0] : b > 0 || c === null ? [0, b + 1, 0] : [0, 0, c + 1]]];
+            if (op[0] === '~') return [['>=', low], ['<', b === null ? [a + 1, 0, 0] : [a, b + 1, 0]]];
+            const next = b === null ? [a + 1, 0, 0] : c === null ? [a, b + 1, 0] : null; // just past a partial version
+            if (op === '=') return next ? [['>=', low], ['<', next]] : [['>=', low], ['<=', low]];
+            if (op === '>=') return [['>=', low]];
+            if (op === '>') return next ? [['>=', next]] : [['>', low]];
+            if (op === '<=') return next ? [['<', next]] : [['<=', low]];
+            return [['<', low]];
+          }
+          function compare(op, x, v) {
+            const d = x[0] - v[0] || x[1] - v[1] || x[2] - v[2];
+            return op === '>=' ? d >= 0 : op === '>' ? d > 0 : op === '<=' ? d <= 0 : d < 0;
+          }
+
+      # S10: a second workflow that publishes to Pages overwrites the site, so it blocks the deploy.
+      # Decided by content: a file directly in .github/workflows whose uses: values name
+      # actions/deploy-pages or actions/upload-pages-artifact (unless workflow_call is its only
+      # trigger), a file that calls such a local reusable file, or another caller of the engine's
+      # deploy.yml. A gh-pages branch publisher is only a warning. File name and name: pick the wording.
+      - name: Look for other workflows that publish to GitHub Pages
+        id: scan
+        if: steps.facts.outputs.intent == 'true'
+        shell: node {0}
+        env:
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+          ENGINE: hangfolio/hangfolio
+        run: |
+          const fs = require('fs');
+          const path = require('path');
+          const env = process.env;
+          const dir = '.github/workflows';
+          const engine = env.ENGINE.toLowerCase();
+          // Inside a called workflow, github.workflow_ref names the caller's file:
+          // owner/repo/.github/workflows/deploy.yml@refs/heads/main
+          const self = env.WORKFLOW_REF.replace(/@.*$/, '').split('/').slice(2).join('/');
+          const selfBase = path.basename(self).toLowerCase();
+          const CARDS = {
+            'astro.yml': ['deploy astro site to pages', 'Astro'],
+            'static.yml': ['deploy static content to pages', 'Static HTML'],
+            'jekyll-gh-pages.yml': ['deploy jekyll with github pages dependencies preinstalled', 'GitHub Pages Jekyll'],
+            'jekyll.yml': ['deploy jekyll site to pages', 'Jekyll'],
+            'nextjs.yml': ['deploy next.js site to pages', 'Next.js'],
+            'nuxtjs.yml': ['deploy nuxt site to pages', 'NuxtJS'],
+            'gatsby.yml': ['deploy gatsby site to pages', 'Gatsby'],
+            'hugo.yml': ['deploy hugo site to pages', 'Hugo'],
+            'mdbook.yml': ['deploy mdbook site to pages', 'mdBook'],
+          };
+          const indent = (s) => /^ */.exec(s)[0].length;
+
+          // GitHub runs only the files directly in .github/workflows.
+          const files = (fs.existsSync(dir) ? fs.readdirSync(dir) : [])
+            .filter((name) => /\.ya?ml$/i.test(name) && fs.statSync(path.join(dir, name)).isFile())
+            .sort();
+
+          const records = files.map((name) => {
+            const base = name.toLowerCase();
+            const triggers = new Set();
+            const calls = [];
+            let wfname = '', hit = false, dup = false, branch = false;
+            let block = -1, inOn = false, onIndent = 0;
+            const lines = fs.readFileSync(path.join(dir, name), 'utf8').replace(/^﻿/, '').split('\n');
+            for (let raw of lines) {
+              raw = raw.replace(/\r$/, '');
+              if (block >= 0) {
+                if (/^ *$/.test(raw) || indent(raw) > block) continue; // inside a block scalar (run: |)
+                block = -1;
+              }
+              if (/^ *#/.test(raw)) continue;
+              const low = raw.replace(/[ \t]#.*$/, '').toLowerCase(); // drop a trailing comment
+              if (/:[ ]*[|>][-+0-9]*[ ]*$/.test(low)) block = indent(low); // a block scalar starts on the next line
+              if (/^name:/.test(low) && wfname === '') wfname = low.replace(/^name:[ ]*/, '').replace(/["']/g, '');
+              if (/^["']?on["']?:/.test(low)) {
+                const rest = low.replace(/^[^:]*:[ ]*/, '');
+                if (rest !== '') {
+                  for (let t of rest.replace(/[[\]{}"']/g, '').split(',')) {
+                    t = t.replace(/:.*/, '').replace(/ /g, '');
+                    if (t) triggers.add(t);
+                  }
+                } else inOn = true;
+                continue;
+              }
+              if (inOn) {
+                if (/^ *$/.test(low)) continue;
+                if (indent(low) === 0) inOn = false;
+                else {
+                  if (onIndent === 0) onIndent = indent(low);
+                  if (indent(low) === onIndent) triggers.add(low.replace(/^ *(- *)?/, '').replace(/[: ].*$/, ''));
+                }
+              }
+              // every uses: value on the line, in block, flow and quoted forms
+              const re = /(^|[ {,-])uses:[ ]*["']?[^ "',}]+/;
+              let s = low;
+              let m;
+              while ((m = re.exec(s))) {
+                let v = m[0].replace(/^.*uses:[ ]*["']?/, '');
+                s = s.slice(m.index + m[0].length);
+                if (/^actions\/(deploy-pages|upload-pages-artifact)@/.test(v)) hit = true;
+                if (v.startsWith(`${engine}/.github/workflows/deploy.y`) && /\.ya?ml@/.test(v)) dup = true;
+                if (/^(peaceiris\/actions-gh-pages|jamesives\/github-pages-deploy-action)@/.test(v)) branch = true;
+                if (/^\.\/\.github\/workflows\/[^/]+$/.test(v)) calls.push(v.replace(/^.*\//, ''));
+              }
+            }
+            // A file whose only trigger is workflow_call runs only when another workflow calls it.
+            const callOnly = triggers.size === 1 && triggers.has('workflow_call');
+            const card = CARDS[base];
+            const label = card && card[0] === wfname ? card[1] : '';
+            return { path: `${dir}/${name}`, base, callOnly, hit, dup, branch, label, calls };
+          });
+
+          const localDeployers = new Set(records.filter((r) => r.callOnly && r.hit).map((r) => r.base));
+          const findings = [];
+          for (const r of records) {
+            const chain = r.base !== selfBase && r.calls.some((c) => localDeployers.has(c));
+            if ((r.hit && !r.callOnly) || chain) findings.push({ kind: 'competing', path: r.path, label: r.label });
+            if (r.dup && r.base !== selfBase) findings.push({ kind: 'duplicate', path: r.path, label: '' });
+            if (r.branch && !r.callOnly) findings.push({ kind: 'branch', path: r.path, label: '' });
+          }
+          for (const f of findings) console.log(`${f.kind}\t${f.path}${f.label ? `\t(GitHub's "${f.label}" suggestion)` : ''}`);
+          console.log(`${files.length} workflow file(s) read; ${findings.length} finding(s). This workflow is ${self || 'unknown'}.`);
+          fs.appendFileSync(env.GITHUB_OUTPUT, `findings=${JSON.stringify(findings)}\nblocking=${findings.filter((f) => f.kind !== 'branch').length}\n`);
+
+      # S4: with the job token, GET /repos/{repo}/pages gives build_type workflow or legacy; only an
+      # HTTP 404 means Pages is off. Any other failure is its own state, never "off". On runs 2 to 5
+      # this waits up to 5 minutes for Source to become GitHub Actions, so the person who has just
+      # edited site.yaml (step 4 of the README) and is still on step 3 gets a deploy, not an error.
+      - name: Read the GitHub Pages settings
+        id: pages
+        if: steps.facts.outputs.intent == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          SERVER_URL: ${{ github.server_url }}
+          RUN_NUMBER: ${{ github.run_number }}
+          BLOCKING: ${{ steps.scan.outputs.blocking }}
+        run: |
+          set -uo pipefail
+          limit=${HANGFOLIO_POLL_LIMIT:-300} # seconds; tests shorten it
+          err_file="${RUNNER_TEMP:-/tmp}/pages-api.err"
+
+          read_once() {
+            local body
+            if body=$(gh api "repos/$REPOSITORY/pages" 2>"$err_file"); then
+              build_type=$(jq -r '.build_type // "legacy"' <<<"$body")
+              html_url=$(jq -r '.html_url // ""' <<<"$body")
+              detail=""
+            elif grep -q 'HTTP 404' "$err_file"; then
+              build_type=none; html_url=""; detail=""
+            else
+              build_type=error; html_url=""
+              detail=$(tr '\n' ' ' <"$err_file" | sed -e 's/[[:space:]]*$//' | cut -c1-200)
+            fi
+          }
+          # Retries an answer that is neither yes nor no, in case GitHub's API had a hiccup.
+          read_pages() {
+            local try
+            for try in 1 2 3; do
+              read_once
+              if [ "$build_type" != error ]; then return 0; fi
+              echo "Could not read the Pages settings (try $try of 3): $detail"
+              if [ "$try" -lt 3 ]; then sleep 5; fi
+            done
+            return 0
+          }
+
+          read_pages
+          echo "GitHub Pages build type: $build_type${html_url:+ ($html_url)}"
+          if [ "$build_type" != workflow ] && [ "$RUN_NUMBER" -ge 2 ] && [ "$RUN_NUMBER" -le 5 ] && [ "${BLOCKING:-0}" = 0 ]; then
+            start=$SECONDS
+            while [ "$build_type" != workflow ] && [ $((SECONDS - start)) -lt "$limit" ]; do
+              echo "Waiting for GitHub Pages: open $SERVER_URL/$REPOSITORY/settings/pages and set Source to \"GitHub Actions\" ($((limit - SECONDS + start)) s left)."
+              sleep 15
+              read_pages
+            done
+            echo "GitHub Pages build type after waiting $((SECONDS - start)) s: $build_type"
+          fi
+          {
+            echo "build-type=$build_type"
+            echo "html-url=$html_url"
+            echo "detail=$detail"
+          } >>"$GITHUB_OUTPUT"
+
+      - name: Decide and explain
+        id: report
+        shell: node {0}
+        env:
+          INTENT: ${{ steps.facts.outputs.intent }}
+          FIRST_RUN: ${{ steps.facts.outputs.first-run }}
+          BUILD_TYPE: ${{ steps.pages.outputs.build-type }}
+          HTML_URL: ${{ steps.pages.outputs.html-url }}
+          DETAIL: ${{ steps.pages.outputs.detail }}
+          FINDINGS: ${{ steps.scan.outputs.findings }}
+          REPOSITORY: ${{ github.repository }}
+          SERVER_URL: ${{ github.server_url }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          FORK: ${{ github.event.repository.fork }}
+          PRIVATE: ${{ github.event.repository.private }}
+          WORKFLOW: ${{ github.workflow }}
+          WORKFLOW_REF: ${{ github.workflow_ref }}
+        run: |
+          const fs = require('fs');
+          const crypto = require('crypto');
+          const env = process.env;
+          const put = (name, value) => {
+            const text = String(value);
+            const eof = `EOF_${crypto.randomBytes(8).toString('hex')}`;
+            fs.appendFileSync(env.GITHUB_OUTPUT, text.includes('\n') ? `${name}<<${eof}\n${text}\n${eof}\n` : `${name}=${text}\n`);
+          };
+          // Workflow commands: an annotation's message escapes %, CR and LF; a property also , and :
+          const escData = (s) => s.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+          const escProp = (s) => escData(s).replace(/:/g, '%3A').replace(/,/g, '%2C');
+          const annotate = (level, title, text) => console.log(`::${level} title=${escProp(title)}::${escData(text)}`);
+
+          const server = env.SERVER_URL || 'https://github.com';
+          const repository = env.REPOSITORY;
+          const [owner, repo] = repository.split('/');
+          const branch = env.DEFAULT_BRANCH || 'main';
+          const wf = env.WORKFLOW || 'Deploy site';
+          const workflowFile = env.WORKFLOW_REF.replace(/@.*$/, '').split('/').pop() || 'deploy.yml';
+          const host = `${owner.toLowerCase()}.github.io`;
+          const userSite = repo.toLowerCase() === host;
+          const siteUrl = env.HTML_URL || `https://${host}/${userSite ? '' : `${repo}/`}`;
+          const settings = `${server}/${repository}/settings/pages`;
+          const general = `${server}/${repository}/settings`;
+          const create = `${server}/new?template_owner=hangfolio&template_name=starter&owner=%40me&visibility=public`;
+
+          const intent = env.INTENT === 'true';
+          const firstRun = env.FIRST_RUN === 'true';
+          const buildType = env.BUILD_TYPE || 'none';
+          let findings = [];
+          try { findings = JSON.parse(env.FINDINGS || '[]'); } catch {}
+          const blocking = findings.filter((f) => f.kind !== 'branch');
+          const ready = intent && buildType === 'workflow' && blocking.length === 0;
+          const state = !intent ? 'n/a' : blocking.length > 0 ? 'competing' : buildType === 'workflow' ? 'ready' : buildType;
+          put('state', state);
+          put('ready', ready);
+          put('site-url', siteUrl);
+          console.log(`state=${state} ready=${ready} site=${siteUrl}`);
+          if (!intent) return;
+
+          // A repository named X.github.io that X does not own is a project site at /X.github.io/.
+          const misnamed = repo.toLowerCase().endsWith('.github.io') && !userSite;
+          const renameNote = misnamed
+            ? `This repository is named \`${repo}\`, but it belongs to \`${owner}\`, so your site is at ${siteUrl}. For https://${host}/, rename it to \`${host}\` in [Settings → General](${general}).`
+            : '';
+          if (misnamed) annotate('warning', 'Repository name', `This repository will be served at ${siteUrl}. To get https://${host}/, rename it to ${host} (Settings → General).`);
+          for (const f of findings.filter((x) => x.kind === 'branch')) {
+            annotate('warning', 'Unused Pages workflow', `${f.path} publishes a gh-pages branch, which GitHub Pages ignores while Source is "GitHub Actions". You can delete it.`);
+          }
+          if (ready && !firstRun) return;
+
+          // What is missing, as a title, Markdown paragraphs and a one-line plain-text error.
+          const source = 'under *Build and deployment → Source* choose **GitHub Actions**';
+          const noConfigure = `Do not click *Configure* on any suggested workflow: ${wf} already publishes your site.`;
+          const steps = { title: '', fix: [], error: [] };
+          if (blocking.length > 0) {
+            steps.title = blocking.length === 1 ? 'Delete the extra Pages workflow' : 'Delete the extra Pages workflows';
+            for (const f of blocking) {
+              const del = `${server}/${repository}/delete/${branch}/${f.path}`;
+              if (f.kind === 'duplicate') {
+                steps.fix.push(`\`${f.path}\` is a second copy of ${wf}, so your site would be published twice. [Delete it](${del}).`);
+                steps.error.push(`${f.path} is a second copy of ${wf}. Delete it: ${del}`);
+              } else {
+                const what = f.label ? `\`${f.path}\` is GitHub's suggested "${f.label}" workflow from Settings → Pages. It also publishes` : `\`${f.path}\` also publishes`;
+                steps.fix.push(`${what} to GitHub Pages, so it overwrites your site. [Delete it](${del}); ${wf} already builds and publishes your site.`);
+                steps.error.push(`${f.path} also publishes to GitHub Pages and overwrites your site. Delete it: ${del}`);
+              }
+            }
+          }
+          if (buildType !== 'workflow') {
+            if (!steps.title) steps.title = buildType === 'legacy' ? 'Switch GitHub Pages to GitHub Actions' : 'Turn on GitHub Pages';
+            if (env.FORK === 'true') {
+              steps.fix.push(`This repository is a fork, and a fork stays linked to the repository it was copied from. Start over with your own copy instead: [Create your site](${create}). To keep this fork anyway, open [Settings → Pages](${settings}) and ${source}.`);
+              steps.error.push(`This repository is a fork. Start over with your own copy: ${create} (or set Source to "GitHub Actions" in ${settings}).`);
+            } else if (buildType === 'none' && env.PRIVATE === 'true') {
+              steps.fix.push(`This repository is private, and on GitHub's free plan Pages needs a public repository (your site is public either way). Make it public in [Settings → General](${general}) under *Danger Zone → Change visibility*. Then open [Settings → Pages](${settings}) and ${source}.`);
+              steps.error.push(`GitHub Pages needs a public repository on the free plan. Make this repository public (${general}), then set Source to "GitHub Actions" in ${settings}.`);
+            } else if (buildType === 'legacy') {
+              steps.fix.push(`GitHub Pages is set to *Deploy from a branch*, which publishes your repository's files as they are, so ${siteUrl} shows an "Almost there" page instead of your site. Open [Settings → Pages](${settings}) and ${source} instead. ${noConfigure}`);
+              steps.error.push(`GitHub Pages is set to "Deploy from a branch". Open ${settings} and set Source to "GitHub Actions".`);
+            } else if (buildType === 'error') {
+              steps.fix.push(`This run could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Open [Settings → Pages](${settings}) and check that ${source}.`);
+              steps.error.push(`Could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Check Source in ${settings}.`);
+            } else {
+              steps.fix.push(`Open [Settings → Pages](${settings}) and ${source}. ${noConfigure}`);
+              steps.error.push(`GitHub Pages is not turned on. Open ${settings} and set Source to "GitHub Actions".`);
+            }
+          }
+
+          const paragraphs = (...parts) => parts.filter(Boolean).join('\n\n');
+          if (!ready) {
+            // Changing a setting starts nothing, so the person re-runs; deleting a file is a commit, which runs again.
+            const settingsOnly = blocking.length === 0;
+            const after = settingsOnly
+              ? `Then click **Re-run all jobs** at the top of this page. Your site goes live at ${siteUrl} about 2 minutes later.`
+              : `Deleting the file is a commit, which runs ${wf} again and publishes your site at ${siteUrl}.${buildType !== 'workflow' ? ' Change the setting first.' : ''}`;
+            const error = [...steps.error, settingsOnly ? 'Then click "Re-run all jobs".' : ''];
+            if (misnamed) error.push(`Note: this repository is served at ${siteUrl}; rename it to ${host} for https://${host}/.`);
+            const heading = `## One step left: ${steps.title[0].toLowerCase()}${steps.title.slice(1)}`;
+            put('setup-message', paragraphs(heading, `**${steps.title}.** ${steps.fix.join('\n\n')}`, after, renameNote));
+            put('setup-error', escData(error.filter(Boolean).join(' ')));
+          }
+          if (!firstRun) return;
+
+          // First run: the same information as a green Welcome summary (SPEC 3.1, step 2).
+          const edit = `${server}/${repository}/edit/${branch}/site.yaml`;
+          const todo = [];
+          if (!ready) todo.push(`**${steps.title}.** ${steps.fix.join('\n\n   ')}`);
+          todo.push(`**Make it yours.** Open [site.yaml](${edit}), replace the example name, tagline, role, affiliation, email and links, and click **Commit changes**. That commit ${ready ? 'replaces the example' : 'publishes your site'} about 2 minutes later.`);
+          const left = todo.length === 1 ? '1 step left' : '2 steps left';
+          const intro = ready
+            ? `Your copy works, and GitHub Pages is already set up: this run publishes the example site at ${siteUrl}.`
+            : `Your copy works: this run built the example site. Nothing is published yet. Your site will be at ${siteUrl}.`;
+          const summary = paragraphs(
+            `## Welcome: ${left}`,
+            intro,
+            todo.map((t, i) => `${i + 1}. ${t}`).join('\n'),
+            renameNote,
+            `Every commit to \`${branch}\` builds your site again and publishes it when the build passes. If something needs fixing, the run turns red and names the file and line. Later runs are listed under [Actions → ${wf}](${server}/${repository}/actions/workflows/${workflowFile}).`,
+          );
+          fs.appendFileSync(env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+          annotate('notice', `Welcome: ${left}`, ready ? `Next: edit site.yaml (${edit}). The summary below has the details.` : `Next: ${steps.error[0]} Then edit site.yaml (${edit}). The summary below has the details.`);
+
+  build:
+    name: Build site
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pages: read # actions/configure-pages
+    outputs:
+      deploy: ${{ steps.upload.outcome == 'success' }}
+      page-url: ${{ steps.pages.outputs.base_url }}
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node ${{ needs.preflight.outputs.node-version }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ needs.preflight.outputs.node-version }}
+          cache: ${{ needs.preflight.outputs.lockfile == 'true' && 'npm' || '' }}
+
+      - name: Install the theme
+        shell: bash
+        run: |
+          log="${RUNNER_TEMP:-/tmp}/npm-ci.log"
+          if [ ! -f package-lock.json ]; then
+            echo "::error file=package.json,title=package-lock.json is missing::package-lock.json is missing. It records the exact theme version your site builds with. Restore it: open the commit that deleted it and click Revert, or copy it back from the template."
+            exit 1
+          fi
+          if npm ci --no-audit --no-fund 2>&1 | tee "$log"; then exit 0; fi
+          if grep -qiE 'are in sync|from lock file|lock file.*(invalid|missing)' "$log"; then
+            echo "::error file=package.json,title=package.json and package-lock.json disagree::package.json and package-lock.json disagree; if you edited package.json by hand, undo that edit. To change the theme version, merge the \"Update site theme\" pull request instead, or run npm install on your computer and commit both files."
+          elif grep -qiE 'ETIMEDOUT|ECONNRESET|ECONNREFUSED|EAI_AGAIN|ENOTFOUND|socket hang up|network|E50[0-9]' "$log"; then
+            echo "::error title=Could not download the theme::npm could not reach the package registry. This is usually temporary: click \"Re-run failed jobs\"."
+          else
+            echo "::error title=npm ci failed::Installing the theme failed; the log above says why. If you changed package.json or package-lock.json, undo that change."
+          fi
+          exit 1
+
+      - name: Read the Pages address
+        id: pages
+        if: needs.preflight.outputs.build-type == 'workflow'
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Check site.yaml and content
+        shell: bash
+        run: npx --no hangfolio check --github
+
+      - name: Build
+        env:
+          # SPEC 7.1: a pinned site-url, else the address GitHub Pages reports; empty on check builds,
+          # where the theme derives it from the repository name.
+          SITE_PAGES_URL: ${{ inputs.site-url || steps.pages.outputs.base_url }}
+        shell: bash
+        run: npm run build
+
+      - name: Verify the built site
+        shell: bash
+        run: npx --no hangfolio verify dist
+
+      - name: Upload the site for publishing
+        id: upload
+        if: needs.preflight.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+      - name: Summary
+        if: ${{ !cancelled() }}
+        shell: node {0}
+        env:
+          JOB_STATUS: ${{ job.status }}
+          INTENT: ${{ needs.preflight.outputs.intent }}
+          READY: ${{ needs.preflight.outputs.ready }}
+          FIRST_RUN: ${{ needs.preflight.outputs.first-run }}
+          UPLOADED: ${{ steps.upload.outcome }}
+          PAGE_URL: ${{ steps.pages.outputs.base_url }}
+          PINNED_URL: ${{ inputs.site-url }}
+          SITE_URL: ${{ needs.preflight.outputs.site-url }}
+          EVENT_NAME: ${{ github.event_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          const fs = require('fs');
+          const env = process.env;
+          const branch = env.DEFAULT_BRANCH || 'main';
+          const [owner, repo] = env.REPOSITORY.split('/');
+          const host = `${owner.toLowerCase()}.github.io`;
+          const url = env.PINNED_URL || env.PAGE_URL || env.SITE_URL || `https://${host}/${repo.toLowerCase() === host ? '' : `${repo}/`}`;
+          let text;
+          if (env.JOB_STATUS !== 'success') {
+            text = `Nothing was published, and your live site is unchanged. Fix what the messages above name, then commit again.`;
+          } else if (env.INTENT !== 'true') {
+            text = env.EVENT_NAME === 'pull_request'
+              ? `This pull request builds without errors. Nothing was published: merging it into \`${branch}\` publishes the site.`
+              : `The site builds without errors. Nothing was published: only commits to \`${branch}\` publish your site.`;
+          } else if (env.UPLOADED === 'success') {
+            text = `Built for ${url}. The **Publish site** job puts it live. GitHub can cache pages for up to 10 minutes: if your site looks out of date, hard-refresh the page.`;
+          } else if (env.FIRST_RUN === 'true') {
+            text = `Built, not published yet: the Welcome summary above lists the steps.`;
+          } else {
+            text = `Built, not published yet: GitHub Pages needs one more step (see **One step left: turn on GitHub Pages**).`;
+          }
+          fs.appendFileSync(env.GITHUB_STEP_SUMMARY, `### Your site\n\n${text}\n`);
+
+  setup-needed:
+    name: 'One step left: turn on GitHub Pages'
+    needs: preflight
+    if: needs.preflight.outputs.intent == 'true' && needs.preflight.outputs.ready != 'true' && needs.preflight.outputs.first-run != 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Say what to do
+        shell: bash
+        env:
+          MESSAGE: ${{ needs.preflight.outputs.setup-message }}
+          ERROR: ${{ needs.preflight.outputs.setup-error }}
+        run: |
+          printf '%s\n' "$MESSAGE" >>"$GITHUB_STEP_SUMMARY"
+          printf '::error title=One step left%%3A turn on GitHub Pages::%s\n' "$ERROR"
+          exit 1

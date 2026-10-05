@@ -1,0 +1,137 @@
+# Reusable workflow: publishes the Pages artifact that build.yml uploaded (SPEC 8.3). A site's
+# deploy.yml calls it as hangfolio/hangfolio/.github/workflows/deploy.yml@v1 when build.yml's
+# `deploy` output is 'true'. The job runs in the CALLER's github-pages environment, which only
+# accepts the default branch, and gets its OIDC token from the caller's id-token grant (S6).
+#
+# Scripts get every ${{ }} value through env, never inline. Actions are pinned by SHA.
+name: Publish site
+
+on:
+  workflow_call:
+    outputs:
+      page-url:
+        description: The address GitHub Pages serves the site at
+        value: ${{ jobs.deploy.outputs.page-url }}
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Publish site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    # One publish at a time per site. A running publish is never cancelled; a newer one waits.
+    concurrency:
+      group: pages-${{ github.repository }}
+      cancel-in-progress: false
+    outputs:
+      page-url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publish to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Explain a failed publish
+        if: failure() && steps.deploy.outcome == 'failure'
+        shell: bash
+        env:
+          SETTINGS: ${{ github.server_url }}/${{ github.repository }}/settings/pages
+        run: |
+          {
+            echo "## Not published"
+            echo
+            echo "GitHub Pages did not take this build, so your live site is unchanged."
+            echo
+            echo "- If the error above says *try again later* or *timed out*, GitHub Pages had a temporary problem: click **Re-run failed jobs** at the top of this page."
+            echo "- If it says Pages is not enabled or not set up, open [Settings → Pages]($SETTINGS), set *Source* to **GitHub Actions**, then click **Re-run all jobs**."
+          } >>"$GITHUB_STEP_SUMMARY"
+          echo "::error title=Not published::GitHub Pages did not take this build. If the error says \"try again later\", click \"Re-run failed jobs\"; otherwise check Source in $SETTINGS."
+
+      - name: Set up Node for the live check
+        if: steps.deploy.outcome == 'success'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+
+      # Fetches the page, its first stylesheet and the generator tag's build SHA (when the theme
+      # writes one), 3 tries 10 s apart. A miss is a warning, not an error: DNS for a new custom
+      # domain and GitHub's cache (up to 10 minutes) can both lag behind a good publish.
+      - name: Check the live site
+        if: steps.deploy.outcome == 'success'
+        shell: node {0}
+        env:
+          PAGE_URL: ${{ steps.deploy.outputs.page_url }}
+          SHA: ${{ github.sha }}
+        run: |
+          const fs = require('fs');
+          const env = process.env;
+          const tries = Number(env.HANGFOLIO_SMOKE_TRIES || 3);
+          const pause = Number(env.HANGFOLIO_SMOKE_WAIT ?? 10) * 1000;
+          const pageUrl = env.PAGE_URL;
+          const sha = (env.SHA || '').toLowerCase();
+          const short = sha.slice(0, 7);
+          const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+          const escData = (s) => s.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+
+          const attr = (tag, name) => {
+            const m = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i').exec(tag);
+            return m ? (m[1] ?? m[2] ?? m[3]) : undefined;
+          };
+          const get = (url, attempt) => {
+            const u = new URL(url);
+            u.searchParams.set('hangfolio-check', `${short}-${attempt}`); // past any cached copy
+            return fetch(u, { headers: { 'cache-control': 'no-cache' }, redirect: 'follow', signal: AbortSignal.timeout(20000) });
+          };
+
+          async function check(attempt) {
+            const page = await get(pageUrl, attempt);
+            if (!page.ok) return { ok: false, why: `${pageUrl} answered HTTP ${page.status}` };
+            const html = await page.text();
+            const tags = html.match(/<(?:meta|link)\b[^>]*>/gi) || [];
+            const generator = tags.find((t) => /^<meta/i.test(t) && (attr(t, 'name') || '').toLowerCase() === 'generator');
+            const stylesheet = tags.find((t) => /^<link/i.test(t) && (attr(t, 'rel') || '').toLowerCase().split(/\s+/).includes('stylesheet'));
+            const content = (generator && attr(generator, 'content')) || '';
+            // A theme that stamps the build writes the commit SHA (7 or more hex digits) into the tag.
+            const stamps = content.match(/\b[0-9a-f]{7,40}\b/gi) || [];
+            if (stamps.length > 0 && !stamps.some((s) => sha.startsWith(s.toLowerCase()))) {
+              return { ok: false, why: `${pageUrl} still shows build ${stamps[0]}, not ${short}` };
+            }
+            let css = '';
+            if (stylesheet && attr(stylesheet, 'href')) {
+              css = new URL(attr(stylesheet, 'href'), page.url).href;
+              const sheet = await get(css, attempt);
+              if (!sheet.ok) return { ok: false, why: `its stylesheet ${css} answered HTTP ${sheet.status}` };
+            }
+            return { ok: true, stamped: stamps.length > 0, css };
+          }
+
+          (async () => {
+            let result;
+            for (let attempt = 1; attempt <= tries; attempt++) {
+              try {
+                result = await check(attempt);
+              } catch (error) {
+                result = { ok: false, why: `${pageUrl} could not be fetched (${(error.cause && error.cause.code) || error.name})` };
+              }
+              console.log(`try ${attempt}: ${result.ok ? 'ok' : result.why}`);
+              if (result.ok) break;
+              if (attempt < tries) await sleep(pause);
+            }
+            const cache = 'GitHub can cache pages for up to 10 minutes: if your site looks out of date, hard-refresh the page (Ctrl+Shift+R, or Cmd+Shift+R on a Mac).';
+            let summary;
+            if (result.ok) {
+              const seen = [result.stamped ? `build ${short}` : 'the page', result.css && 'its stylesheet'].filter(Boolean).join(' and ');
+              summary = `## Live at ${pageUrl}\n\nPublished commit ${short}. Checked ${seen} on the live site.\n\n${cache}\n`;
+            } else {
+              const why = `${result.why}. A new custom domain can take a while to resolve, and GitHub can keep an old copy for up to 10 minutes.`;
+              console.log(`::warning title=Published; the live check did not pass yet::${escData(`${why} Open ${pageUrl} in a few minutes.`)}`);
+              summary = `## Published to ${pageUrl}\n\nThe check of the live site did not pass yet: ${why} Open the link in a few minutes.\n\n${cache}\n`;
+            }
+            fs.appendFileSync(env.GITHUB_STEP_SUMMARY, summary);
+          })();
