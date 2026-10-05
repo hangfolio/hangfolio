@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+  hangfolio-plumbing: 1
+  Your site is built by .github/workflows/deploy.yml, not from this file. GitHub shows this page
+  only while Settings → Pages publishes the repository's files as they are ("Deploy from a branch"),
+  which is how GitHub starts a repository named <you>.github.io. Once Source is "GitHub Actions",
+  it is never shown again, and you may delete this file and .nojekyll.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Almost there</title>
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --fg: #121826;
+    --muted: #4b5567;
+    --rule: #d8dee7;
+    --accent: #2c5aa0;
+    --accent-strong: #1d3f75;
+    --well: #eceff4;
+    --serif: 'Newsreader Variable', 'Newsreader', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    --sans: 'IBM Plex Sans', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media screen and (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1219;
+      --fg: #e2e7ef;
+      --muted: #9aa5b6;
+      --rule: #222a36;
+      --accent: #8fb2ea;
+      --accent-strong: #b8cff4;
+      --well: #131922;
+      color-scheme: dark;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  main { max-width: 38rem; margin: 0 auto; padding: 4.5rem 1rem 3rem; }
+  .kicker {
+    margin: 0 0 .75rem;
+    font-family: var(--mono);
+    font-size: .8125rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    margin: 0 0 1.25rem;
+    font-family: var(--serif);
+    font-size: clamp(2.25rem, 7vw, 3rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -.01em;
+  }
+  p { margin: 0 0 1rem; }
+  ol { counter-reset: step; list-style: none; margin: 1.75rem 0 2rem; padding: 0; border-top: 1px solid var(--rule); }
+  li { counter-increment: step; position: relative; padding: 1rem 0 1rem 2.5rem; border-bottom: 1px solid var(--rule); }
+  li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: .9rem;
+    font-family: var(--serif);
+    font-size: 1.375rem;
+    line-height: 1.4;
+    color: var(--accent);
+  }
+  a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: .22em;
+  }
+  a:hover { color: var(--accent-strong); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+  .note {
+    margin-top: 2rem;
+    padding: 1rem 1.125rem;
+    background: var(--well);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: .9375rem;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  code { font-family: var(--mono); font-size: .875em; }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">GitHub Pages setup</p>
+  <h1>Almost there</h1>
+  <p>This site is being set up. If it is yours, one setting in GitHub finishes the job:</p>
+  <ol>
+    <li>Open <span id="settings">your repository’s <strong>Settings → Pages</strong></span>.</li>
+    <li>Under <strong>Build and deployment → Source</strong>, choose <strong>GitHub Actions</strong>. Do not click <em>Configure</em> on a suggested workflow: your repository already has one.</li>
+    <li>Open <span id="run"><strong>Actions → Deploy site</strong></span> and click <strong>Run workflow</strong>. About two minutes later, your site replaces this page.</li>
+  </ol>
+  <div class="note">
+    <p>You see this page because GitHub Pages is publishing the files in your repository as they are (<em>Deploy from a branch</em>). Your site is built by GitHub Actions instead.</p>
+    <p>Still here after the steps? Reload the page: GitHub can keep an old copy for up to 10 minutes.</p>
+  </div>
+</main>
+<script>
+  // On <owner>.github.io, link the steps to the repository: the user site lives at the root, and a
+  // project site at /<repo>/. Elsewhere (a custom domain), the plain-text steps stay as they are.
+  (function () {
+    var match = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname);
+    if (!match) return;
+    var first = location.pathname.split('/')[1] || '';
+    var repo = first && first !== 'index.html' ? decodeURIComponent(first) : location.hostname.toLowerCase();
+    var base = 'https://github.com/' + match[1].toLowerCase() + '/' + encodeURIComponent(repo);
+    link('settings', base + '/settings/pages', 'Settings → Pages', 'your repository’s ');
+    link('run', base + '/actions/workflows/deploy.yml', 'Actions → Deploy site', '');
+    function link(id, href, text, before) {
+      var span = document.getElementById(id);
+      var a = document.createElement('a');
+      var strong = document.createElement('strong');
+      a.href = href;
+      strong.textContent = text;
+      a.appendChild(strong);
+      span.textContent = before;
+      span.appendChild(a);
+    }
+  })();
+</script>
+</body>
+</html>

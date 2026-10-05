@@ -1,0 +1,25 @@
+# Builds and publishes your site. You should not need to edit this file.
+# hangfolio-plumbing: 1
+name: Deploy site
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions: {}
+jobs:
+  build:
+    uses: hangfolio/hangfolio/.github/workflows/build.yml@v1
+    permissions:
+      contents: read
+      pages: read
+    secrets:
+      GOOGLE_WALLET_KEY: ${{ secrets.GOOGLE_WALLET_KEY }}   # optional and unused for now; leave this line as it is
+    # with:
+    #   site-url: https://example.com     # only to pin canonical URLs
+  deploy:
+    needs: build
+    if: needs.build.outputs.deploy == 'true'
+    uses: hangfolio/hangfolio/.github/workflows/deploy.yml@v1
+    permissions:
+      pages: write
+      id-token: write
