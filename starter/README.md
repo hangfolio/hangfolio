@@ -6,7 +6,7 @@ A personal website for researchers and engineers: your name and work up front, p
 straight from BibTeX, experience, news and posts, in light and dark. You edit text files in the
 browser; GitHub builds and publishes the site every time you save. No installs, no typed URLs.
 
-**See the demo:** [hangfolio.github.io](https://hangfolio.github.io/). Rowan Vale is
+**See the demo:** [hangfolio.github.io/starter](https://hangfolio.github.io/starter/). Rowan Vale is
 a made-up person; everything about them is example content.
 
 > Reading this in your own copy? You've done step 2 already. Carry on from [step 3](#3-turn-on-github-pages).
@@ -18,14 +18,13 @@ You need a GitHub account with a verified email address. That's all.
 ### 1. Create your copy
 
 Click **[Create your site →](https://github.com/new?template_owner=hangfolio&template_name=starter&owner=%40me&visibility=public)**.
-GitHub opens its "Create a new repository" form with this template already chosen.
-
-<!-- SCREENSHOT step-1: https://raw.githubusercontent.com/hangfolio/hangfolio/v1/docs/images/step-1.png
-     alt: GitHub's "Create a new repository" form, with hangfolio/starter selected as the template. -->
+GitHub opens its "Create a new repository" form with the template at the top already set to
+**hangfolio/starter**. Leave **Include all branches** off.
 
 ### 2. Name it and create it
 
-Type a repository name and leave it **Public** (GitHub Pages needs a public repository on a free plan):
+Check that **Owner** shows your account. Type a name in **Repository name** and leave the
+visibility at **Public** (GitHub Pages needs a public repository on a free plan):
 
 - `<your-username>.github.io` gives you `https://<your-username>.github.io/`.
 - Any other name, such as `website`, gives you `https://<your-username>.github.io/website/`.
@@ -33,15 +32,15 @@ Type a repository name and leave it **Public** (GitHub Pages needs a public repo
 Already have a `<your-username>.github.io` site? Use another name for now; see
 [I already have a site at username.github.io](#i-already-have-a-site-at-usernamegithubio).
 
-Click **Create repository**. GitHub copies the files and runs **Deploy site** once. It ends green,
-and its summary says what's left. You don't need to wait for it.
-
-<!-- SCREENSHOT step-2: https://raw.githubusercontent.com/hangfolio/hangfolio/v1/docs/images/step-2.png
-     alt: The repository name field filled in with a username followed by .github.io, Public selected, and the Create repository button. -->
+Leave everything else as it is and click **Create repository** at the bottom of the form. GitHub
+copies the files, opens your new repository and runs **Deploy site** once. It ends green, and its
+summary says what's left. You don't need to wait for it.
 
 ### 3. Turn on GitHub Pages
 
-In your new repository, open **Settings → Pages**. Under *Build and deployment*, set **Source** to
+In your new repository, click the **Settings** tab at the top (in a narrow window it's in the **⋯**
+menu), then **Pages** in the left sidebar, under *Code and automation*. Under *Build and
+deployment*, open the **Source** menu, which says **Deploy from a branch**, and choose
 **GitHub Actions**. Nothing visible happens yet; that's expected.
 
 > [!IMPORTANT]
@@ -49,19 +48,15 @@ In your new repository, open **Settings → Pages**. Under *Build and deployment
 > has its own (**Deploy site**). A suggested one would publish a second, broken copy over it. If you
 > clicked one by mistake, delete the file it added under `.github/workflows/`.
 
-<!-- SCREENSHOT step-3: https://raw.githubusercontent.com/hangfolio/hangfolio/v1/docs/images/step-3.png
-     alt: Settings, Pages, with Source set to GitHub Actions. The suggested workflow cards below it are crossed out. -->
-
 ### 4. Make it yours
 
-Open `site.yaml` in your repository and click the pencil icon (*Edit this file*). Replace the
-example `name`, `tagline`, `role`, `affiliation` and `email` with yours, and the `links` with your
-profiles. Every other line marked `# example` is optional: change it or delete it.
+On the **Code** tab, click `site.yaml` in the list of files, then the pencil icon
+(**Edit this file**) at the top right of the file. Replace the example `name`, `tagline`, `role`,
+`affiliation` and `email` with yours, and the `links` with your profiles. Keep the quotes. Every
+other line marked `# example` is optional: change it or delete it.
 
-Click **Commit changes…**, keep **Commit directly to the main branch**, and click **Commit changes**.
-
-<!-- SCREENSHOT step-4: https://raw.githubusercontent.com/hangfolio/hangfolio/v1/docs/images/step-4.png
-     alt: site.yaml open in GitHub's editor, with the name and email lines changed and the Commit changes button. -->
+Click **Commit changes…** at the top right. In the box that opens, keep **Commit directly to the
+`main` branch** and click **Commit changes**.
 
 **Deploy site** runs again. It checks your files first. If something is wrong, the run fails with
 the file, the line and the fix, GitHub emails you, and nothing on the web changes. Everything that
@@ -70,12 +65,10 @@ listed in the run summary.
 
 ### 5. Open your site
 
-After about 2 minutes, open the **Actions** tab, click the latest **Deploy site** run, and follow
-the **Live at https://…** link in its summary. The same link is in *Settings → Pages* and in the
-**Deployments** box on your repository's front page.
-
-<!-- SCREENSHOT step-5: https://raw.githubusercontent.com/hangfolio/hangfolio/v1/docs/images/step-5.png
-     alt: A finished Deploy site run whose summary says Live at, followed by the site's address. -->
+After about 2 minutes, open the **Actions** tab and click the newest **Deploy site** run. When it
+has a green tick, scroll down to its summary and follow the **Live at https://…** link. The same
+link is in **Settings → Pages** and under **Deployments** on the right of your repository's front
+page.
 
 Your site shows your name, tagline, role, links and email, with your initials in place of a photo
 until you add one. If it still shows the old page, wait a few minutes and reload: GitHub caches pages
@@ -85,16 +78,16 @@ for up to 10 minutes.
 
 Each change goes live about 2 minutes after you commit it.
 
-- **Photo and CV.** Open `public/images/`, choose *Add file → Upload files*, and upload a photo.
+- **Photo and CV.** Open `public/images/`, choose **Add file → Upload files**, and upload a photo.
   Name it `avatar.jpg` (or `.png`, `.webp`) and it's used automatically; otherwise set
   `avatar: "/images/<file>"` in `site.yaml`. Put your CV in `public/files/` and set
   `cv: "/files/<file>.pdf"`.
 - **Papers.** Open `content/publications.bib`, click the pencil, and paste your BibTeX from Google
-  Scholar (*Cite → BibTeX*) or your reference manager. Your name is underlined automatically.
+  Scholar (**Cite → BibTeX**) or your reference manager. Your name is underlined automatically.
 - **Projects, experience, news and posts.** Edit an example file and delete its `example: true`
   line, or copy an example and change it. Sections with nothing in them disappear by themselves.
 - **Custom domain.** See [Custom domain](https://github.com/hangfolio/hangfolio/blob/v1/docs/custom-domain.md).
-- **Preview before publishing.** *Code → Codespaces → Create codespace* opens a live preview with
+- **Preview before publishing.** **Code → Codespaces → Create codespace** opens a live preview with
   nothing to install. See [Local preview](https://github.com/hangfolio/hangfolio/blob/v1/docs/local-preview.md).
 
 ## What to edit
@@ -142,7 +135,7 @@ up to 10 minutes; reload then.
 Click it. The summary names the file, the line and what to write instead, and the same notes appear
 on the line itself in the commit. Fix that line and commit again; your live site stays as it was
 until a run succeeds. If it says **One step left: turn on GitHub Pages**, do [step 3](#3-turn-on-github-pages)
-and click *Re-run all jobs*. Every message is explained in
+and click **Re-run all jobs**. Every message is explained in
 [troubleshooting](https://github.com/hangfolio/hangfolio/blob/v1/docs/troubleshooting.md).
 
 ### Why does my site say "This is an example site"?
@@ -157,15 +150,15 @@ Keep it running while you build the new one:
 1. Do steps 1 to 5 with a temporary name, such as `new-site`. It goes live at
    `https://<username>.github.io/new-site/` with nothing to configure, and your old site keeps
    serving `https://<username>.github.io/`.
-2. Copy your old `files/` and `images/` folders into `public/` (*Add file → Upload files*, and drag a
+2. Copy your old `files/` and `images/` folders into `public/` (**Add file → Upload files**, and drag a
    whole folder). The addresses of your PDFs stay the same, so links from Google Scholar keep working.
-3. When you're ready, swap the names in *Settings → General → Repository name*: rename the **old**
+3. When you're ready, swap the names in **Settings → General → Repository name**: rename the **old**
    repository to something like `old-site` first, then rename the **new** one to
    `<username>.github.io`. Then open **Actions → Deploy site → Run workflow**, because renaming
    doesn't start a build.
-4. If the old repository had a custom domain, remove it from the old repository's *Settings → Pages*
+4. If the old repository had a custom domain, remove it from the old repository's **Settings → Pages**
    and add it to the new one's. HTTPS can take up to 24 hours to come back.
-5. Optional: once the old repository is renamed, turn off its Pages (*Settings → Pages*), so its
+5. Optional: once the old repository is renamed, turn off its Pages (**Settings → Pages**), so its
    copy at `/old-site/` goes away. GitHub doesn't let a repository named `<username>.github.io` turn
    Pages off, so do this only after the rename.
 

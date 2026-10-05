@@ -1,9 +1,10 @@
 # Screenshots
 
 The quickstart's screenshots of GitHub's interface, taken at each release (they age as GitHub
-changes). The starter's `README.md` loads them from here at the `v1` tag, and `quickstart.md` links
-them relatively. Until a file exists, its place in both documents is an HTML comment starting
-`<!-- SCREENSHOT step-N:` that holds the path and the alt text; replace each comment with the image.
+changes). `quickstart.md` links them relatively. Until a file exists, its place there is an HTML
+comment starting `<!-- SCREENSHOT step-N:` that holds the path and the alt text; replace each
+comment with the image. The starter's `README.md` names every button and menu in words instead and
+never waits on a screenshot (the docs check fails on a placeholder there).
 
 | File | Shows |
 |---|---|

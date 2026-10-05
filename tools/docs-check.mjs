@@ -8,6 +8,7 @@
 // 3. Every code the validator can report (TITLES in packages/theme/src/validate/issue.ts) has its
 //    anchor in docs/troubleshooting.md, in the form docsUrl() links to: #e201 for E201.
 // 4. The field reference in docs/site-yaml.md matches the site schema (tools/site-yaml-reference.mjs).
+// 5. The starter's README has no screenshot placeholders.
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -136,10 +137,15 @@ try {
   report(join(DOCS, 'site-yaml.md'), error.message);
 }
 
+// 5. The starter's README ships to every new site, so it describes each step in words and never
+//    waits on a screenshot; the quickstart's placeholders are counted until their images exist.
+if (readFileSync(join(STARTER, 'README.md'), 'utf8').includes('<!-- SCREENSHOT')) {
+  report(join(STARTER, 'README.md'), 'has a screenshot placeholder; describe the step in words instead');
+}
 const placeholders = markdown.reduce((n, file) => n + (readFileSync(file, 'utf8').match(/<!-- SCREENSHOT step-\d/g)?.length ?? 0), 0);
 if (problems.length > 0) {
   console.error(`docs check: ${problems.length} problem${problems.length === 1 ? '' : 's'}\n${problems.map((p) => `  ${p}`).join('\n')}`);
   process.exit(1);
 }
 const checked = codes.filter((code) => !DEFERRED.has(code)).length;
-console.log(`docs check: ${markdown.length} files, ${checked} error codes anchored, field reference fresh` + (placeholders ? `; ${placeholders} screenshots still to add at release` : ''));
+console.log(`docs check: ${markdown.length} files, ${checked} error codes anchored, field reference fresh` + (placeholders ? `; ${placeholders} quickstart screenshots still to add` : ''));
