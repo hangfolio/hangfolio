@@ -259,7 +259,7 @@ export const advanced = z
     nameParts: z
       .strictObject({ given: text, family: text })
       .optional()
-      .describe('Your name split for the contact card. Default: the last word is the family name.'),
+      .describe('Your name split into given and family names, for your initials, author matching and the profile tags. Default: the last word is the family name.'),
   })
   .check(ownFiles)
   .prefault({});
