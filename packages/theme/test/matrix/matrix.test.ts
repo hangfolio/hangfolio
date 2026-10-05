@@ -1,7 +1,8 @@
 // The build matrix (SPEC 10.2): every site (the starter and each fixture with a package.json) at
 // base / and /hangfolio, in urlFormat 'preserve' and 'directory', built with the hangfolio command
 // in a copy under .tmp/matrix/ and checked with `hangfolio verify`. Run with `npm run test:matrix`.
-// Any verify issue fails, warnings included, apart from the PENDING links below.
+// Any verify issue fails, warnings included, apart from the PENDING links below. verify reads the
+// pages, their JSON-LD, the CSS, the feed, the sitemaps, robots.txt and the web manifest.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -28,17 +29,12 @@ const SITES = [
 ];
 
 /**
- * Links to pages and files that milestones being built alongside this one add (M4: projects,
- * experience and writing pages; M5: publications; M9: the starter's paper PDF). Each entry is an
- * exact path under the base, expected as E602 in every build of that site. Once the page exists,
- * the matrix fails until the entry is removed, so nothing stays hidden here by accident.
+ * Links that are allowed to be broken while a page they point at is still being built: an exact
+ * path under the base per site, expected as E602 in every build of that site. Empty now that every
+ * page exists. Once a listed page exists, the matrix fails until the entry is removed, so nothing
+ * stays hidden here by accident.
  */
-const PENDING: Record<string, string[]> = {
-  starter: ['/experience', '/files/vale2024bounded.pdf', '/projects/tidepool/', '/publications', '/writing/what-fsync-promises/'],
-  'fixtures/minimal': ['/writing/first-note/'],
-  'fixtures/kitchen-sink': ['/writing/bottom-up/', '/writing/cache-lied/'],
-  'fixtures/owner-like': ['/writing/idle-radio-drain/', '/writing/pondskip-flaky-tests/'],
-};
+const PENDING: Record<string, string[]> = {};
 
 function run(cwd: string, args: string[], base: string, extra: Record<string, string | undefined> = { SITE_PAGES_URL: `${ORIGIN}${base === '/' ? '' : base}` }) {
   const env = { ...process.env, GITHUB_ACTIONS: undefined, GITHUB_REPOSITORY: undefined, SITE_PAGES_URL: undefined, NO_COLOR: '1', ...extra };
@@ -73,6 +69,8 @@ for (const dir of SITES) {
 
           const result = verifyDist({ dist: join(site, 'dist'), origin: ORIGIN, base, urlFormat: format });
           assert.ok(result.pages > 0 && result.links > 0, `verify checked ${result.pages} pages and ${result.links} links`);
+          // The generated endpoints are checked too: the sitemap always, and the feed with a post.
+          assert.ok(result.xml > 0 && existsSync(join(site, 'dist/sitemap.xml')), `verify checked ${result.xml} XML files`);
           const pending = PENDING[dir] ?? [];
           const unexpected = result.issues.filter((issue) => !(issue.code === 'E602' && issue.target && pending.includes(issue.target)));
           assert.deepEqual(unexpected.map(line), [], `hangfolio verify found problems:\n${unexpected.map(line).join('\n')}`);
