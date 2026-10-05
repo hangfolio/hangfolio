@@ -213,6 +213,41 @@ and dark mode. The message suggests the nearest colour that passes.
 **Old result.** A number in `highlights` has an `asOf` date more than 180 days ago. Update the number
 and the date, or delete `asOf`.
 
+### E606
+
+**Link leaves the site.** After building, `hangfolio verify` found an address that starts with `/`
+but not with your site's base path. On a project site such as `https://you.github.io/my-site/`, a
+link to `/projects` would open `https://you.github.io/projects`, which isn't your site. Links you
+write in `site.yaml` and Markdown get the base added for you, so this usually comes from HTML typed
+into a post or from `url(…)` in `content/custom.css`. The message names the page and the address to
+use instead.
+
+### E607
+
+**Double slash in a link.** An address has `//` in its path, such as `/files//cv.pdf`, or starts
+with `//`, which a browser reads as the name of another server. Remove the extra slash; the message
+shows the corrected address.
+
+### E608
+
+**Wrong site address.** The canonical link, the sharing preview, the sitemap or the feed names an
+address other than the one the site is built for, for example `http://localhost:4321/` in a build for
+GitHub Pages, or an old domain. Search engines would list the wrong address. If you set `url` in
+`site.yaml`, make it match where the site is published ([The address](site-yaml.md#the-address));
+otherwise run **Actions → Deploy site → Run workflow** again.
+
+### E609
+
+**Duplicate id.** One page uses the same id twice, so a link to it can land on the wrong spot. This
+usually means two headings in one post end with the same `{#name}`, or an anchor you set (such as a
+project group's `headingId`) matches another one on the page. Rename one of them.
+
+### W610
+
+**Missing anchor.** A link points at `#something` on a page that has no element with that id, for
+example `/publications#vale2024` when the paper's key is `vale2024bounded`. The page still opens, at
+the top. The message suggests the closest id that exists.
+
 ### N701
 
 **Plumbing file outdated.** One of the files that connect your site to the theme (`astro.config.mjs`,

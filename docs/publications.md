@@ -75,7 +75,7 @@ hold. `content/publications/quill2025gauges.md`:
 ```markdown
 ---
 equal: [Quill, Ash]
-place: "Lisbon, May 13–17, 2025"
+place: "Lisbon, May 20–23, 2025"
 links:
   - { label: "Talk", url: "https://example.org/talk" }
 data: { text: "Gauge readings from 12 harbours, 2023–2025." }
@@ -91,7 +91,7 @@ A plain-language summary, shown under the citation.
 | `anchor` | The paper's anchor. Default: its key. |
 | `bibtexAnchor` | The BibTeX block's anchor. Default: `bibtex-` and the paper's anchor. |
 | `venueDetail` | The venue exactly as you want it shown, instead of `booktitle` or `journal`. |
-| `place` | Where and when, such as "Lisbon, May 13–17, 2025". |
+| `place` | Where and when, such as "Lisbon, May 20–23, 2025". |
 | `data` | A data line: `{ tag?, text }`, with `tag` defaulting to "Data". |
 | `schema` | Fields for the paper's structured data (`ScholarlyArticle`) that replace the generated ones. |
 

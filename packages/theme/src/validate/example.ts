@@ -3,6 +3,7 @@
 // and example files under /example/ are hidden, with the avatar becoming a monogram (W404).
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { findAvatar } from '../lib/avatar.ts';
 import type { Site } from '../schema/site.ts';
 import type { StarterValues } from '../lib/starter-values.ts';
 import type { ExampleEntry } from './entries.ts';
@@ -77,11 +78,14 @@ export function siteExamples(site: Site, source: Source, starter: StarterValues,
     ogImage: ['the example image', "so it's left out. Point it at your own image, or delete the line."],
     cv: ['the example CV', "so it's left out. Upload yours to public/files/ and set cv, or delete the line."],
   } as const;
+  // A photo uploaded as public/images/avatar.* replaces the example one (SPEC 3.2, step 6).
+  const uploaded = findAvatar(root);
   for (const key of ['avatar', 'ogImage', 'cv'] as const) {
     if (!isExampleAsset(site[key])) continue;
     hidden.assets.push(key);
     const [what, rest] = ASSET_TEXT[key];
-    add('W404', [key], `${key} is ${what} (${site[key]}), ${rest}`);
+    const instead = key === 'avatar' && uploaded ? `so your photo ${uploaded} is shown instead. Delete this line.` : rest;
+    add('W404', [key], `${key} is ${what} (${site[key]}), ${instead}`);
   }
   if (existsSync(join(root, 'public/example'))) {
     const message = "public/example/ holds the example files, so it's left out of your site. Delete the folder when you no longer need it.";

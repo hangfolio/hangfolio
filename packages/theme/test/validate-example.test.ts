@@ -1,7 +1,9 @@
 // Example mode (SPEC 5.2): the demo identity, what outside demo mode hides from site.yaml, how
 // example entries are found and told apart from edited ones, and starter-values.json itself.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { isDemoIdentity, STARTER_VALUES_FILE, starterValues } from '../src/lib/starter-values.ts';
@@ -60,6 +62,23 @@ test('outside demo mode, example values leave site.yaml and the rest stays', () 
   assert.equal(visible.cv, '/files/cv.pdf');
   assert.deepEqual(visible.links.map((l) => l.url), ['https://github.com/hangfolio/hangfolio']);
   assert.equal(visible.booking?.calcom, 'mara-quill/30min');
+});
+
+test('an example avatar line with a photo uploaded as public/images/avatar.jpg points at that photo', () => {
+  const root = mkdtempSync(join(tmpdir(), 'hangfolio-avatar-'));
+  try {
+    mkdirSync(join(root, 'public/images'), { recursive: true });
+    writeFileSync(join(root, 'public/images/avatar.jpg'), '');
+    const text = 'name: "Mara Quill"\nemail: "mara@quill.test"\navatar: "/example/avatar.jpg"\n';
+    const site = parseOk(siteSchema, parseYaml(text));
+    const { issues, hidden } = siteExamples(site, loadSource('site.yaml', text), starterValues(), root);
+    assert.deepEqual(issues.map((i) => `${i.line ?? '-'} ${i.code} ${i.message}`), [
+      '3 W404 avatar is the example photo (/example/avatar.jpg), so your photo /images/avatar.jpg is shown instead. Delete this line.',
+    ]);
+    assert.equal(visibleSite(site, hidden).avatar, undefined);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('a partly edited availability keeps showing; only the example headline hides it', () => {

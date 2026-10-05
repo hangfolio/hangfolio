@@ -41,7 +41,8 @@ BibTeX). See [W403](troubleshooting.md#w403).
 ## Can I delete the example files?
 
 Yes, whenever you like: example entries you don't want, `public/example/`, and the comments. Keep
-`site.yaml` and the plumbing files (`package.json`, `astro.config.mjs`, `src/`, `.github/`).
+`site.yaml` and the plumbing files (`package.json`, `package-lock.json`, `astro.config.mjs`, `src/`,
+`.github/`).
 
 ## How do I add a page that isn't in the list?
 

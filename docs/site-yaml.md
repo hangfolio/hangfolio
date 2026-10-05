@@ -173,7 +173,7 @@ the subject of the Email buttons. It hides itself after `until`.
 ```yaml
 availability:
   headline: "Open to research internships · Summer 2027."
-  detail: "Returning to the PhD afterwards."
+  detail: "Back at Example University in the fall."
   emailSubject: "Summer 2027 internship"
   until: 2027-06-01
 ```

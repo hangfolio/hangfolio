@@ -6,7 +6,7 @@ A personal website for researchers and engineers: your name and work up front, p
 straight from BibTeX, experience, news and posts, in light and dark. You edit text files in the
 browser; GitHub builds and publishes the site every time you save. No installs, no typed URLs.
 
-**See the demo:** [hangfolio.github.io/starter](https://hangfolio.github.io/starter/). Rowan Vale is
+**See the demo:** [hangfolio.github.io](https://hangfolio.github.io/). Rowan Vale is
 a made-up person; everything about them is example content.
 
 > Reading this in your own copy? You've done step 2 already. Carry on from [step 3](#3-turn-on-github-pages).

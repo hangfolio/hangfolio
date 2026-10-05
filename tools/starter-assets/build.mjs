@@ -77,7 +77,7 @@ const cv = page(
   <h2>Education</h2>
   <div class="entry"><div class="row"><span><b>PhD, Computer Science</b>, <span class="org">Example University</span></span><span class="when">2025 – 2029 (expected)</span></div>
   <p>Storage systems and crash consistency. Advisor: Dr. Ada Advisor.</p></div>
-  <div class="entry"><div class="row"><span><b>BS, Computer Science</b>, <span class="org">Example College</span></span><span class="when">2020 – 2024</span></div></div>
+  <div class="entry"><div class="row"><span><b>BS, Computer Science</b>, <span class="org">Example College</span></span><span class="when">2019 – 2023</span></div></div>
   <h2>Research</h2>
   <div class="entry"><div class="row"><span><b>Graduate Research Assistant</b>, <span class="org">Example University</span></span><span class="when">Jan 2025 – present</span></div>
   <ul><li>Built a fault-injection harness for key-value stores.</li><li>Tidepool: replays crash points to find lost writes; found 12 of 12 seeded bugs with no false positives.</li></ul></div>
@@ -118,7 +118,7 @@ const paper = page(
   code{font-family:'Plex Mono',monospace;font-size:0.9em}`,
   `<h1>Bounded Staleness for Edge Caches</h1>
   <p class="authors">A. Author*, Rowan Vale*, P. Investigator · Example University · <span class="star">* Equal contribution</span></p>
-  <p class="venue">Proceedings of the Example Conference (EXC '24), Lisbon, May 13–17, 2024, pp. 1–12 · doi:10.5555/exc24.0001</p>
+  <p class="venue">Proceedings of the Example Conference (EXC '24), Lisbon, May 20–23, 2024, pp. 1–12 · doi:10.5555/exc24.0001</p>
   <p class="venue fiction">An example paper for the hangfolio demo site: the authors, venue and results are made up. Public domain (CC0 1.0).</p>
   <div class="abstract"><b>Abstract</b>Edge caches answer reads close to users, but a cache that misses an invalidation can serve stale data for as long as it likes. We bound that staleness. Each replica holds a lease that expires before it can fall more than a configured bound behind, and a replica whose lease has lapsed sends reads to the origin until it catches up. On a synthetic edge workload across three regions, this lowers p99 read latency by up to 40% compared with strong reads, while no read is more than 250 ms stale.</div>
   <h2>1 Introduction</h2>

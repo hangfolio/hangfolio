@@ -42,6 +42,6 @@ entries:
     example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
     role: "BS, Computer Science"           # example
     org: "Example College"                 # example
-    start: 2020-09                         # example
-    end: 2024-05                           # example
-    homeLine: { text: "BS, CS, Example College", years: "2020 – 2024" }   # example
+    start: 2019-09                         # example
+    end: 2023-06                           # example
+    homeLine: { text: "BS, CS, Example College", years: "2019 – 2023" }   # example

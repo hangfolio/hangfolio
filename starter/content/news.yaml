@@ -7,10 +7,10 @@ items:
     example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
     text: "Released [Tidepool](/projects/tidepool/) 1.0."   # example
 
-  - date: 2025-01
+  - date: 2025-11                          # example
     example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
-    text: "Started my PhD at Example University."           # example
+    text: "Ran my first Distributed Systems lab as a teaching assistant."   # example
 
-  - date: 2024-05
+  - date: 2024-05                          # example
     example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
     text: "Presented [bounded staleness](/publications#vale2024bounded) at EXC ’24."   # example

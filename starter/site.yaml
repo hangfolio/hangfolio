@@ -23,8 +23,8 @@ links:                                                 # example: your profiles,
 
 availability:                                          # example: edit or delete the whole block
   headline: "Open to research internships · Summer 2027."               # example
-  detail: "Returning to the PhD afterwards."                            # example
-  contact: "I'm looking for a **Summer 2027** research internship, then returning to my PhD."   # example
+  detail: "Back at Example University in the fall."                     # example
+  contact: "I'm looking for a **Summer 2027** research internship in storage or distributed systems."   # example
   emailSubject: "Summer 2027 internship"                                # example: the subject of the Email button
   until: 2027-06-01                                                     # example: the box hides itself after this date
 
