@@ -17,6 +17,10 @@ type Args = { root: string; args: string[]; env: Record<string, string | undefin
 export const VERIFY_USAGE = 'Usage: hangfolio verify [folder] [--github]   (the folder is dist by default)';
 
 export async function runVerify({ root, args, env, out, err }: Args): Promise<number> {
+  if (args.includes('--help') || args.includes('-h')) {
+    out.write(`${VERIFY_USAGE}\nChecks the links, files and addresses in the site that npx hangfolio build wrote.\n`);
+    return 0;
+  }
   const options = args.filter((arg) => arg.startsWith('-'));
   const folders = args.filter((arg) => !arg.startsWith('-'));
   const unknown = options.find((arg) => arg !== '--github');
@@ -30,6 +34,10 @@ export async function runVerify({ root, args, env, out, err }: Args): Promise<nu
     err.write(`hangfolio verify: there is no ${label}/ folder. Build the site first: npx hangfolio build\n`);
     return 1;
   }
+  if (['site.yaml', 'package.json', 'node_modules'].some((name) => existsSync(join(dist, name)))) {
+    err.write(`hangfolio verify: ${label}/ is the site's own folder, not the built site. Build it with npx hangfolio build, then run npx hangfolio verify, which checks dist/.\n`);
+    return 1;
+  }
 
   const { site } = readSiteConfig(join(root, 'site.yaml'));
   let address: ReturnType<typeof resolveSiteUrl>;
@@ -40,7 +48,7 @@ export async function runVerify({ root, args, env, out, err }: Args): Promise<nu
     return 1;
   }
   const urlFormat = site.advanced.urlFormat;
-  const result = verifyDist({ dist, origin: address.origin, base: address.base, urlFormat, label });
+  const result = verifyDist({ dist, origin: address.origin, base: address.base, urlFormat, label, source: address.source });
   const home = new URL(`${address.base.replace(/\/+$/, '')}/`, address.origin).href;
 
   out.write(verifyReport(result, { label, home, urlFormat, color: wantsColor(out, env) }));
@@ -72,7 +80,7 @@ export function verifyReport(result: VerifyResult, { label, home, urlFormat, col
   } else {
     const codes = [...new Set(result.issues.map((issue) => `#${issue.code.toLowerCase()}`))].sort();
     const tally = [errors > 0 ? tint.error(plural(errors, 'error')) : 'No errors', warnings > 0 && tint.warning(plural(warnings, 'warning'))].filter(Boolean).join(', ');
-    out.push('', `${tally}.${errors > 0 ? ' Fix them, then build and verify again.' : ''} Help: ${docsUrl()} (${codes.join(', ')})`);
+    out.push('', `${tally}.${errors > 0 ? ` Fix ${errors + warnings === 1 ? 'it' : 'them'}, then build and verify again.` : ''} Help: ${docsUrl()} (${codes.join(', ')})`);
   }
   return `${out.join('\n')}\n`;
 }

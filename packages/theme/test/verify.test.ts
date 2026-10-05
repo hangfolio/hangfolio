@@ -190,14 +190,15 @@ describe('E607: // in a path', () => {
 describe('E608: the site address', () => {
   test('a canonical or og:url on another origin, outside the base, relative, or on this computer', () => {
     const { lines } = verify({
-      'index.html': '<link rel="canonical" href="https://example.com/"><meta property="og:url" content="http://localhost:4321/">',
+      'index.html': '<link rel="canonical" href="https://u.github.io/hangfolio/"><meta property="og:url" content="http://localhost:4321/">',
       'a.html': '<link rel="canonical" href="https://u.github.io/a"><meta property="og:url" content="/hangfolio/a">',
+      'b.html': '<link rel="canonical" href="https://example.com/b">',
     });
     assert.deepEqual(lines.map((line) => line.replace(/ but th(?:is|e) site.*| which is.*/, '')), [
       'dist/a.html:1:23 E608 The canonical address is https://u.github.io/a,',
       'dist/a.html:1:76 E608 og:url is /hangfolio/a,',
-      'dist/index.html:1:23 E608 The canonical address is https://example.com/,',
-      'dist/index.html:1:75 E608 og:url is http://localhost:4321/, an address on this computer,',
+      'dist/b.html:1:23 E608 The canonical address is https://example.com/b,',
+      'dist/index.html:1:85 E608 og:url is http://localhost:4321/, an address on this computer,',
     ]);
     assert.match(lines[0], /which is outside this site \(https:\/\/u\.github\.io\/hangfolio\/\), so search engines would list the wrong address\.$/);
     assert.match(lines[2], /but this site is built for https:\/\/u\.github\.io\/hangfolio\/, so search engines would list the wrong address\. Build again with the address the site is published at/);
@@ -214,6 +215,30 @@ describe('E608: the site address', () => {
     assert.match(lines[1], /^dist\/robots\.txt:1:10 E608 robots\.txt names the sitemap https:\/\/example\.com\/sitemap\.xml, but this site is built for/);
     assert.match(lines[2], /^dist\/sitemap\.xml:1:19 E608 The sitemap lists https:\/\/u\.github\.io\/, which is outside this site/);
     assert.match(lines[3], /^dist\/sitemap\.xml:1:\d+ E608 The sitemap lists \/hangfolio\/, which is not a full address\./);
+  });
+
+  test('a site built for another address: one message saying how to give build and verify the same address', () => {
+    const files = { 'index.html': page('/', '<a href="/hangfolio/missing">x</a>'), 'a.html': page('/a', '<img src="/hangfolio/gone.png">') };
+    const at = (origin: string, base: string, source?: VerifyOptions['source']) => verify(files, { origin, base, source }).lines;
+    const local = at('http://localhost:4321', '/', 'local');
+    assert.deepEqual(local, [
+      'dist/index.html:1:60 E608 This site was built for https://u.github.io/hangfolio/, but verify is checking it for http://localhost:4321/, so every address in it would look wrong; nothing else was checked. Neither site.yaml url nor SITE_PAGES_URL is set, so verify expected a local build. Run SITE_PAGES_URL=https://u.github.io/hangfolio npx hangfolio verify, or build again without SITE_PAGES_URL.',
+    ]);
+    assert.match(at('https://u.github.io', '/', 'SITE_PAGES_URL')[0], /checking it for https:\/\/u\.github\.io\/, .* https:\/\/u\.github\.io\/ comes from SITE_PAGES_URL; give the build and verify the same SITE_PAGES_URL, or build again\.$/);
+    assert.match(at('https://example.com', '/hangfolio', 'site.yaml')[0], /https:\/\/example\.com\/hangfolio\/ is the url in site\.yaml; if you changed it after building, build again\.$/);
+    assert.match(at('https://u.github.io', '/other', 'GITHUB_REPOSITORY')[0], /comes from the repository name, because SITE_PAGES_URL is not set/);
+    assert.match(at('https://u.github.io', '/other')[0], /Verify it with the address it was built for, or build it again for this one\.$/);
+    // At the right address, the problems in the pages are reported as usual.
+    assert.deepEqual(codes(at('https://u.github.io', '/hangfolio/')), ['E602', 'E602']);
+  });
+
+  test('a link pasted from a local preview, and a folder that is not a built site', () => {
+    const { lines } = verify({ 'index.html': page('/', '<a href="http://localhost:4321/projects?x=1#top">Projects</a>') });
+    assert.deepEqual(lines, [
+      'dist/index.html:1:179 E608 Links to http://localhost:4321/projects?x=1#top ("Projects"), an address on this computer, which only works on the computer running a preview. Write /projects?x=1#top instead; the site\'s address is added for you.',
+    ]);
+    const noHome = verify({ 'about.html': page('/about', '') });
+    assert.deepEqual(noHome.lines, ['dist/index.html E602 There is no index.html, so the site has no home page and GitHub Pages would show a 404 there. npx hangfolio build writes the site to dist/; build again and check that it finished without errors.']);
   });
 
   test('a site built for localhost may use localhost', () => {
@@ -323,6 +348,12 @@ describe('hangfolio verify', () => {
     const missing = await cli(root, ['build']);
     assert.equal(missing.code, 1);
     assert.equal(missing.err, 'hangfolio verify: there is no build/ folder. Build the site first: npx hangfolio build\n');
+    const own = await cli(root, ['.']);
+    assert.equal(own.code, 1);
+    assert.equal(own.err, "hangfolio verify: ./ is the site's own folder, not the built site. Build it with npx hangfolio build, then run npx hangfolio verify, which checks dist/.\n");
+    const help = await cli(root, ['--help']);
+    assert.equal(help.code, 0);
+    assert.match(help.out, /^Usage: hangfolio verify \[folder\] \[--github\]/);
   });
 
   test('site.yaml url and advanced.urlFormat win; another folder can be named', async () => {
@@ -346,9 +377,9 @@ describe('hangfolio verify', () => {
     const annotation = result.out.split('\n').find((line) => line.startsWith('::'));
     assert.equal(
       annotation,
-      '::error file=dist/index.html,line=1,col=23,title=E608 Wrong site address::The canonical address is https://elsewhere.test/, but this site is built for https://u.github.io/, so search engines would list the wrong address. Build again with the address the site is published at (site.yaml url, or the GitHub Pages address).%0AHelp: ' + docsUrl('E608'),
+      '::error file=dist/index.html,line=1,col=23,title=E608 Wrong site address::This site was built for https://elsewhere.test/, but verify is checking it for https://u.github.io/, so every address in it would look wrong; nothing else was checked. https://u.github.io/ comes from SITE_PAGES_URL; give the build and verify the same SITE_PAGES_URL, or build again.%0AHelp: ' + docsUrl('E608'),
     );
-    assert.match(readFileSync(summary, 'utf8'), /^## hangfolio verify\n\n\*\*1 error, 0 warnings\*\* \(1 page and 0 internal links checked for https:\/\/u\.github\.io\/\)\.\n\n\| \| Where \| Code \| What to do \|\n\|---\|---\|---\|---\|\n\| error \| `dist\/index\.html:1:23` \| \[E608\]\(https:\/\/github\.com\/hangfolio\/hangfolio\/blob\/hangfolio@[^/]+\/docs\/troubleshooting\.md#e608\) Wrong site address \| The canonical address is/);
+    assert.match(readFileSync(summary, 'utf8'), /^## hangfolio verify\n\n\*\*1 error, 0 warnings\*\* \(1 page and 0 internal links checked for https:\/\/u\.github\.io\/\)\.\n\n\| \| Where \| Code \| What to do \|\n\|---\|---\|---\|---\|\n\| error \| `dist\/index\.html:1:23` \| \[E608\]\(https:\/\/github\.com\/hangfolio\/hangfolio\/blob\/hangfolio@[^/]+\/docs\/troubleshooting\.md#e608\) Wrong site address \| This site was built for https:\/\/elsewhere\.test\/, /);
     assert.equal(verifySummary({ issues: [], pages: 2, xml: 0, css: 1, links: 9, bytes: 1 }, 'https://u.github.io/'), '## hangfolio verify\n\nNo problems: 2 pages and 9 internal links checked for https://u.github.io/.\n');
   });
 

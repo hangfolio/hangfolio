@@ -7,6 +7,7 @@
 // - E606: a link written without the site's address that leaves the base (/projects at /hangfolio).
 // - E607: // in a link's path (//projects is a server named "projects").
 // - E608: a canonical, og:url, sitemap or other own address on another origin or outside the base.
+//   When the home page itself was built for another address, that one message replaces the rest.
 // - E609: an id used twice on one page.
 // - W610: a #fragment that names no id on its page.
 // - W603: a file over 50 MB, or a site over 900 MB (GitHub Pages allows 1 GB).
@@ -14,6 +15,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import type { Issue } from '../validate/issue.ts';
 import { didYouMean } from '../validate/suggest.ts';
+import type { SiteUrl } from './site-url.ts';
 import { cssRefs, scanHtml, scanXml, type Ref, type Scan } from './verify-html.ts';
 
 export type VerifyOptions = {
@@ -26,6 +28,8 @@ export type VerifyOptions = {
   urlFormat: 'preserve' | 'directory';
   /** How file names start in messages; `dist` by default */
   label?: string;
+  /** Where the origin and base came from, to explain a site built for another address */
+  source?: SiteUrl['source'];
 };
 
 /** An issue, plus for E602 the missing path under the base (/writing/x/), for tests and tools. */
@@ -166,7 +170,11 @@ export function verifyDist(options: VerifyOptions): VerifyResult {
     if (target.protocol !== 'http:' && target.protocol !== 'https:') return;
     if (target.origin !== origin) {
       if (LOCAL_HOSTS.test(target.hostname) && !LOCAL_HOSTS.test(home.hostname)) {
-        add('E608', from, ref.offset, `${describe(ref)} ${raw}${quoted(ref)}, an address on this computer, but the site is built for ${home.href}. Build it again with the same settings as the published site.`);
+        const advice =
+          kind === 'self'
+            ? `but the site is built for ${home.href}. Build it again with the same settings as the published site.`
+            : `which only works on the computer running a preview. Write ${target.pathname}${target.search}${target.hash} instead; the site's address is added for you.`;
+        add('E608', from, ref.offset, `${describe(ref)} ${raw}${quoted(ref)}, an address on this computer, ${advice}`);
       } else if (kind === 'self') {
         add('E608', from, ref.offset, `${describe(ref)} ${raw}, but this site is built for ${home.href}, so search engines would list the wrong address. Build again with the address the site is published at (site.yaml url, or the GitHub Pages address).`);
       }
@@ -203,6 +211,25 @@ export function verifyDist(options: VerifyOptions): VerifyResult {
 
   /** url() for messages: a site path with the base in front. */
   const url = (path: string) => `${prefix}${path}`;
+
+  const cssFiles = files.filter((file) => file.endsWith('.css'));
+  const xmlFiles = files.filter((file) => /\.(?:xml|rss|atom)$/i.test(file));
+  const result = () => ({ issues: sortByPlace(issues), pages: pageFiles.length, xml: xmlFiles.length, css: cssFiles.length, links, bytes });
+
+  const index = pages.get('index.html');
+  if (!index) {
+    add('E602', { file: 'index.html' }, undefined, 'There is no index.html, so the site has no home page and GitHub Pages would show a 404 there. npx hangfolio build writes the site to dist/; build again and check that it finished without errors.', '/');
+  }
+
+  // A site built for another address: every link and address in it would be reported, so report
+  // that once, with how to give the build and verify the same address, and check nothing else.
+  const builtRef = index?.scan.canonical ?? index?.scan.selfUrls[0];
+  const built = builtRef && /^https?:\/\//i.test(builtRef.url) ? safeUrl(builtRef.url) : undefined;
+  if (index && builtRef && built && (built.origin !== origin || (built.pathname.replace(/\/+$/, '') || '/') !== (prefix || '/'))) {
+    const was = `${built.origin}${built.pathname}`;
+    add('E608', index, builtRef.offset, `This site was built for ${was}, but verify is checking it for ${home.href}, so every address in it would look wrong; nothing else was checked. ${mismatchFix(options.source, was, home.href)}`);
+    return result();
+  }
 
   // Pages: links, assets, ids, canonical and own addresses.
   for (const page of pages.values()) {
@@ -273,7 +300,6 @@ export function verifyDist(options: VerifyOptions): VerifyResult {
   }
 
   // Stylesheets: fonts and images they load.
-  const cssFiles = files.filter((file) => file.endsWith('.css'));
   for (const file of cssFiles) {
     const text = read(file);
     const from: From = { file, url: new URL(servedAt(file), origin), at: locator(text) };
@@ -281,7 +307,6 @@ export function verifyDist(options: VerifyOptions): VerifyResult {
   }
 
   // XML: sitemaps list only this site's pages; feeds are checked where they point at this site.
-  const xmlFiles = files.filter((file) => /\.(?:xml|rss|atom)$/i.test(file));
   for (const file of xmlFiles) {
     const text = read(file);
     const from: From = { file, url: new URL(servedAt(file), origin), at: locator(text) };
@@ -307,7 +332,32 @@ export function verifyDist(options: VerifyOptions): VerifyResult {
     }
   }
 
-  return { issues: sortByPlace(issues), pages: pageFiles.length, xml: xmlFiles.length, css: cssFiles.length, links, bytes };
+  return result();
+}
+
+/** How to give `hangfolio build` and `hangfolio verify` the same address, by where verify's came from. */
+function mismatchFix(source: SiteUrl['source'] | undefined, built: string, checking: string): string {
+  const pagesUrl = built.replace(/\/+$/, '');
+  switch (source) {
+    case 'site.yaml':
+      return `${checking} is the url in site.yaml; if you changed it after building, build again.`;
+    case 'SITE_PAGES_URL':
+      return `${checking} comes from SITE_PAGES_URL; give the build and verify the same SITE_PAGES_URL, or build again.`;
+    case 'GITHUB_REPOSITORY':
+      return `${checking} comes from the repository name, because SITE_PAGES_URL is not set; give verify the same SITE_PAGES_URL as the build.`;
+    case 'local':
+      return `Neither site.yaml url nor SITE_PAGES_URL is set, so verify expected a local build. Run SITE_PAGES_URL=${pagesUrl} npx hangfolio verify, or build again without SITE_PAGES_URL.`;
+    default:
+      return 'Verify it with the address it was built for, or build it again for this one.';
+  }
+}
+
+function safeUrl(value: string): URL | undefined {
+  try {
+    return new URL(value);
+  } catch {
+    return undefined;
+  }
 }
 
 /** What a reference does, to start a message: "Links to", "Loads" … */
