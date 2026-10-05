@@ -2,14 +2,15 @@
 // fixed for a whole major. Each carries a `hangfolio-plumbing: <n>` marker; when one is missing,
 // unmarked or at another version, `hangfolio check` shows a notice with the replacement text.
 // The package.json scripts are plumbing too, but JSON has no comments, so they are compared.
-// TODO(M8, M9): add deploy.yml, dependabot.yml, the devcontainer and index.html with the starter's.
+// The starter's index.html ("Almost there", SPEC 8.4) is plumbing too, but it is inert once Pages
+// builds from GitHub Actions and may be deleted, so it is not checked here.
 
 export const PLUMBING_VERSION = 1;
 
 const MARKER = /hangfolio-plumbing:\s*(\d+)/;
 
 /** Each plumbing file's path in the site and its exact text (the starter's copy must match). */
-export const PLUMBING_FILES = [
+export const PLUMBING_FILES: { file: string; text: string; optional?: boolean }[] = [
   {
     file: 'astro.config.mjs',
     text:
@@ -20,6 +21,91 @@ export const PLUMBING_FILES = [
   {
     file: 'src/content.config.ts',
     text: '// Do not edit.  hangfolio-plumbing: 1\n' + "export { collections } from 'hangfolio/content';\n",
+  },
+  // A missing copy of the files below is fine (a site may deploy another way, or do without
+  // Dependabot or Codespaces); a copy that is there must carry the marker.
+  {
+    file: '.github/workflows/deploy.yml',
+    optional: true,
+    text: [
+      '# Builds and publishes your site. You should not need to edit this file.',
+      '# hangfolio-plumbing: 1',
+      'name: Deploy site',
+      'on:',
+      '  push:',
+      '  pull_request:',
+      '  workflow_dispatch:',
+      'permissions: {}',
+      'jobs:',
+      '  build:',
+      '    uses: hangfolio/hangfolio/.github/workflows/build.yml@v1',
+      '    permissions:',
+      '      contents: read',
+      '      pages: read',
+      '    secrets:',
+      '      GOOGLE_WALLET_KEY: ${{ secrets.GOOGLE_WALLET_KEY }}   # optional and unused for now; leave this line as it is',
+      '    # with:',
+      '    #   site-url: https://example.com     # only to pin canonical URLs',
+      '  deploy:',
+      '    needs: build',
+      '    if: needs.build.outputs.deploy == \'true\'',
+      '    uses: hangfolio/hangfolio/.github/workflows/deploy.yml@v1',
+      '    permissions:',
+      '      pages: write',
+      '      id-token: write',
+      '',
+    ].join('\n'),
+  },
+  {
+    file: '.github/dependabot.yml',
+    optional: true,
+    text: [
+      '# Keeps your site up to date: once a month, a pull request for a new theme release and one for the',
+      '# deploy workflow. Each one builds your site first; merging it publishes the update.',
+      '# hangfolio-plumbing: 1',
+      'version: 2',
+      'updates:',
+      '  - package-ecosystem: npm',
+      '    directory: /',
+      '    schedule: { interval: monthly }',
+      '    allow: [{ dependency-name: hangfolio }]',
+      '    open-pull-requests-limit: 1',
+      '    commit-message: { prefix: "Update site theme" }',
+      '  - package-ecosystem: github-actions',
+      '    directory: /',
+      '    schedule: { interval: monthly }',
+      '    # build.yml and deploy.yml move to a new major together, in one pull request (S7).',
+      '    groups:',
+      '      engine:',
+      '        patterns: ["hangfolio/hangfolio/*"]',
+      '    commit-message: { prefix: "Update site engine" }',
+      '',
+    ].join('\n'),
+  },
+  {
+    file: '.devcontainer/devcontainer.json',
+    optional: true,
+    text: [
+      '// A ready-made preview for Codespaces: Code → Codespaces → Create codespace. It installs the site',
+      '// and opens a live preview that reloads as you edit. You should not need to edit this file.',
+      '// hangfolio-plumbing: 1',
+      '{',
+      '  "name": "Site preview",',
+      '  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-24-bookworm",',
+      '  "postCreateCommand": "npm ci",',
+      '  "postAttachCommand": "npm run dev",',
+      '  "waitFor": "postCreateCommand",',
+      '  "forwardPorts": [4321],',
+      '  "portsAttributes": {',
+      '    "4321": { "label": "Site preview", "onAutoForward": "openPreview" }',
+      '  },',
+      '  "customizations": {',
+      '    "codespaces": { "openFiles": ["site.yaml"] },',
+      '    "vscode": { "extensions": ["redhat.vscode-yaml"] }',
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
   },
 ];
 
@@ -35,10 +121,11 @@ export type PlumbingNotice = { code: 'N701'; file: string; line?: number; messag
 /** Checks the plumbing of a site. `read` returns a file's text by its path in the site, or undefined. */
 export function checkPlumbing(read: (file: string) => string | undefined): PlumbingNotice[] {
   const notices: PlumbingNotice[] = [];
-  for (const { file, text } of PLUMBING_FILES) {
+  for (const { file, text, optional } of PLUMBING_FILES) {
     const add = (message: string, line?: number) => notices.push({ code: 'N701', file, line, message, replacement: text });
     const current = read(file);
     if (current === undefined) {
+      if (optional) continue;
       add(`${file} is missing. It connects your site to hangfolio; create it with the text below.`);
       continue;
     }

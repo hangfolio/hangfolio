@@ -54,3 +54,15 @@ test('package.json scripts are plumbing too', () => {
   assert.match(notice.replacement, /^"scripts": \{\n {4}"dev": "hangfolio dev",/);
   assert.deepEqual(checkPlumbing(files({ 'package.json': '{ not json' })), []);
 });
+
+test('deploy.yml, dependabot.yml and the devcontainer are checked when present, never asked for when missing', () => {
+  const optional = PLUMBING_FILES.filter((entry) => entry.optional).map((entry) => entry.file);
+  assert.deepEqual(optional, ['.github/workflows/deploy.yml', '.github/dependabot.yml', '.devcontainer/devcontainer.json']);
+  assert.deepEqual(checkPlumbing(files(Object.fromEntries(optional.map((file) => [file, undefined])))), []);
+  const deploy = PLUMBING_FILES.find((entry) => entry.file === '.github/workflows/deploy.yml')!;
+  const [unmarked] = checkPlumbing(files({ [deploy.file]: deploy.text.replace('# hangfolio-plumbing: 1\n', '') }));
+  assert.equal(unmarked.file, '.github/workflows/deploy.yml');
+  assert.equal(unmarked.replacement, deploy.text);
+  assert.match(unmarked.message, /has no hangfolio-plumbing line/);
+});
+
