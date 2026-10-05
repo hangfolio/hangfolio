@@ -1,0 +1,14 @@
+---
+// <Terminal> in MDX posts (SPEC 5.9): the exhibit's terminal window, one line per entry.
+// <Terminal label="Build output" lines={["$ make", "# 3 targets", "[HIGH] stale cache key"]} />
+import ExhibitTerminal from './ExhibitTerminal.astro';
+
+interface Props {
+  /** The accessible name, e.g. "Sample output" */
+  label?: string;
+  lines: string[];
+}
+
+const { label = 'Terminal', lines } = Astro.props;
+---
+<ExhibitTerminal label={label} lines={lines} />

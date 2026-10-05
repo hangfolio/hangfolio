@@ -1,0 +1,31 @@
+---
+// Under each post (SPEC 5.9): who wrote it, from site.yaml, with the email address for questions,
+// and the link back to every post.
+import { site } from 'virtual:hangfolio/site';
+import { mailto } from '../lib/hero.ts';
+import { url } from '../lib/url.ts';
+import { byline } from '../lib/writing.ts';
+
+interface Props {
+  /** The writing index, when it exists */
+  index?: string;
+}
+
+const { index } = Astro.props;
+---
+<footer class="post-foot">
+  <p>Written by {byline(site)}. Questions or corrections: <a href={mailto(site.email)}>{site.email}</a>.</p>
+  {index && <p><a href={url(index)}>{site.advanced.labels.allWriting}</a></p>}
+</footer>
+
+<style>
+  .post-foot {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: .9375rem;
+    color: var(--muted);
+  }
+</style>

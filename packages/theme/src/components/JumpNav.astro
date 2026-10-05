@@ -1,0 +1,21 @@
+---
+// In-page jump links under a page title, e.g. to each group on /projects.
+interface Props {
+  /** The accessible name, e.g. "Project groups" */
+  label: string;
+  items: { label: string; href: string }[];
+}
+
+const { label, items } = Astro.props;
+---
+<nav class="jump" aria-label={label}>
+  <ul class="links mono">
+    {items.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+  </ul>
+</nav>
+
+<style>
+  .jump {
+    padding-top: .25rem;
+  }
+</style>

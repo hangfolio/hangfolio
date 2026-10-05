@@ -1,0 +1,54 @@
+---
+// /projects (SPEC 5.5): the listed projects in their groups (lib/projects.ts), each group a section
+// with its heading and optional link, jump links to the groups when there are several, and one
+// numbering across the page. A project with a body links to its own page first ("Case study").
+// No projects to list: no page (the route's getStaticPaths gives none).
+import { getEntry } from 'astro:content';
+import { site } from 'virtual:hangfolio/site';
+import JumpNav from '../components/JumpNav.astro';
+import SectionHead from '../components/SectionHead.astro';
+import WorkItem from '../components/WorkItem.astro';
+import Page from '../layouts/Page.astro';
+import { projectEntries } from '../lib/collections.ts';
+import { pagePath } from '../lib/nav.ts';
+import { childPath } from '../lib/paths.ts';
+import { hasPage, listedProjects, projectGroups } from '../lib/projects.ts';
+import { localeTag, pageTitle } from '../lib/site.ts';
+import { resolveHeadingLink, workView } from '../lib/work.ts';
+
+export async function getStaticPaths() {
+  return listedProjects(await projectEntries()).length > 0 ? [{ params: { page: undefined } }] : [];
+}
+
+const page = site.pages.projects || { path: '/projects' };
+const heading = page.heading ?? 'Projects';
+const settings = (await getEntry('projectGroups', 'projects'))?.data.groups ?? [];
+const groups = projectGroups(await projectEntries(), settings);
+const locale = localeTag(site);
+---
+<Page title={pageTitle(site, page.title ?? heading)} description={page.description} path={pagePath(site, 'projects')!} nav="projects" section="projects" heading={heading} lede={page.lede}>
+  {groups.length > 1 && <JumpNav slot="meta" label="Project groups" items={groups.map((group) => ({ label: group.title, href: `#${group.id}` }))} />}
+  {groups.map((group) => (
+    <section id={group.id} class="group" aria-labelledby={group.headingId}>
+      <SectionHead id={group.headingId} heading={group.title} link={resolveHeadingLink(group.link, site)} />
+      {group.runs.map((run) => (
+        <ol class:list={['works', { compact: run.compact }]} start={run.start > 1 ? run.start : undefined}>
+          {run.entries.map((entry, i) => {
+            const view = workView(entry, run.compact ? 'compact' : 'full', { n: run.start + i, site, locale });
+            if (hasPage(entry)) view.links.unshift({ label: 'Case study', href: childPath(page.path, entry.id) });
+            return <WorkItem view={view} />;
+          })}
+        </ol>
+      ))}
+    </section>
+  ))}
+</Page>
+
+<style>
+  /* One group of projects: its heading, then the list */
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+</style>

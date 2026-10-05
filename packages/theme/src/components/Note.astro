@@ -1,0 +1,37 @@
+---
+// <Note> in MDX posts (SPEC 5.9): an aside set off from the text by an accent rule, with an
+// optional small-caps title ("Note" when none is given).
+interface Props {
+  title?: string;
+}
+
+const { title = 'Note' } = Astro.props;
+---
+<aside class="note">
+  <p class="eyebrow">{title}</p>
+  <div class="note-body"><slot /></div>
+</aside>
+
+<style>
+  .note {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    padding: .875rem 1.125rem;
+    border-left: 2px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    background: var(--tint);
+  }
+
+  .eyebrow {
+    color: var(--muted);
+  }
+
+  .note-body {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    font-size: .9375rem;
+    line-height: 1.6;
+  }
+</style>

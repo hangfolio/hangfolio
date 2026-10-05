@@ -1,0 +1,85 @@
+---
+// The writing index (SPEC 5.9), at pages.writing.path (/writing/ by default): every published
+// post, newest first, with its date in the margin, its excerpt and reading time. No posts: no page.
+import { site } from 'virtual:hangfolio/site';
+import Hang from '../components/Hang.astro';
+import Page from '../layouts/Page.astro';
+import { posts } from '../lib/collections.ts';
+import { isoDate, postDate } from '../lib/dates.ts';
+import { pagePath } from '../lib/nav.ts';
+import { localeTag, pageTitle, postPath } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+import { postMinutes } from '../lib/writing.ts';
+
+export async function getStaticPaths() {
+  return (await posts()).length > 0 ? [{ params: { page: undefined } }] : [];
+}
+
+const page = site.pages.writing || { path: '/writing/' };
+const heading = page.heading ?? 'Writing';
+const locale = localeTag(site);
+---
+<Page title={pageTitle(site, page.title ?? heading)} description={page.description} path={pagePath(site, 'writing')!} nav="writing" section="writing" heading={heading} lede={page.lede}>
+  <ol class="post-index">
+    {(await posts()).map((post) => (
+      <Hang as="li">
+        <time slot="m" datetime={isoDate(post.data.date)}>{postDate(post.data.date, locale)}</time>
+        <article>
+          <h2><a href={url(postPath(site, post.id))}>{post.data.title}</a></h2>
+          <p>{post.data.excerpt}</p>
+          <p class="meta">{postMinutes(post)} {site.advanced.labels.minRead}</p>
+        </article>
+      </Hang>
+    ))}
+  </ol>
+</Page>
+
+<style>
+  .post-index {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--rule);
+  }
+
+  .post-index > :global(li) {
+    padding: 1.5rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  article {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -.01em;
+    text-wrap: pretty;
+  }
+
+  h2 a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+
+  h2 a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+  }
+
+  article p {
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: .75rem;
+    color: var(--faint);
+  }
+</style>

@@ -99,6 +99,7 @@ test('research shows when its block has content and its section is listed; then 
   assert.equal(showsResearch(homeSchema.parse({ research: { teaching: 'TA' } })), true);
   assert.equal(showsResearch(homeSchema.parse({ research: { featured: 'x' } })), true);
   assert.equal(showsResearch(homeSchema.parse({ research: { problem: 'P' }, sections: ['work'] })), false);
-  assert.deepEqual(navItems(site, availablePages(site, { research: true })), [{ key: 'research', label: 'Research', href: '/#papers' }]);
-  assert.deepEqual(navItems(site, availablePages(site)), []);
+  const contact = { key: 'contact', label: 'Contact', href: '/contact' };
+  assert.deepEqual(navItems(site, availablePages(site, { research: true })), [{ key: 'research', label: 'Research', href: '/#papers' }, contact]);
+  assert.deepEqual(navItems(site, availablePages(site)), [contact]);
 });

@@ -1,0 +1,56 @@
+---
+// The contact page (SPEC 5.3), at pages.contact.path (/contact by default): the email address in
+// large type (with the availability's subject while it applies), the location, each link marked
+// `contact`, booking, and the availability as a status line under a hairline.
+import { demo, site } from 'virtual:hangfolio/site';
+import AvailabilityCallout from '../components/AvailabilityCallout.astro';
+import BigMail from '../components/BigMail.astro';
+import ContactRows from '../components/ContactRows.astro';
+import Page from '../layouts/Page.astro';
+import { contactRows } from '../lib/contact.ts';
+import { bookingHref, currentAvailability } from '../lib/hero.ts';
+import { availablePages, pagePath } from '../lib/nav.ts';
+import { pageTitle } from '../lib/site.ts';
+import { absUrl } from '../lib/url.ts';
+
+const page = site.pages.contact || { path: '/contact' };
+const heading = page.heading ?? 'Contact';
+const title = pageTitle(site, page.title ?? heading);
+const path = pagePath(site, 'contact')!;
+const availability = currentAvailability(site);
+const rows = contactRows(site, bookingHref(site, availablePages(site).has('booking'), demo));
+
+const schema = [
+  {
+    '@type': 'ContactPage',
+    '@id': `${absUrl(path)}#webpage`,
+    url: absUrl(path),
+    name: title,
+    isPartOf: { '@id': `${absUrl('/')}#website` },
+    about: { '@id': `${absUrl('/')}#person` },
+  },
+];
+---
+<Page title={title} description={page.description} path={path} nav="contact" section="contact" heading={heading} lede={page.lede} schema={schema}>
+  <BigMail slot="meta" subject={availability?.emailSubject} />
+
+  {(rows.length > 0 || availability) && (
+    <div class="contact">
+      {rows.length > 0 && <ContactRows rows={rows} />}
+      {availability && <AvailabilityCallout availability={availability} variant="rule" />}
+    </div>
+  )}
+</Page>
+
+<style>
+  /* The address sits a little below the title, as on the reference design */
+  :global(.page-head > .mail) {
+    margin-top: .25rem;
+  }
+
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+// The experience page (SPEC 5.7), at pages.experience.path (/experience by default): a section per
+// kind of entry, in a fixed order and with fixed ids (lib/experience.ts), and the CV and email
+// links under the title. No entries: no page.
+import { site } from 'virtual:hangfolio/site';
+import RoleList from '../components/RoleList.astro';
+import SectionHead from '../components/SectionHead.astro';
+import Page from '../layouts/Page.astro';
+import { experienceEntries } from '../lib/collections.ts';
+import { experienceSections } from '../lib/experience.ts';
+import { isPdf, mailto } from '../lib/hero.ts';
+import { pagePath } from '../lib/nav.ts';
+import { pageTitle } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+
+export async function getStaticPaths() {
+  return (await experienceEntries()).length > 0 ? [{ params: { page: undefined } }] : [];
+}
+
+const page = site.pages.experience || { path: '/experience' };
+const heading = page.heading ?? 'Experience';
+const sections = experienceSections(await experienceEntries());
+---
+<Page title={pageTitle(site, page.title ?? heading)} description={page.description} path={pagePath(site, 'experience')!} nav="experience" section="experience" heading={heading} lede={page.lede}>
+  <div slot="meta" class="links">
+    {site.cv && <a href={url(site.cv)}>{isPdf(site.cv) ? 'Résumé (PDF)' : 'Résumé'}</a>}
+    <a href={mailto(site.email)}>Email</a>
+  </div>
+
+  <div class="stack">
+    {sections.map((section) => (
+      <section class="block" aria-labelledby={section.id}>
+        <SectionHead id={section.id} heading={section.heading} />
+        <RoleList entries={section.entries} />
+      </section>
+    ))}
+  </div>
+</Page>
+
+<style>
+  .block {
+    gap: 2rem;
+  }
+</style>

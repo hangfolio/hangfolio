@@ -1,7 +1,9 @@
 ---
-// Interior page: a serif title, an optional lede, then the page body.
+// Interior page: a serif title, an optional lede (inline Markdown, like site.yaml's pages.*.lede),
+// then the page body.
 import Base from './Base.astro';
 import type { ComponentProps } from 'astro/types';
+import { inlineMd } from '../lib/inline-md.ts';
 
 type Props = ComponentProps<typeof Base> & {
   heading: string;
@@ -14,7 +16,7 @@ const { heading, lede, ...base } = Astro.props;
   <header class="page-head">
     <slot name="eyebrow" />
     <h1>{heading}</h1>
-    {lede && <p class="lede">{lede}</p>}
+    {lede && <p class="lede" set:html={inlineMd(lede)} />}
     <slot name="meta" />
   </header>
   <slot />

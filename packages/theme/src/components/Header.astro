@@ -1,9 +1,8 @@
 ---
 // Site header: the brand (a link home), the primary navigation and the theme toggle.
-import { getEntry } from 'astro:content';
 import { site } from 'virtual:hangfolio/site';
 import ThemeToggle from './ThemeToggle.astro';
-import { showsResearch } from '../lib/home.ts';
+import { pageContent } from '../lib/collections.ts';
 import { availablePages, navItems } from '../lib/nav.ts';
 import { url } from '../lib/url.ts';
 
@@ -14,8 +13,7 @@ interface Props {
 
 const { current } = Astro.props;
 const brand = site.advanced.brand ?? new URL(import.meta.env.SITE).hostname;
-const home = (await getEntry('home', 'home'))?.data;
-const nav = navItems(site, availablePages(site, { research: showsResearch(home) }));
+const nav = navItems(site, availablePages(site, await pageContent()));
 ---
 <header class="hdr">
   <a href={url('/')} class="quiet home">{brand}</a>

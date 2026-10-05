@@ -1,0 +1,85 @@
+---
+// One section of the experience page (SPEC 5.7): each entry with its dates (or `when` text) and
+// location in the margin, then the role and organisation, and its bullets, or the `desc`
+// paragraph of an earlier entry, and its photos.
+import DateRange from './DateRange.astro';
+import Gallery from './Gallery.astro';
+import Hang from './Hang.astro';
+import type { Job } from '../lib/home.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+
+interface Props {
+  entries: Job[];
+}
+
+const { entries } = Astro.props;
+---
+<ol class="roles">
+  {entries.map((entry) => (
+    <Hang as="li">
+      <Fragment slot="m">
+        <DateRange start={entry.start} end={entry.end} expected={entry.expected} when={entry.when} />
+        {entry.location && <span class="where">{entry.location}</span>}
+      </Fragment>
+      <div class="role">
+        <h3>{entry.role} <span class="org">· {entry.org}</span></h3>
+        {entry.bullets && entry.bullets.length > 0 && <ul class="bullets">{entry.bullets.map((bullet) => <li set:html={inlineMd(bullet)} />)}</ul>}
+        {entry.desc && <p class="desc" set:html={inlineMd(entry.desc)} />}
+        {entry.gallery && <Gallery caption={entry.gallery.caption} images={entry.gallery.images} />}
+      </div>
+    </Hang>
+  ))}
+</ol>
+
+<style>
+  .roles {
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+  }
+
+  /* Locations sit under the dates in the margin; balance keeps two-line places even */
+  .where {
+    text-wrap: balance;
+  }
+
+  .role {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 0;
+  }
+
+  .role h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  /* Bullets: the same rhythm and markers as .prose lists */
+  .bullets {
+    display: flex;
+    flex-direction: column;
+    gap: .375rem;
+    padding-left: 1.25rem;
+    list-style: disc;
+    font-size: .9375rem;
+    line-height: 1.6;
+  }
+
+  .bullets li {
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  .bullets li::marker {
+    color: var(--faint);
+  }
+
+  .desc {
+    font-size: .9375rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+</style>

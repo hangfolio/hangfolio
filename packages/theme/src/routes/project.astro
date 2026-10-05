@@ -1,0 +1,59 @@
+---
+// /projects/<id>/ (SPEC 5.5): a plain prose page for a project whose file has a body: the
+// project's title and summary, its kicker and dates, the body, and its links.
+import { render } from 'astro:content';
+import { site } from 'virtual:hangfolio/site';
+import DateRange from '../components/DateRange.astro';
+import Note from '../components/Note.astro';
+import Terminal from '../components/Terminal.astro';
+import Page from '../layouts/Page.astro';
+import { projectEntries } from '../lib/collections.ts';
+import { pagePath } from '../lib/nav.ts';
+import { childPath } from '../lib/paths.ts';
+import { hasPage, plainText } from '../lib/projects.ts';
+import { pageTitle } from '../lib/site.ts';
+import { contentUrl, url } from '../lib/url.ts';
+import { resolveLinks } from '../lib/work.ts';
+
+export async function getStaticPaths() {
+  return (await projectEntries()).filter(hasPage).map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+type Entry = Awaited<ReturnType<typeof projectEntries>>[number];
+const { entry } = Astro.props as { entry: Entry };
+const { data } = entry;
+const { Content } = await render(entry);
+const list = site.pages.projects || { path: '/projects' };
+const index = pagePath(site, 'projects');
+const links = resolveLinks(data.links, site);
+---
+<Page title={pageTitle(site, data.title)} description={plainText(data.summary)} path={childPath(list.path, entry.id)} nav="projects" section="project" heading={data.title} lede={data.summary}>
+  {index && <p slot="eyebrow" class="eyebrow back"><a href={url(index)} class="soft">{list.heading ?? 'Projects'}</a></p>}
+  {(data.kicker || data.margin || data.start || data.end) && (
+    <p slot="meta" class="meta">
+      {data.kicker && <span>{data.kicker}</span>}
+      {data.kicker && (data.margin || data.start || data.end) && <span aria-hidden="true"> · </span>}
+      {data.margin ? <span>{data.margin}</span> : <DateRange start={data.start} end={data.end} />}
+    </p>
+  )}
+  <article class="prose post">
+    <Content components={{ Note, Terminal }} />
+  </article>
+  {links.length > 0 && (
+    <div class="links">
+      {links.map((link) => ('code' in link ? <code class="inline-code">{link.code}</code> : <a href={contentUrl(link.href)}>{link.label}</a>))}
+    </div>
+  )}
+</Page>
+
+<style>
+  .back a {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .post {
+    max-width: 41.25rem;
+  }
+</style>

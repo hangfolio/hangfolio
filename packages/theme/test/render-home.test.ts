@@ -161,7 +161,7 @@ describe('render: home sections at base /hangfolio', () => {
       '<section class="block contact" aria-labelledby="contact" data-section="contact">' +
         '<div class="sec-head"><h2 id="contact" class="eyebrow">Get in touch</h2></div>' +
         '<a href="mailto:wren@halloway.test?subject=Summer%202027" class="mail">wren@halloway.test</a>' +
-        '<div class="links"><a href="/hangfolio/files/cv.pdf">Résumé (PDF)</a><a href="https://example.org/book">Book a call</a></div>' +
+        '<div class="links"><a href="/hangfolio/files/cv.pdf">Résumé (PDF)</a><a href="/hangfolio/meet">Book a call</a></div>' +
         '</section>',
     );
     const later = await r.render('HomeContact', { id: 'hello', heading: 'Say hello', now: new Date('2100-06-01T00:00:00Z') });

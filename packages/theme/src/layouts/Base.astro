@@ -38,6 +38,8 @@ interface Props {
   article?: { published: Date; modified?: Date; tags?: readonly string[] };
   /** Extra JSON-LD nodes for this page, added to the site graph */
   schema?: Record<string, unknown>[];
+  /** The page's name for content/custom.css: <main data-section="…"> (SPEC 6.4) */
+  section?: string;
 }
 
 const {
@@ -51,6 +53,7 @@ const {
   noindex: noindexPage = false,
   article,
   schema = [],
+  section,
 } = Astro.props;
 
 // The example site is never indexed (SPEC 5.2).
@@ -122,7 +125,7 @@ const { light } = parseTokens(tokensCss);
     {demo && <ExampleBanner />}
     <div class="wrap shell">
       <Header current={nav} />
-      <main id="main" class="page" tabindex="-1">
+      <main id="main" class="page" tabindex="-1" data-section={section}>
         <slot />
       </main>
       <Footer />
