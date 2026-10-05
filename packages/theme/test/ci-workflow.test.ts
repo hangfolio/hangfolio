@@ -88,6 +88,13 @@ test('browser jobs check that Chrome is installed, since the browser tests skip 
   }
 });
 
+test('the tests that build sites run without the GitHub variables that would move them under /hangfolio/', () => {
+  for (const name of ['matrix', 'e2e', 'a11y', 'screenshots']) {
+    const runs = workflow.jobs[name].steps.map((s) => s.run ?? '').filter((r) => r.includes('npm run test:'));
+    assert.ok(runs.length > 0 && runs.every((r) => r.startsWith('env -u GITHUB_ACTIONS -u GITHUB_REPOSITORY npm run ')), name);
+  }
+});
+
 test('the no-network build blocks requests and checks that it does', () => {
   const job = workflow.jobs['no-network'] as Job & { env: Record<string, string> };
   for (const key of ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']) assert.equal(job.env[key], 'http://127.0.0.1:9', key);
