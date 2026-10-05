@@ -176,7 +176,7 @@ test('advanced: nameParts, anchors, language and time zone', () => {
     "advanced.timezone E202: must be a time zone like UTC or America/New_York (you wrote 'Mars/Olympus')",
   ]);
   assert.deepEqual(issuesOf(site, { ...minimal, advanced: { googleVerification: { file: 'google 123.html' } } }), [
-    'advanced.googleVerification.file invalid_format: must be the token Google gives you: letters, digits, ., - and _',
+    "advanced.googleVerification.file E202: must be the name of the file Google gives you, like google1234567890abcdef.html (you wrote 'google 123.html')",
   ]);
   assert.deepEqual(issuesOf(site, { ...minimal, advanced: { nameParts: { given: 'Wren' } } }), [
     'advanced.nameParts.family invalid_type: Invalid input: expected string, received undefined',

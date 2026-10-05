@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { inferLabel, slug } from '../lib/links.ts';
 import { accent, bool, externalUrl, href, htmlId, md, navLink, pagePath, profileId, text, webUrl } from './common.ts';
 import { partialDate } from './dates.ts';
-import { exactlyOne, fail, show } from './issues.ts';
+import { exactlyOne, fail, show, type Issues } from './issues.ts';
 
 const profile = z
   .union([
@@ -158,8 +158,55 @@ const timezone = text.check((ctx) => {
   }
 });
 
-// The token from Google Search Console's HTML file or meta tag method
-const token = text.regex(/^[\w.-]+$/, 'must be the token Google gives you: letters, digits, ., - and _');
+// The path of a generated XML file (the feed, a sitemap copy). GitHub Pages picks a file's type
+// from its extension, and without .xml the file could land on a page's address.
+const xmlPath = (example: string) =>
+  pagePath
+    .check((ctx) => {
+      if (!/\.xml$/i.test(ctx.value)) fail(ctx, ctx.value, 'E202', `must be a file path ending in .xml, like ${example} (you wrote ${show(ctx.value)})`);
+    })
+    .meta({ pattern: '\\.xml$' });
+
+const SITEMAP_PATH = '/sitemap.xml';
+
+/** The feed, the sitemap and each sitemap copy need their own file (E303). */
+function ownFiles(ctx: Issues & { value: { feed: { path: string }; sitemapAliases: string[] } }) {
+  const { feed, sitemapAliases } = ctx.value;
+  if (feed.path === SITEMAP_PATH) {
+    fail(ctx, feed.path, 'E303', `is also the sitemap's path (${show(SITEMAP_PATH)}); give the feed its own, like /feed.xml`, ['feed', 'path']);
+  }
+  sitemapAliases.forEach((path, i) => {
+    if (path === feed.path) fail(ctx, path, 'E303', `is also the feed's path (${show(path)}); give the sitemap copy its own, like /sitemap-static.xml`, ['sitemapAliases', i]);
+  });
+}
+
+// Google Search Console's two methods. The HTML file is always named google<hex>.html; the meta
+// tag's token is a longer run of letters, digits, - and _. People paste the whole tag, the file's
+// address or its contents, or put one method's token under the other's key.
+const GOOGLE_FILE = /^google[0-9a-z]+(\.html)?$/;
+const TOKEN = /^[\w.-]+$/;
+
+const googleFile = text
+  .check((ctx) => {
+    if (GOOGLE_FILE.test(ctx.value)) return;
+    const name = /\b(google[0-9a-z]{6,})(?:\.html)?\b/.exec(ctx.value)?.[1];
+    const message = name
+      ? `must be just the file's name, '${name}.html' (you wrote ${show(ctx.value)})`
+      : TOKEN.test(ctx.value) && ctx.value.length >= 20
+        ? `must be the name of the file Google gives you, like google1234567890abcdef.html; ${show(ctx.value)} looks like the meta tag's token, so put it under googleVerification.meta instead`
+        : `must be the name of the file Google gives you, like google1234567890abcdef.html (you wrote ${show(ctx.value)})`;
+    fail(ctx, ctx.value, 'E202', message);
+  })
+  .meta({ pattern: '^google[0-9a-z]+(\\.html)?$' });
+
+const googleMeta = text
+  .check((ctx) => {
+    const content = /\bcontent\s*=\s*["']([^"']+)["']/i.exec(ctx.value)?.[1];
+    if (content) fail(ctx, ctx.value, 'E202', `must be only the token inside content="…", '${content}'`);
+    else if (GOOGLE_FILE.test(ctx.value)) fail(ctx, ctx.value, 'E202', `is the HTML file's name (${show(ctx.value)}), so put it under googleVerification.file instead`);
+    else if (!TOKEN.test(ctx.value)) fail(ctx, ctx.value, 'E202', `must be the token from Google's meta tag: letters, digits, ., - and _ (you wrote ${show(ctx.value)})`);
+  })
+  .meta({ pattern: '^[\\w.-]+$' });
 
 export const advanced = z
   .strictObject({
@@ -172,10 +219,10 @@ export const advanced = z
     titleSuffix: z.string().default(' — {name}'),
     writingPath: pagePath.default('/writing'),
     feed: z
-      .strictObject({ path: pagePath.default('/feed.xml'), title: text.default('{name} — Writing'), description: text.optional() })
+      .strictObject({ path: xmlPath('/feed.xml').default('/feed.xml'), title: text.default('{name} — Writing'), description: text.optional() })
       .prefault({}),
-    sitemapAliases: z.array(pagePath).default([]),
-    googleVerification: z.strictObject({ file: token.optional(), meta: token.optional() }).optional(),
+    sitemapAliases: z.array(xmlPath('/sitemap-static.xml')).default([]),
+    googleVerification: z.strictObject({ file: googleFile.optional(), meta: googleMeta.optional() }).optional(),
     anchors,
     labels: z
       .strictObject({
@@ -191,4 +238,5 @@ export const advanced = z
       .optional()
       .describe('Your name split for the contact card. Default: the last word is the family name.'),
   })
+  .check(ownFiles)
   .prefault({});

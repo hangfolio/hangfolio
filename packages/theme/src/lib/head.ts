@@ -14,6 +14,7 @@ const ICON_FILES: { file: string; rel: string; type?: string; sizes?: string; ma
   { file: 'favicon.svg', rel: 'icon', type: 'image/svg+xml' },
   { file: 'favicon-32.png', rel: 'icon', type: 'image/png', sizes: '32x32' },
   { file: 'favicon-32x32.png', rel: 'icon', type: 'image/png', sizes: '32x32' },
+  { file: 'favicon.png', rel: 'icon', type: 'image/png' },
   { file: 'apple-touch-icon.png', rel: 'apple-touch-icon' },
   { file: 'safari-pinned-tab.svg', rel: 'mask-icon', mask: true },
 ];

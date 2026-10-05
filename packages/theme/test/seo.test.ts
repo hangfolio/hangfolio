@@ -19,7 +19,7 @@ import { absUrl, url } from '../src/lib/url.ts';
 import { post as postSchema } from '../src/schema/post.ts';
 import { site as siteSchema, type SiteInput } from '../src/schema/site.ts';
 import { rssProblems } from './e2e/rss-check.ts';
-import { parseOk } from './helpers.ts';
+import { issuesOf, parseOk } from './helpers.ts';
 
 const ORIGIN = 'https://u.github.io';
 const BASE = '/hangfolio';
@@ -86,6 +86,7 @@ describe('head helpers', () => {
       { rel: 'mask-icon', mask: true, href: '/images/safari-pinned-tab.svg' },
     ]);
     assert.deepEqual(findIcons(has(['favicon.ico', 'images/favicon.ico'])), [{ rel: 'icon', sizes: 'any', href: '/favicon.ico' }]);
+    assert.deepEqual(findIcons(has(['images/favicon.png'])), [{ rel: 'icon', type: 'image/png', href: '/images/favicon.png' }]);
     assert.deepEqual(findIcons(has([])), []);
   });
 
@@ -194,7 +195,7 @@ describe('the feed', () => {
     { id: 'newer', data: parseOk(postSchema, { title: 'Newer & better', date: '2026-08-20', description: 'Long description.', excerpt: 'The teaser.' }) },
   ];
 
-  test('published posts, newest first, with absolute links under the base', () => {
+  test('published posts, newest first, with absolute links under the base and their description (not the list teaser)', () => {
     const options = feedOptions(SITE, entries, abs);
     assert.equal(options.title, 'Wren Halloway — Writing');
     assert.equal(options.description, 'Postdoc in distributed systems, Institute of Example Studies');
@@ -203,7 +204,7 @@ describe('the feed', () => {
     assert.deepEqual(
       (options.items as { title: string; link: string; description: string }[]).map(({ title, link, description }) => ({ title, link, description })),
       [
-        { title: 'Newer & better', link: `${HOME}writing/newer/`, description: 'The teaser.' },
+        { title: 'Newer & better', link: `${HOME}writing/newer/`, description: 'Long description.' },
         { title: 'Older', link: `${HOME}writing/older/`, description: 'The older one.' },
       ],
     );
@@ -214,7 +215,7 @@ describe('the feed', () => {
     const xml = await getRssString(feedOptions(site, entries, abs));
     assert.deepEqual(rssProblems(xml), []);
     assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?><rss version="2\.0"><channel><title>Wren Halloway: notes<\/title><description>Occasional notes\.<\/description><link>https:\/\/u\.github\.io\/hangfolio\/<\/link><language>en-gb<\/language><item>/);
-    assert.match(xml, /<item><title>Newer &amp; better<\/title><link>https:\/\/u\.github\.io\/hangfolio\/notes\/newer\/<\/link><guid isPermaLink="true">https:\/\/u\.github\.io\/hangfolio\/notes\/newer\/<\/guid><description>The teaser\.<\/description><pubDate>Thu, 20 Aug 2026 00:00:00 GMT<\/pubDate><\/item>/);
+    assert.match(xml, /<item><title>Newer &amp; better<\/title><link>https:\/\/u\.github\.io\/hangfolio\/notes\/newer\/<\/link><guid isPermaLink="true">https:\/\/u\.github\.io\/hangfolio\/notes\/newer\/<\/guid><description>Long description\.<\/description><pubDate>Thu, 20 Aug 2026 00:00:00 GMT<\/pubDate><\/item>/);
     assert.match(xml, /<category>logs<\/category>/);
     assert.doesNotMatch(xml, /Draft/);
   });
@@ -310,6 +311,57 @@ describe('the sitemap', () => {
     assert.equal(readFileSync(join(dist, 'sitemap.xml'), 'utf8'), sitemapXml(entries));
     assert.equal(readFileSync(join(dist, 'maps/sitemap-static.xml'), 'utf8'), sitemapXml(entries));
     assert.equal(sitemapXml([]), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>\n');
+  });
+
+  test('a path the build already wrote is never overwritten', async () => {
+    const dist = folder({ 'index.html': '<html><head><link rel="canonical" href="https://u.github.io/hangfolio/"></head></html>', 'notes.xml': '<rss/>' });
+    const taken: string[] = [];
+    assert.equal(await writeSitemaps(dist, ['/sitemap.xml', '/notes.xml'], HOME, [], (path) => taken.push(path)), 1);
+    assert.deepEqual(taken, ['/notes.xml']);
+    assert.equal(readFileSync(join(dist, 'notes.xml'), 'utf8'), '<rss/>');
+    assert.match(readFileSync(join(dist, 'sitemap.xml'), 'utf8'), /<loc>https:\/\/u\.github\.io\/hangfolio\/<\/loc>/);
+  });
+});
+
+describe('site.yaml mistakes in the SEO settings', () => {
+  const issues = (advanced: Record<string, unknown>) => issuesOf(siteSchema, { name: 'Wren Halloway', email: 'wren@halloway.test', advanced });
+
+  test('the feed and the sitemap copies are .xml files, each at its own path', () => {
+    assert.deepEqual(issues({ feed: { path: '/feed' } }), ["advanced.feed.path E202: must be a file path ending in .xml, like /feed.xml (you wrote '/feed')"]);
+    assert.deepEqual(issues({ feed: { path: '/feed.xml/' } }), ["advanced.feed.path E202: must be a file path ending in .xml, like /feed.xml (you wrote '/feed.xml/')"]);
+    assert.deepEqual(issues({ sitemapAliases: ['/index.html'] }), [
+      "advanced.sitemapAliases.0 E202: must be a file path ending in .xml, like /sitemap-static.xml (you wrote '/index.html')",
+    ]);
+    assert.deepEqual(issues({ feed: { path: '/sitemap.xml' } }), ["advanced.feed.path E303: is also the sitemap's path ('/sitemap.xml'); give the feed its own, like /feed.xml"]);
+    assert.deepEqual(issues({ sitemapAliases: ['/sitemap-static.xml', 'feed.xml'] }), [
+      "advanced.sitemapAliases.1 E303: is also the feed's path ('/feed.xml'); give the sitemap copy its own, like /sitemap-static.xml",
+    ]);
+    assert.deepEqual(issues({ feed: { path: 'notes.xml' }, sitemapAliases: ['/sitemap.xml', '/maps/sitemap-static.xml'] }), []);
+  });
+
+  test('Google verification: a pasted tag, address or file body, or a token under the wrong key, says what to write', () => {
+    const file = 'google0a1b2c3d4e5f6a7b';
+    const metaToken = 'Tq3abcDEFghiJKLmnoPQRstuVWXyz0123456789_-A';
+    assert.deepEqual(issues({ googleVerification: { file, meta: metaToken } }), []);
+    assert.deepEqual(issues({ googleVerification: { file: `${file}.html` } }), []);
+    assert.deepEqual(issues({ googleVerification: { file: `https://wren.example/${file}.html` } }), [
+      `advanced.googleVerification.file E202: must be just the file's name, '${file}.html' (you wrote 'https://wren.example/${file}.html')`,
+    ]);
+    assert.deepEqual(issues({ googleVerification: { file: `google-site-verification: ${file}.html` } }), [
+      `advanced.googleVerification.file E202: must be just the file's name, '${file}.html' (you wrote 'google-site-verification: ${file}.html')`,
+    ]);
+    assert.deepEqual(issues({ googleVerification: { file: metaToken } }), [
+      `advanced.googleVerification.file E202: must be the name of the file Google gives you, like google1234567890abcdef.html; '${metaToken}' looks like the meta tag's token, so put it under googleVerification.meta instead`,
+    ]);
+    assert.deepEqual(issues({ googleVerification: { file: 'index' } }), [
+      "advanced.googleVerification.file E202: must be the name of the file Google gives you, like google1234567890abcdef.html (you wrote 'index')",
+    ]);
+    assert.deepEqual(issues({ googleVerification: { meta: `<meta name="google-site-verification" content="${metaToken}" />` } }), [
+      `advanced.googleVerification.meta E202: must be only the token inside content="…", '${metaToken}'`,
+    ]);
+    assert.deepEqual(issues({ googleVerification: { meta: `${file}.html` } }), [
+      `advanced.googleVerification.meta E202: is the HTML file's name ('${file}.html'), so put it under googleVerification.file instead`,
+    ]);
   });
 });
 

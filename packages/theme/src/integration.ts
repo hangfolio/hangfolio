@@ -9,7 +9,7 @@ import type { AstroIntegration } from 'astro';
 import { AstroError } from 'astro/errors';
 import { exampleBanner } from './lib/banner.ts';
 import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
-import { planSeo, type SeoPlan } from './lib/endpoints.ts';
+import { planSeo, SITEMAP, type SeoPlan } from './lib/endpoints.ts';
 import { buildSha } from './lib/head.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
 import { ROUTES } from './lib/routes.ts';
@@ -113,7 +113,12 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
           const visible = report?.visible ?? site;
           const { origin, base, home } = siteUrl;
           const order = Object.values(visible.pages).flatMap((page) => (page && 'path' in page && page.path ? [absUrl(page.path, origin, base)] : []));
-          const count = await writeSitemaps(fileURLToPath(dir), seo.sitemaps, home, order);
+          const count = await writeSitemaps(fileURLToPath(dir), seo.sitemaps, home, order, (path) =>
+            logger.warn(
+              `${path.slice(1)} is already in the built site (another page or file writes it), so the sitemap was not written there.` +
+                (path === SITEMAP ? '' : ' Give advanced.sitemapAliases another path.'),
+            ),
+          );
           if (seo.sitemaps.length > 0) logger.info(`${seo.sitemaps.map((path) => path.slice(1)).join(', ')}: ${count} pages`);
         }
         if (urlFormat !== 'preserve') return;

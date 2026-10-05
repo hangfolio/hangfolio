@@ -2,7 +2,7 @@
 // built: every HTML page with a canonical link on the site and no noindex. So a page that is
 // turned off, has no content, is a redirect or is the example site never gets an entry, and every
 // entry is a page that exists. Posts (pages with article:published_time) get a lastmod.
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
@@ -65,13 +65,21 @@ export function sitemapXml(entries: SitemapEntry[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('')}</urlset>\n`;
 }
 
-/** Writes the same sitemap at each path (sitemap.xml and its aliases); returns how many URLs it lists. */
-export async function writeSitemaps(dist: string, paths: string[], home: string, order: string[] = []): Promise<number> {
+/**
+ * Writes the same sitemap at each path (sitemap.xml and its aliases); returns how many URLs it
+ * lists. A path the build already wrote something at is left alone and passed to `taken`: the
+ * build starts from an empty dist, so that file is a page or another generated file.
+ */
+export async function writeSitemaps(dist: string, paths: string[], home: string, order: string[] = [], taken: (path: string) => void = () => {}): Promise<number> {
   if (paths.length === 0) return 0;
   const entries = sitemapEntries(dist, home, order);
   const xml = sitemapXml(entries);
   for (const path of paths) {
     const file = join(dist, path.replace(/^\/+/, ''));
+    if (existsSync(file)) {
+      taken(path);
+      continue;
+    }
     await mkdir(dirname(file), { recursive: true });
     await writeFile(file, xml);
   }
