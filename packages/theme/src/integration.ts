@@ -81,6 +81,16 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
                 load: (id: string) => (id === '\0' + VIRTUAL_ID ? source : undefined),
               },
             ],
+            // Every MDX post makes the bundler warn about a directive Astro adds itself
+            // ("use astro:head-inject"); it is harmless, and a site owner can do nothing about it.
+            build: {
+              rolldownOptions: {
+                onLog(level: string, log: { code?: string; message: string }, handler: (level: string, log: unknown) => void) {
+                  if (log.code === 'MODULE_LEVEL_DIRECTIVE' && log.message.includes('astro:head-inject')) return;
+                  handler(level, log);
+                },
+              },
+            },
           },
         });
       },

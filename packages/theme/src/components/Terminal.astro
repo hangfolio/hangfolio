@@ -1,14 +1,19 @@
 ---
 // <Terminal> in MDX posts (SPEC 5.9): the exhibit's terminal window, one line per entry.
 // <Terminal label="Build output" lines={["$ make", "# 3 targets", "[HIGH] stale cache key"]} />
+// lines="$ make" (text in quotes) also works: each line of the text is a line of the window.
 import ExhibitTerminal from './ExhibitTerminal.astro';
 
 interface Props {
   /** The accessible name, e.g. "Sample output" */
   label?: string;
-  lines: string[];
+  lines: string[] | string;
 }
 
 const { label = 'Terminal', lines } = Astro.props;
+const list = typeof lines === 'string' ? lines.split(/\r?\n/) : Array.isArray(lines) ? lines.map(String) : undefined;
+if (!list || list.length === 0) {
+  throw new Error(`<Terminal> needs its lines, like <Terminal lines={["$ make", "# done"]} />.`);
+}
 ---
-<ExhibitTerminal label={label} lines={lines} />
+<ExhibitTerminal label={label} lines={list} />

@@ -10,7 +10,7 @@ import Page from '../layouts/Page.astro';
 import { projectEntries } from '../lib/collections.ts';
 import { pagePath } from '../lib/nav.ts';
 import { childPath } from '../lib/paths.ts';
-import { hasPage, plainText } from '../lib/projects.ts';
+import { hasPage, listedProjects, plainText } from '../lib/projects.ts';
 import { pageTitle } from '../lib/site.ts';
 import { contentUrl, url } from '../lib/url.ts';
 import { resolveLinks } from '../lib/work.ts';
@@ -24,7 +24,8 @@ const { entry } = Astro.props as { entry: Entry };
 const { data } = entry;
 const { Content } = await render(entry);
 const list = site.pages.projects || { path: '/projects' };
-const index = pagePath(site, 'projects');
+// The back link only while /projects lists something (a homepage-only project can still have a page).
+const index = listedProjects(await projectEntries()).length > 0 ? pagePath(site, 'projects') : undefined;
 const links = resolveLinks(data.links, site);
 ---
 <Page title={pageTitle(site, data.title)} description={plainText(data.summary)} path={childPath(list.path, entry.id)} nav="projects" section="project" heading={data.title} lede={data.summary}>

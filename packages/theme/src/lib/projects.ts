@@ -33,15 +33,24 @@ export function listedProjects<T extends ProjectEntry>(entries: T[]): T[] {
 /** A project gets its own page when its file has a body (SPEC 5.5). */
 export const hasPage = (entry: { body?: string }) => Boolean(entry.body?.trim());
 
+/** Group names match without regard to case or extra spaces: "developer tools" is "Developer  Tools". */
+const groupKey = (title: string) => title.trim().replace(/\s+/g, ' ').toLowerCase();
+
 export function projectGroups<T extends ProjectEntry>(entries: T[], settings: GroupSettings[] = []): ProjectGroup<T>[] {
   const listed = listedProjects(entries);
-  const titles = [...new Set([...settings.map((group) => group.title), ...listed.map((entry) => entry.data.group)])];
-  const taken = new Set(settings.map((group) => group.id));
+  const used = new Set(listed.map((entry) => groupKey(entry.data.group)));
+  // A projects.yaml group that no listed project uses shows nothing, so it takes no id.
+  const shown = settings.filter((group) => used.has(groupKey(group.title)));
+  // Each group once: projects.yaml's title for it, else the title its first project uses.
+  const titles = new Map<string, string>();
+  for (const title of [...shown.map((group) => group.title), ...listed.map((entry) => entry.data.group)]) {
+    if (!titles.has(groupKey(title))) titles.set(groupKey(title), title);
+  }
+  const taken = new Set(shown.map((group) => group.id));
   let n = 1;
-  return titles.flatMap((title) => {
-    const members = listed.filter((entry) => entry.data.group === title);
-    if (members.length === 0) return [];
-    const own = settings.find((group) => group.title === title);
+  return [...titles].map(([key, title]) => {
+    const members = listed.filter((entry) => groupKey(entry.data.group) === key);
+    const own = shown.find((group) => groupKey(group.title) === key);
     let id = own?.id;
     if (!id) {
       const base = slug(title) || 'group';
@@ -56,7 +65,7 @@ export function projectGroups<T extends ProjectEntry>(entries: T[], settings: Gr
       else runs.push({ compact: entry.data.compact, start: n, entries: [entry] });
       n++;
     }
-    return [{ title, id, headingId: own?.headingId ?? `${id}-h`, link: own?.link, runs }];
+    return { title, id, headingId: own?.headingId ?? `${id}-h`, link: own?.link, runs };
   });
 }
 

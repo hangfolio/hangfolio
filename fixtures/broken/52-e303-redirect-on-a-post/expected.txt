@@ -1,0 +1,2 @@
+site.yaml:4:7 E303 from '/writing/tide-tables' is the address of the post content/writing/tide-tables.md, so the page would replace this redirect. Delete one of the two.
+site.yaml:5:7 E303 from '/projects/gauge/' is the address of the page of content/projects/gauge.md, so the page would replace this redirect. Delete one of the two.

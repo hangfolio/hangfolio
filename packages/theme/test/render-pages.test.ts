@@ -105,5 +105,11 @@ describe('render: interior page components at base /hangfolio', () => {
       '<div class="well terminal" role="group" aria-label="A trace"><div class="pre-wrap"><span class="c" aria-hidden="true">$ </span>shoal explain</div>' +
         '<div class="c"># 2 misses</div><div class="pre-wrap"><span class="sev high">[HIGH]</span> key leak</div></div>',
     );
+    // lines written as text in quotes (lines="$ make") are split into lines, not a crash
+    assert.equal(
+      await r.render('Terminal', { lines: '$ make\n# done' }),
+      '<div class="well terminal" role="group" aria-label="Terminal"><div class="pre-wrap"><span class="c" aria-hidden="true">$ </span>make</div><div class="c"># done</div></div>',
+    );
+    await assert.rejects(r.render('Terminal', {}), /<Terminal> needs its lines, like <Terminal lines=\{\["\$ make", "# done"\]\} \/>/);
   });
 });

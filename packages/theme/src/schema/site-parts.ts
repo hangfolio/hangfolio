@@ -77,7 +77,13 @@ export const booking = z
   })
   .check((ctx) => {
     // Neither calcom nor link means booking is paused; that is allowed only to keep the page.
-    if (ctx.value.keepPageWhenOff && ctx.value.calcom === undefined && ctx.value.link === undefined) return;
+    if (ctx.value.calcom === undefined && ctx.value.link === undefined) {
+      if (ctx.value.keepPageWhenOff) return;
+      const message =
+        'needs one of calcom or link. To pause booking but keep the page (it then points to email), ' +
+        'add keepPageWhenOff: true; to turn booking off, delete the whole booking block';
+      return void fail(ctx, ctx.value, 'E202', message);
+    }
     exactlyOne(['calcom', 'link'])(ctx);
   });
 
@@ -99,7 +105,20 @@ export const pages = z
   })
   .prefault({});
 
-export const redirect = z.strictObject({ from: pagePath, to: href });
+// A redirect is an HTML page with a refresh, so it can only stand where a page is read:
+// /about, /about/ or /about.html. Written into old-cv.pdf or feed.xml it would break that file.
+const redirectFrom = pagePath.check((ctx) => {
+  if (typeof ctx.value !== 'string') return; // pagePath has reported it
+  const last = ctx.value.slice(ctx.value.lastIndexOf('/') + 1);
+  const extension = /\.([A-Za-z0-9]+)$/.exec(last)?.[1];
+  if (extension === undefined || /^html?$/i.test(extension)) return;
+  const message =
+    `must be a page address like /about, /about/ or /about.html, because a redirect can't stand in for a .${extension} file. ` +
+    `To keep an old file's address working, put the file itself at that path in public/ (you wrote ${show(ctx.value)})`;
+  fail(ctx, ctx.value, 'E202', message);
+});
+
+export const redirect = z.strictObject({ from: redirectFrom, to: href });
 
 export const seo = z.strictObject({
   description: text.optional(),

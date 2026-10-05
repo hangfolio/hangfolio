@@ -15,6 +15,7 @@ import { byline, postMinutes, publishedPosts, readingMinutes } from '../src/lib/
 import { experience } from '../src/schema/experience.ts';
 import { project, projectsGroups } from '../src/schema/project.ts';
 import { site as siteSchema, type SiteInput } from '../src/schema/site.ts';
+import { entryId } from '../src/validate/redirects.ts';
 import { parseOk } from './helpers.ts';
 
 const site = (input: Partial<SiteInput> = {}) => parseOk(siteSchema, { name: 'Wren Halloway', email: 'wren@halloway.test', ...input });
@@ -132,9 +133,21 @@ test('projects: listed ones by order then file order; groups from projects.yaml,
     ],
   );
   // A group named like another group's id gets a number, so ids stay unique.
-  const clash = projectGroups(projects({ a: { title: 'A', group: 'Tools' } }), parseOk(projectsGroups, { groups: [{ title: 'Other', id: 'tools' }] }).groups);
-  assert.equal(clash[0].id, 'tools-2');
+  const clash = projectGroups(projects({ a: { title: 'A', group: 'Tools' }, b: { title: 'B', group: 'Other' } }), parseOk(projectsGroups, { groups: [{ title: 'Other', id: 'tools' }] }).groups);
+  assert.deepEqual(clash.map((group) => group.id), ['tools', 'tools-2']);
   assert.deepEqual(projectGroups([], settings), []);
+  // projects.yaml names a group as its projects do, give or take case and spaces; an unused group takes no id.
+  const loose = projectGroups(
+    projects({ a: { title: 'A', group: 'Developer  Tools' }, b: { title: 'B', group: 'developer tools' } }),
+    parseOk(projectsGroups, { groups: [{ title: 'Talks' }, { title: 'developer tools', link: { label: 'GitHub', href: 'https://github.com/x' } }] }).groups,
+  );
+  assert.deepEqual(loose.map((group) => [group.title, group.id, group.link?.label, group.runs[0].entries.map((entry) => entry.id).join('')]), [['developer tools', 'developer-tools', 'GitHub', 'ab']]);
+});
+
+test("a content file's id is Astro's slug of its name (for the redirect check)", () => {
+  assert.equal(entryId('cache-lied'), 'cache-lied');
+  assert.equal(entryId('My First Post'), 'my-first-post');
+  assert.equal(entryId('Café_Notes (v2)'), 'café_notes-v2');
 });
 
 test('projects: a body earns a page; summaries as plain text for the meta description', () => {

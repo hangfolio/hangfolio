@@ -113,14 +113,16 @@ test('affiliation as a string, and the other shorthands in site.yaml', () => {
 });
 
 test('booking needs calcom or link, not both; neither only to keep the page while booking is paused', () => {
-  assert.deepEqual(issuesOf(site, { ...minimal, booking: { label: 'Talk to me' } }), ['booking E202: needs one of calcom or link']);
+  const PAUSE =
+    'booking E202: needs one of calcom or link. To pause booking but keep the page (it then points to email), add keepPageWhenOff: true; to turn booking off, delete the whole booking block';
+  assert.deepEqual(issuesOf(site, { ...minimal, booking: { label: 'Talk to me' } }), [PAUSE]);
   assert.deepEqual(parseOk(site, { ...minimal, booking: { keepPageWhenOff: true } }).booking, {
     label: 'Book a 1:1',
     path: '/meet',
     emailSubject: 'Meeting request',
     keepPageWhenOff: true,
   });
-  assert.deepEqual(issuesOf(site, { ...minimal, booking: { keepPageWhenOff: false } }), ['booking E202: needs one of calcom or link']);
+  assert.deepEqual(issuesOf(site, { ...minimal, booking: { keepPageWhenOff: false } }), [PAUSE]);
   assert.deepEqual(issuesOf(site, { ...minimal, booking: { calcom: 'a/b', link: 'https://example.org/book' } }), [
     'booking E202: needs only one of calcom or link, but has calcom and link',
   ]);
@@ -177,6 +179,15 @@ test('two pages at one path are E303, reported where the path was written', () =
   ]);
   assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/contact/', to: '/' }] }), [
     "redirects.0.from E303: is also the address of the contact page ('/contact/'); give each page its own path",
+  ]);
+  // a redirect is a page, so it can't stand in for a PDF or a feed; .htm, /x/ and extensionless are pages
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/about.htm', to: '/' }, { from: '/v1.2/notes', to: '/' }, { from: '/old/', to: '/' }] }), []);
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/files/old-cv.pdf', to: '/files/cv.pdf' }, { from: '/feed.XML', to: '/' }] }), [
+    "redirects.0.from E202: must be a page address like /about, /about/ or /about.html, because a redirect can't stand in for a .pdf file. To keep an old file's address working, put the file itself at that path in public/ (you wrote '/files/old-cv.pdf')",
+    "redirects.1.from E202: must be a page address like /about, /about/ or /about.html, because a redirect can't stand in for a .XML file. To keep an old file's address working, put the file itself at that path in public/ (you wrote '/feed.XML')",
+  ]);
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/a b.pdf', to: '/' }] }), [
+    "redirects.0.from E202: must be a plain path like /projects, without spaces, ? or # (you wrote '/a b.pdf')",
   ]);
   // the booking page only takes its path when there is a booking block
   assert.deepEqual(issuesOf(site, { ...minimal, pages: { card: { path: '/meet' } } }), []);

@@ -1,0 +1,6 @@
+name: "Juniper Ash"
+email: "juniper@ash.test"
+redirects:
+  - { from: "/writing/tide-tables", to: "/" }
+  - { from: "/projects/gauge/", to: "/" }
+  - { from: "/writing/old-draft/", to: "/" }

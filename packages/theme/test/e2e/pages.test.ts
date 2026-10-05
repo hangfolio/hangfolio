@@ -3,10 +3,10 @@
 // expected files, every internal link under the base and every canonical at its page's address;
 // the redirect files are written exactly. Then each page's content, pages turned off and moved, a
 // paused booking, and, in the installed Chrome: no sideways scrolling, text contrast in both
-// themes, the status dot's pulse, the photo gallery's columns, and the Cal.com calendar reloading
-// only when the visitor clicks the theme toggle.
+// themes, the contact page's still status dot, the photo gallery's columns, and the Cal.com
+// calendar reloading only when the visitor clicks the theme toggle.
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -254,7 +254,7 @@ describe('fixtures/owner-like: the reference design’s paths and ids', () => {
   });
 });
 
-describe('pages turned off and moved, a paused booking, and redirects public/ already has', () => {
+describe('pages turned off and moved, a paused booking, redirects public/ already has, and a homepage-only project page', () => {
   let dist = '';
   const page = (file: string) => readFileSync(join(dist, file), 'utf8');
   before(() => {
@@ -271,11 +271,13 @@ describe('pages turned off and moved, a paused booking, and redirects public/ al
         '  - { from: "/legacy.html", to: "/" }\n',
     );
     writeFileSync(join(dir, 'public/legacy.html'), '<p>kept from public/</p>\n');
+    mkdirSync(join(dir, 'content/projects'), { recursive: true });
+    writeFileSync(join(dir, 'content/projects/weir.md'), '---\ntitle: "Weir"\nsummary: "A homepage-only project."\nlisted: false\n---\nHow the weir was built.\n');
     dist = buildSite(dir.slice(REPO.length), 'https://u.github.io/hangfolio');
   });
 
   test('writes the moved contact page, the paused booking page and the redirects; no writing pages and no 404', () => {
-    assert.deepEqual(htmlFiles(dist), ['about-me/index.html', 'book.html', 'cv.html', 'index.html', 'legacy.html', 'old-notes/index.html']);
+    assert.deepEqual(htmlFiles(dist), ['about-me/index.html', 'book.html', 'cv.html', 'index.html', 'legacy.html', 'old-notes/index.html', 'projects/weir/index.html']);
     assert.equal(page('legacy.html'), '<p>kept from public/</p>\n');
     assert.match(page('old-notes/index.html'), /<meta http-equiv="refresh" content="0; url=https:\/\/example\.org\/notes">/);
     assert.match(page('cv.html'), /<link rel="canonical" href="https:\/\/u\.github\.io\/hangfolio\/files\/cv\.pdf"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url=\/hangfolio\/files\/cv\.pdf">/);
@@ -290,6 +292,12 @@ describe('pages turned off and moved, a paused booking, and redirects public/ al
     const nav = [...home.matchAll(/<a href="([^"]+)" class="quiet"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]} ${m[1]}`);
     assert.deepEqual(nav, ['CV /hangfolio/files/cv.pdf', 'Contact /hangfolio/about-me/']);
     assert.doesNotMatch(home, /first-note|data-section="writing"/);
+  });
+
+  test('a project with a body but listed: false gets its page, with no back link to a /projects that was not built', () => {
+    const main = mainOf(page('projects/weir/index.html'));
+    assert.match(main, /^<header class="page-head"><h1>Weir<\/h1><p class="lede">A homepage-only project\.<\/p><\/header>/);
+    assert.doesNotMatch(main, /href="\/hangfolio\/projects"/);
   });
 
   test('a paused booking keeps its page, pointing to email, with no calls to action or nav item', () => {
@@ -353,14 +361,14 @@ describe('the interior pages in Chrome', { skip: noChrome }, () => {
     });
   }
 
-  test("the contact page's status dot pulses like the home page's, and holds still for reduced motion", async () => {
-    const animation = (page: Page) => page.$eval('.status.rule .dot', (dot) => getComputedStyle(dot).animationName);
-    const moving = await open('contact');
-    assert.equal(await animation(moving.page), 'ping');
-    await moving.ctx.close();
-    const still = await open('contact', { reducedMotion: 'reduce' });
-    assert.equal(await animation(still.page), 'none');
-    await still.ctx.close();
+  test("the contact page's status dot holds still, as on the reference design (only the home page's pulses)", async () => {
+    const animation = (page: Page, selector: string) => page.$eval(selector, (dot) => getComputedStyle(dot).animationName);
+    const contact = await open('contact');
+    assert.equal(await animation(contact.page, '.status.rule .dot'), 'none');
+    await contact.ctx.close();
+    const home = await open('');
+    assert.equal(await animation(home.page, '.status.box .dot'), 'ping');
+    await home.ctx.close();
   });
 
   test('photos sit two to a row, one under 540px; dates and places hang in the margin on wide screens', async () => {

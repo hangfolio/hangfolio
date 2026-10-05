@@ -1,0 +1,2 @@
+site.yaml:3:1 E202 booking needs one of calcom or link. To pause booking but keep the page (it then points to email), add keepPageWhenOff: true; to turn booking off, delete the whole booking block.
+site.yaml:5:7 E202 from must be a page address like /about, /about/ or /about.html, because a redirect can't stand in for a .pdf file. To keep an old file's address working, put the file itself at that path in public/. You wrote '/files/old-cv.pdf'.

@@ -28,15 +28,15 @@ availability:
 
 booking:
   link: "https://example.org/book/kmorrow"
-  lede: "Choose a slot for a call about internships, edge systems or the testbed."
+  lede: "Half-hour calls, usually on Tuesdays, about the testbed or edge scheduling."
   keepPageWhenOff: true
 
 nav: [research, projects, writing, cv, booking]
 
 pages:
-  projects: { lede: "Developer tools I maintain, the public dataset behind our NSX ’24 paper, and a small library." }
-  experience: { path: "/work-experience", heading: "Work Experience", lede: "Engineering and research work at Northlake, Fernway, Calder Labs and Calder Polytechnic." }
-  writing: { lede: "Notes on scheduling, measurement and tooling, newest first." }
+  projects: { lede: "Mostly scheduler tooling from the testbed, plus one dataset and a small library." }
+  experience: { path: "/work-experience", heading: "Work Experience", lede: "Industry roles, lab work and teaching, most recent first." }
+  writing: { lede: "Field notes from the testbed, mostly about radios and flaky tests." }
 
 redirects:
   - { from: "/about.html", to: "/" }

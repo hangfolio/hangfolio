@@ -1,9 +1,10 @@
 ---
 // site.yaml `availability` (SPEC 5.3) in one of two looks:
-// - box: the accent box under the home page intro, headline in bold and the detail muted;
+// - box: the accent box under the home page intro, headline in bold and the detail muted, with a
+//   dot that pulses (still when the visitor asks for reduced motion);
 // - rule: the status line under a hairline on the contact page, with `contact` (inline Markdown)
-//   or else the headline and detail, then anything passed in the slot.
-// In both, the dot pulses (and holds still when the visitor asks for reduced motion).
+//   or else the headline and detail, then anything passed in the slot; its dot holds still, as
+//   on the reference design.
 // The caller passes the block only while it applies (lib/hero.ts currentAvailability).
 import { inlineMd } from '../lib/inline-md.ts';
 import type { SiteYaml } from '../lib/site.ts';
