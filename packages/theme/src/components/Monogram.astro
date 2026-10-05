@@ -5,26 +5,27 @@ import { site } from 'virtual:hangfolio/site';
 import { initials } from '../lib/avatar.ts';
 
 interface Props {
-  /** The diameter in rem */
+  /** The diameter in rem. Without it the size comes from CSS (--size, 6rem by default). */
   size?: number;
 }
 
-const { size = 6 } = Astro.props;
+const { size } = Astro.props;
 ---
-<span class="monogram" aria-hidden="true" style={`--size: ${size}rem`}>{initials(site.name, site.advanced.nameParts)}</span>
+<span class="monogram" aria-hidden="true" style={size === undefined ? undefined : `--size: ${size}rem`}>{initials(site.name, site.advanced.nameParts)}</span>
 
 <style>
   .monogram {
     display: inline-grid;
     place-items: center;
-    width: var(--size);
-    height: var(--size);
+    flex: none;
+    width: var(--size, 6rem);
+    height: var(--size, 6rem);
     border-radius: 50%;
     background: var(--tint);
     border: 1px solid var(--rule);
     color: var(--accent);
     font-family: var(--serif);
-    font-size: calc(var(--size) * .4);
+    font-size: calc(var(--size, 6rem) * .4);
     line-height: 1;
     letter-spacing: .02em;
     user-select: none;

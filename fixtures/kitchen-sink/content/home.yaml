@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/home.json
+intro: "Fourth-year PhD candidate at the [Institute of Example Studies](https://example.org), advised by [Dr. Ilse Marrow](https://example.org/~marrow). Before that I kept build farms fast at Example Systems."
+now: "a tracing layer for build caches, and a paper on `fsync` batching."
+highlights:
+  items:
+    - { value: "up to 62%", what: "shorter p95 build times on a 40-node farm", source: "[Shoal](#work), in preparation" }
+    - { value: "18/18", what: "seeded cache bugs found, 0 false alarms", source: "[Driftnet data](/files/driftnet.pdf)" }
+    - { value: "9 min → 70s", what: "median CI run for 300 engineers", source: "[Example Systems](https://example.org)" }
+    - { value: "1,240", what: "monthly downloads", source: "[Quay](https://example.org/quay) on the package index" }

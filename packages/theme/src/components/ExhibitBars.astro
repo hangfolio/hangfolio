@@ -1,0 +1,22 @@
+---
+// Bars drawn to scale: each width is value / max, rounded to 0.1% (lib/exhibits.ts). To a screen
+// reader the rows are one image whose label carries every value; the caption is read after it.
+import { barRows, barsLabel, type Bars } from '../lib/exhibits.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+
+type Props = Bars;
+
+const bars = Astro.props;
+---
+<figure class="well bars">
+  <div class="bar-rows" role="img" aria-label={barsLabel(bars)}>
+    {barRows(bars).map((row) => (
+      <div class="bar-row">
+        <span>{row.label}</span>
+        <span class="track"><span class={`fill ${row.tone}`} style={`width: ${row.width}`}></span></span>
+        <span class="val">{row.value}</span>
+      </div>
+    ))}
+  </div>
+  <figcaption set:html={inlineMd(bars.caption)} />
+</figure>

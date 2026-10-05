@@ -1,0 +1,12 @@
+---
+// The command that installs a project, as a one-line terminal.
+import ExhibitTerminal from './ExhibitTerminal.astro';
+
+interface Props {
+  command: string;
+  label?: string;
+}
+
+const { command, label = 'Install' } = Astro.props;
+---
+<ExhibitTerminal label={label} lines={[`$ ${command}`]} class="install" />

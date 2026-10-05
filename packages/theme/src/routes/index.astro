@@ -1,29 +1,43 @@
 ---
-// The home page. TODO(M3): the hero and the sections from content/home.yaml.
+// The home page (SPEC 5.4): the hero, then the sections in home.yaml `sections` order, each with
+// its id from advanced.anchors. Without home.yaml, or while it is the example, the defaults apply
+// and each section shows only when its content exists.
+// TODO(M3): the research, experience, education, news, writing and contact sections.
+import { getCollection, getEntry } from 'astro:content';
 import { site } from 'virtual:hangfolio/site';
-import Monogram from '../components/Monogram.astro';
-import Page from '../layouts/Page.astro';
-import { pageTitle } from '../lib/site.ts';
-import { url } from '../lib/url.ts';
+import Hero from '../components/Hero.astro';
+import ResultsStrip from '../components/ResultsStrip.astro';
+import SectionHead from '../components/SectionHead.astro';
+import WorkItem from '../components/WorkItem.astro';
+import Base from '../layouts/Base.astro';
+import { availablePages } from '../lib/nav.ts';
+import { localeTag, pageTitle } from '../lib/site.ts';
+import { featuredProjects, workView } from '../lib/work.ts';
+import { home as homeSchema } from '../schema/home.ts';
 
-const whoami = [site.role, site.affiliation?.name, site.location].filter(Boolean).join(' · ');
+const home = (await getEntry('home', 'home'))?.data ?? homeSchema.parse({});
+const featured = featuredProjects(await getCollection('projects'));
+const anchors = site.advanced.anchors;
+const locale = localeTag(site);
+const projectsPage = availablePages(site).has('projects') && site.pages.projects;
+const allProjects = projectsPage ? { label: 'All projects', href: projectsPage.path } : undefined;
 ---
-<Page title={pageTitle(site)} path="/" ogType="profile" heading={site.name} lede={site.tagline}>
-  <Fragment slot="eyebrow">
-    {site.avatar ? <img class="avatar" src={url(site.avatar)} alt={site.avatarAlt} width="96" height="96" /> : <Monogram />}
-  </Fragment>
-  {whoami && <p class="kicker">{whoami}</p>}
-  <ul class="links">
-    <li><a href={url(`mailto:${site.email}`)}>{site.email}</a></li>
-    {site.cv && <li><a href={url(site.cv)}>CV (PDF)</a></li>}
-  </ul>
-</Page>
-
-<style>
-  .avatar {
-    width: 6rem;
-    height: 6rem;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-</style>
+<Base title={pageTitle(site)} path="/" ogType="profile">
+  <Hero home={home} />
+  {home.sections.map((section) => {
+    if (section === 'highlights' && home.highlights) {
+      return <ResultsStrip id={anchors.highlights} heading={home.highlights.heading} items={home.highlights.items} />;
+    }
+    if (section === 'work' && featured.length > 0) {
+      return (
+        <section class="block" aria-labelledby={anchors.work} data-section="work">
+          <SectionHead id={anchors.work} heading={home.headings.work} link={allProjects} />
+          <ol class="works">
+            {featured.map((entry, i) => <WorkItem view={workView(entry, 'featured', { n: i + 1, site, locale })} />)}
+          </ol>
+        </section>
+      );
+    }
+    return null;
+  })}
+</Base>

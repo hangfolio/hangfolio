@@ -1,0 +1,17 @@
+---
+// A section heading: a small-caps label, a hairline, and an optional link on the right.
+import { url } from '../lib/url.ts';
+
+interface Props {
+  /** The heading's id, which the section's aria-labelledby and #links point at */
+  id: string;
+  heading: string;
+  link?: { label: string; href: string };
+}
+
+const { id, heading, link } = Astro.props;
+---
+<div class="sec-head">
+  <h2 id={id} class="eyebrow">{heading}</h2>
+  {link && <a href={url(link.href)}>{link.label}</a>}
+</div>

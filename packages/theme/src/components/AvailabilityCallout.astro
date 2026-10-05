@@ -1,0 +1,27 @@
+---
+// site.yaml `availability` (SPEC 5.3) in one of two looks:
+// - box: the accent box under the home page intro, headline in bold and the detail muted, with a
+//   dot that pulses (still when the visitor asks for reduced motion);
+// - rule: the status line under a hairline on the contact page, with `contact` (inline Markdown)
+//   or else the headline and detail, then anything passed in the slot.
+// The caller passes the block only while it applies (lib/hero.ts currentAvailability).
+import { inlineMd } from '../lib/inline-md.ts';
+import type { SiteYaml } from '../lib/site.ts';
+
+interface Props {
+  availability: NonNullable<SiteYaml['availability']>;
+  variant?: 'box' | 'rule';
+}
+
+const { availability, variant = 'box' } = Astro.props;
+const { headline, detail, contact } = availability;
+const slotted = Astro.slots.has('default');
+---
+<p class={`status ${variant}`}>
+  <span class="dot" aria-hidden="true"></span>
+  {variant === 'rule' && contact ? (
+    <span><Fragment set:html={inlineMd(contact)} />{slotted && ' '}<slot /></span>
+  ) : (
+    <span><strong>{headline}</strong>{detail && <> <span class="muted">{detail}</span></>}{slotted && ' '}<slot /></span>
+  )}
+</p>

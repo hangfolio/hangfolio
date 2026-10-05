@@ -339,6 +339,596 @@ main:focus {
   color: var(--fg);
 }
 
+/* ---------- Utilities ---------- */
+
+.muted {
+  color: var(--muted);
+}
+
+.faint {
+  color: var(--faint);
+}
+
+.strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* ---------- Home: hero (Hero.astro) ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.hero-id {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hero .avatar {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  background: var(--tint);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+.hero .monogram {
+  --size: 4.5rem;
+}
+
+.id-text {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -.018em;
+}
+
+.whoami {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.hero .lede {
+  max-width: 38rem;
+  font-family: var(--serif);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -.008em;
+  text-wrap: balance;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: .875rem;
+  max-width: 37rem;
+}
+
+.intro p {
+  text-wrap: pretty;
+}
+
+.now {
+  font-size: .9375rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+/* Calls to action: the Résumé button, then plain links */
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem 1.75rem;
+  padding-top: .25rem;
+}
+
+.cta > a:not(.btn) {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  font-size: .9375rem;
+}
+
+.pdf {
+  font-family: var(--mono);
+  font-size: .75rem;
+  font-weight: 500;
+}
+
+/* Profile links, each with the external-link arrow */
+.prof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.25rem;
+  font-size: .875rem;
+}
+
+.prof a {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+}
+
+.ext {
+  flex: none;
+}
+
+/* The avatar hangs in the left margin, like the dates below it */
+@media (min-width: 1120px) {
+  .hero-id {
+    margin-left: -6rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .hero .lede {
+    font-size: 1.375rem;
+  }
+
+  .hero .avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .hero .monogram {
+    --size: 3.5rem;
+  }
+
+  .hero-id {
+    gap: 1rem;
+  }
+
+  .prof a {
+    min-height: 2.75rem;
+  }
+}
+
+/* ---------- Availability (AvailabilityCallout.astro) ---------- */
+
+.status {
+  display: flex;
+  align-items: baseline;
+  font-size: 1rem;
+  text-wrap: pretty;
+}
+
+.status strong {
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.status .dot {
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-.05rem);
+}
+
+/* box: the one line every visitor of the home page should see */
+.status.box {
+  gap: .75rem;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: .25rem;
+  padding: .875rem 1.125rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  line-height: 1.5;
+}
+
+.status.box .dot {
+  width: .625rem;
+  height: .625rem;
+}
+
+/* rule: a quieter status line under a hairline (the contact page) */
+.status.rule {
+  gap: .625rem;
+  max-width: 37rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  line-height: 1.6;
+}
+
+.status.rule .dot {
+  width: .5rem;
+  height: .5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .status.box .dot {
+    animation: ping 2.4s ease-out infinite;
+  }
+}
+
+@keyframes ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 .5rem color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+
+/* ---------- Home sections ---------- */
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.block.tight-gap {
+  gap: 2rem;
+}
+
+/* ---------- Results strip (ResultsStrip.astro) ---------- */
+
+.proof {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 1.75rem 2.5rem;
+}
+
+.proof li {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+
+.big {
+  font-family: var(--mono);
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -.03em;
+}
+
+/* "up to " before the figure */
+.big .pre {
+  font-size: 1rem;
+  letter-spacing: 0;
+  color: var(--muted);
+}
+
+/* " → " between a before and an after */
+.big .arrow {
+  color: var(--faint);
+}
+
+.what {
+  font-size: .9375rem;
+  line-height: 1.45;
+}
+
+.src {
+  font-family: var(--mono);
+  font-size: .75rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.src a {
+  color: var(--muted);
+}
+
+.src a:hover {
+  color: var(--accent);
+}
+
+/* Wide screens: all the results in one row (--cols is the number of items, at most 4) */
+@media (min-width: 900px) {
+  .proof {
+    grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+    gap: 1.75rem 1.5rem;
+  }
+
+  .big {
+    font-size: 1.625rem;
+  }
+}
+
+/* ---------- Work items (WorkItem.astro) ---------- */
+
+.works {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.works.compact {
+  gap: 2.25rem;
+}
+
+.work {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.work > p {
+  text-wrap: pretty;
+}
+
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .25rem .875rem;
+}
+
+.title-row h3 {
+  font-family: var(--serif);
+  font-size: 1.625rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+}
+
+.full .title-row h3,
+.compact .title-row h3 {
+  text-wrap: balance;
+}
+
+/* compact: lighter title, muted one-liner */
+.compact .work {
+  gap: .5rem;
+}
+
+.compact .title-row h3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.compact .work > p {
+  font-size: .9375rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* "RESULT  up to 3.1× write throughput" */
+.result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .125rem .75rem;
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.55;
+}
+
+.result .tag {
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+/* Problem / Built / Result / Install, separated by hairlines (FactsList.astro) */
+.facts {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: .25rem 1rem;
+  padding: .625rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.facts dt {
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.facts dd {
+  min-width: 0;
+  font-size: .9375rem;
+  line-height: 1.6;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.facts .nums {
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+.facts dd.install {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.facts .well {
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  .full .title-row h3 {
+    font-size: 1.4375rem;
+  }
+
+  .compact .title-row h3 {
+    font-size: 1.1875rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+  }
+}
+
+/* ---------- Exhibits (Exhibit*.astro) ---------- */
+
+/* Severity badges in a terminal: critical and high filled, medium and low outlined */
+.sev {
+  padding: 0 .3125rem;
+  border-radius: 2px;
+  background: var(--fg);
+  color: var(--well);
+  font-weight: 500;
+}
+
+.sev.high {
+  background: var(--muted);
+}
+
+.sev.medium,
+.sev.low {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.sev.medium {
+  color: var(--fg);
+}
+
+.sev.low {
+  color: var(--muted);
+}
+
+.well.install {
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Metrics: label, then before → after */
+.metrics {
+  gap: .25rem;
+}
+
+.metrics dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .125rem 1.5rem;
+  max-width: 22rem;
+}
+
+.metrics dt {
+  color: var(--muted);
+}
+
+.metrics dd {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.hi {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Bars: label, track, value; the columns line up across rows */
+.bars {
+  gap: .625rem;
+  padding: .875rem 1rem;
+  line-height: 1.5;
+}
+
+.bar-rows {
+  display: grid;
+  grid-template-columns: minmax(2.75rem, max-content) minmax(4rem, 1fr) minmax(4.25rem, max-content);
+  align-items: center;
+  gap: .5rem .75rem;
+}
+
+.bar-row {
+  display: contents;
+}
+
+.track {
+  display: block;
+  height: .75rem;
+  background: var(--well-line);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+
+.fill.faint {
+  background: var(--faint);
+}
+
+.val {
+  text-align: right;
+  font-weight: 500;
+}
+
+.bars figcaption {
+  padding-top: .5rem;
+  border-top: 1px dashed var(--rule-strong);
+  color: var(--muted);
+}
+
+.bars figcaption strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+
 /* ---------- Interior pages ---------- */
 
 .page-head {

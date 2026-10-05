@@ -1,0 +1,67 @@
+---
+// The top of the home page: the photo (or initials monogram), name and whoami line, the tagline,
+// the intro, the "Now:" line and the availability box, then the calls to action (Résumé with
+// a PDF badge, Email, booking) and the profile links. What each shows is worked out in lib/hero.ts.
+import { demo, site } from 'virtual:hangfolio/site';
+import AvailabilityCallout from './AvailabilityCallout.astro';
+import ExternalIcon from './ExternalIcon.astro';
+import Monogram from './Monogram.astro';
+import { currentAvailability, heroActions, introHtml, whoami } from '../lib/hero.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+import { availablePages } from '../lib/nav.ts';
+import { url } from '../lib/url.ts';
+import type { Home } from '../schema/home.ts';
+
+interface Props {
+  /** content/home.yaml, when the site has one that isn't the example */
+  home?: Pick<Home, 'intro' | 'now'>;
+  /** The moment availability.until is compared with: the build's own time by default */
+  now?: Date;
+}
+
+const { home, now = new Date() } = Astro.props;
+const who = whoami(site);
+const intro = introHtml(site, home);
+const availability = currentAvailability(site, now);
+const actions = heroActions(site, { bookingPage: availablePages(site).has('booking'), demo, now });
+---
+<section class="hero" aria-labelledby="name">
+  <div class="hero-id">
+    {site.avatar ? <img class="avatar" src={url(site.avatar)} alt={site.avatarAlt} width="72" height="72" fetchpriority="high" /> : <Monogram />}
+    <div class="id-text">
+      <h1 id="name">{site.name}</h1>
+      {who && <p class="whoami">{who}</p>}
+    </div>
+  </div>
+
+  {site.tagline && <p class="lede" set:html={inlineMd(site.tagline)} />}
+
+  {(intro || home?.now || availability) && (
+    <div class="intro">
+      {intro && <p class="muted" set:html={intro} />}
+      {home?.now && <p class="now"><span class="strong">{site.advanced.labels.now}</span> <Fragment set:html={inlineMd(home.now)} /></p>}
+      {availability && <AvailabilityCallout availability={availability} variant="box" />}
+    </div>
+  )}
+
+  <div class="actions">
+    <div class="cta">
+      {actions.resume && (
+        <a href={url(actions.resume.href)} class="btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"></path></svg>
+          <span>Résumé</span>
+          {actions.resume.pdf && <span class="pdf">PDF</span>}
+        </a>
+      )}
+      <a href={url(actions.email)} class={actions.resume ? undefined : 'btn'}>Email</a>
+      {actions.booking && <a href={url(actions.booking.href)}>{actions.booking.label}</a>}
+    </div>
+    {actions.profiles.length > 0 && (
+      <ul class="prof" aria-label="Profiles">
+        {actions.profiles.map((profile) => (
+          <li><a class="soft" href={url(profile.href)}>{profile.label}{profile.external && <ExternalIcon />}</a></li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>

@@ -16,6 +16,8 @@
     "test": "npm test -w packages/theme",
     "test:golden": "npm run test:golden -w packages/theme",
     "test:e2e": "npm run test:e2e -w packages/theme",
+    "test:a11y": "npm run test:a11y -w packages/theme",
+    "test:screenshots": "npm run test:screenshots -w packages/theme",
     "test:starter-scenario": "npm run test:starter-scenario -w packages/theme",
     "changeset": "changeset",
     "version-packages": "changeset version"

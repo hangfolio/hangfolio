@@ -58,10 +58,19 @@ describe('starter scenario', () => {
     assert.equal(build.status, 0, build.output);
     for (const file of pages()) {
       assert.match(read(file), /<meta name="robots" content="noindex, follow">/, file);
-      assert.match(read(file), /<div class="xbanner" role="note"[^>]*><p[^>]*>This is an example site\. Edit site\.yaml to make it yours\.<\/p><\/div>/, file);
+      assert.match(read(file), /<section class="xbanner" aria-label="Example site"[^>]*><p[^>]*>This is an example site\. Edit site\.yaml to make it yours\.<\/p><\/section>/, file);
     }
     assert.ok(existsSync(join(DIST, 'example/avatar.jpg')));
-    assert.match(read('index.html'), /<img class="avatar" src="\/example\/avatar\.jpg" alt="Portrait of Rowan Vale"/);
+    const home = read('index.html');
+    assert.match(home, /<img class="avatar" src="\/example\/avatar\.jpg" alt="Portrait of Rowan Vale"/);
+    // The example home.yaml, availability and project show in demo mode.
+    assert.match(home, /<p class="muted">PhD student at <a href="https:\/\/example\.edu">Example University<\/a>, advised by /);
+    assert.match(home, /<p class="status box">.*<strong>Open to research internships · Summer 2027\.<\/strong>/);
+    assert.match(home, /<a href="mailto:rowan@example\.edu\?subject=Summer%202027%20internship">Email<\/a>/);
+    assert.match(home, /<span class="big nowrap"><span class="pre">up to <\/span>40%<\/span>/);
+    assert.match(home, /<li class="hang featured">.*<h3>Tidepool<\/h3>.*<span class="sev critical">\[CRITICAL\]<\/span> lost write after fsync reorder/);
+    // No Cal.com link for the fictional booking name.
+    assert.doesNotMatch(home, /cal\.com/);
   });
 
   test('2. only name and email changed: E401 on tagline, role and affiliation, and no build', () => {
@@ -131,6 +140,7 @@ describe('starter scenario', () => {
     const home = read('index.html');
     assert.match(home, /<meta name="robots" content="index, follow/);
     assert.match(home, /<span class="monogram" aria-hidden="true"[^>]*>MQ<\/span>/);
-    assert.match(home, /<p class="kicker"[^>]*>Oceanographer · Harbor Institute<\/p>/);
+    assert.match(home, /<div class="intro"><p class="muted">Oceanographer · Harbor Institute<\/p><\/div>/);
+    assert.doesNotMatch(home, /class="status|class="proof"|class="works"|class="btn"><svg/);
   });
 });

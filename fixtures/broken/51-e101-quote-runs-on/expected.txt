@@ -1,0 +1,2 @@
+site.yaml:3:7 E101 This value's " quote is closed with a curly ”, which YAML doesn't read as a quote. Use a straight one: role: "Marine ecologist"
+content/experience.yaml:2:32 E101 This value's " quote is never closed. Add the closing ": - { section: research, role: "Field engineer", org: "Harbor Institute", start: 2025-01 }

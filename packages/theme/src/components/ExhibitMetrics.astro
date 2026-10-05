@@ -1,0 +1,25 @@
+---
+// Before → after figures in a terminal-style well: a "# title" comment, one row per metric, and
+// an optional footer line with a muted aside. A row marked highlight shows its after value in
+// the accent colour.
+import { inlineMd } from '../lib/inline-md.ts';
+import type { Exhibit } from '../lib/exhibits.ts';
+
+type Props = NonNullable<Exhibit['metrics']>;
+
+const { title, rows, footer, footerMuted } = Astro.props;
+---
+<div class="well metrics" role="group" aria-label={title}>
+  <div class="c"># {title}</div>
+  <dl>
+    {rows.map((row) => (
+      <>
+        <dt>{row.label}</dt>
+        <dd><span class="muted">{row.before}</span> <span class="c" aria-hidden="true">→</span><span class="visually-hidden">to</span> <span class={row.highlight ? 'hi' : undefined}>{row.after}</span></dd>
+      </>
+    ))}
+  </dl>
+  {(footer || footerMuted) && (
+    <div>{footer && <Fragment set:html={inlineMd(footer)} />}{footer && footerMuted && ' '}{footerMuted && <span class="muted">{footerMuted}</span>}</div>
+  )}
+</div>

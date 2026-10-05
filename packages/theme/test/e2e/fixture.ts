@@ -12,7 +12,12 @@ const BIN = fileURLToPath(new URL('../../bin/hangfolio.mjs', import.meta.url));
 
 /** Runs `hangfolio build` in fixtures/<name> with SITE_PAGES_URL set; returns the dist path. */
 export function buildFixture(name: string, pagesUrl: string): string {
-  const cwd = join(REPO, 'fixtures', name);
+  return buildSite(join('fixtures', name), pagesUrl);
+}
+
+/** Runs `hangfolio build` in a site folder given relative to the repo (e.g. `starter`). */
+export function buildSite(dir: string, pagesUrl: string): string {
+  const cwd = join(REPO, dir);
   const result = spawnSync(process.execPath, [BIN, 'build'], {
     cwd,
     env: { ...process.env, SITE_PAGES_URL: pagesUrl },

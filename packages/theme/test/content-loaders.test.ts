@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import type { LoaderContext } from 'astro/loaders';
+import type { Loader, LoaderContext } from 'astro/loaders';
+import { optional } from '../src/lib/loaders.ts';
 import { readSiteConfig } from '../src/lib/read-site.ts';
 import { yamlFile } from '../src/lib/yaml-file.ts';
 import { news } from '../src/schema/news.ts';
@@ -108,4 +109,32 @@ test('outside demo mode a YAML file loses its example entries; in demo mode it k
   const demo = context();
   await yamlFile('items.yaml', hide).load(demo.ctx);
   assert.deepEqual((demo.entries.get('items')?.data as { items: unknown[] }).items.length, 2);
+});
+
+test('optional(): a folder with no entries is an empty collection that exists, so getCollection() does not warn', async () => {
+  // Astro's store keeps a collection once an entry was stored, even after it is removed.
+  const collections = new Map<string, Map<string, unknown>>();
+  const storeFor = (name: string) => ({
+    keys: () => [...(collections.get(name)?.keys() ?? [])],
+    set: (entry: { id: string }) => void (collections.get(name) ?? collections.set(name, new Map()).get(name)!).set(entry.id, entry),
+    delete: (id: string) => void collections.get(name)?.delete(id),
+  });
+  const warnings: string[] = [];
+  const logger = { warn: (message: string) => warnings.push(message) };
+  const run = (name: string, ids: string[]) => {
+    const loader: Loader = {
+      name: 'stand-in',
+      load: async ({ store, logger }) => {
+        logger.warn('No files found matching "*.md" in directory "content/x"');
+        for (const id of ids) store.set({ id, data: {} });
+      },
+    };
+    return optional(loader).load({ store: storeFor(name), logger } as unknown as LoaderContext);
+  };
+
+  await run('empty', []);
+  assert.deepEqual([...(collections.get('empty')?.keys() ?? ['missing'])], []);
+  await run('full', ['a', 'b']);
+  assert.deepEqual([...collections.get('full')!.keys()], ['a', 'b']);
+  assert.deepEqual(warnings, []);
 });

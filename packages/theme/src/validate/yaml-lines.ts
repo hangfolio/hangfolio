@@ -1,6 +1,6 @@
 // Fixes built from the text of one YAML line: the value part, the value in quotes, curly quotes
 // made straight, where an unclosed quote opens, and a value inside { } that is missing a comma or
-// its quotes. yaml-hints.ts turns them into messages.
+// its quotes or has run on into the next one. yaml-hints.ts turns them into messages.
 
 /** The value part of a `key: value` or `- value` line, without a trailing comment. */
 export function valueOf(line: string): { prefix: string; text: string; col: number } | undefined {
@@ -20,30 +20,44 @@ export function uncurl(text: string): string | undefined {
 }
 
 /** A comment at the end of a line (` # …`); `#` inside a word or before a digit is text. */
-const COMMENT = /\s+#(?:\s.*)?$/;
+export const COMMENT = /\s+#(?:\s.*)?$/;
 
 /**
- * The quote that starts a value on this line and is still open at its end, if any. A quote
- * starts a value only after `key:`, `- `, `{`, `[` or `,`, so the apostrophe in I'm is text.
+ * The quoted values on a line, in order: where each opens, and where it closes (-1 when it
+ * doesn't). A quote starts a value only after `key:`, `- `, `{`, `[` or `,`, so the apostrophe
+ * in I'm is text.
  */
-export function openQuote(line: string): { index: number; char: string } | undefined {
-  let open: { index: number; char: string } | undefined;
+function quotedValues(line: string): { index: number; char: string; end: number }[] {
+  const found: { index: number; char: string; end: number }[] = [];
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
-    if (open) {
-      if (open.char === '"' && c === '\\') i++;
-      else if (c === open.char && open.char === "'" && line[i + 1] === "'") i++;
-      else if (c === open.char) open = undefined;
-      continue;
+    if (c === '#' && (i === 0 || /\s/.test(line[i - 1]))) break;
+    if ((c !== '"' && c !== "'") || !/(?:^|[:[{,]|(?:^|\s)-)$/.test(line.slice(0, i).trimEnd())) continue;
+    let end = i + 1;
+    while (end < line.length) {
+      // \" is a quote inside "…", and '' one inside '…'
+      if ((c === '"' && line[end] === '\\') || (c === "'" && line.startsWith("''", end))) end += 2;
+      else if (line[end] === c) break;
+      else end++;
     }
-    if (c === '#' && (i === 0 || /\s/.test(line[i - 1]))) return undefined;
-    if ((c === '"' || c === "'") && /(?:^|[:[{,]|(?:^|\s)-)$/.test(line.slice(0, i).trimEnd())) open = { index: i, char: c };
+    found.push({ index: i, char: c, end: end < line.length ? end : -1 });
+    if (end >= line.length) break;
+    i = end;
   }
-  return open;
+  return found;
 }
 
-/** The line with its unclosed quote closed: before a trailing comment, and before a closing } or ]. */
-export function closeQuote(line: string, open: { index: number; char: string }): string {
+/** The quote that starts a value on this line and is still open at its end, if any. */
+export function openQuote(line: string): { index: number; char: string } | undefined {
+  const last = quotedValues(line).at(-1);
+  return last?.end === -1 ? { index: last.index, char: last.char } : undefined;
+}
+
+/**
+ * The line with its unclosed quote closed: before a trailing comment, and before a closing } or ].
+ * A closing quote typed curly ("Marine ecologist”) is made straight; `curly` says which it was.
+ */
+export function closeQuote(line: string, open: { index: number; char: string }): { fixed: string; curly?: string } {
   const before = line.slice(0, open.index);
   let value = line.slice(open.index).replace(COMMENT, '').trimEnd();
   let tail = '';
@@ -51,7 +65,33 @@ export function closeQuote(line: string, open: { index: number; char: string }):
     tail = /\s*[}\]][\s}\],]*$/.exec(value)?.[0] ?? '';
     value = value.slice(0, value.length - tail.length);
   }
-  return `${before.trim()} ${value}${open.char}${tail}`;
+  const curly = curlyCloser(value, open.char);
+  if (curly) value = value.slice(0, -1);
+  return { fixed: `${before.trim()} ${value}${open.char}${tail}`, curly };
+}
+
+/** The last character of a value that opens with `char`, if it is a curly closing quote that nothing inside opened. */
+function curlyCloser(value: string, char: string): string | undefined {
+  const [closers, openers] = char === '"' ? ['”“', '“„'] : ['’‘', '‘‚'];
+  const last = value.at(-1) ?? '';
+  return value.length > 1 && closers.includes(last) && ![...value.slice(1, -1)].some((c) => openers.includes(c)) ? last : undefined;
+}
+
+/**
+ * Inside { } or [ ], a value whose closing quote is missing runs on to the next value's opening
+ * quote and swallows the comma between them: { role: "Engineer, org: "Example" }. The quote that
+ * opens it, and the line with the quote closed before that comma.
+ */
+export function runOnQuote(line: string): { index: number; char: string; fixed: string } | undefined {
+  for (const { index, char, end } of quotedValues(line)) {
+    const before = line.slice(0, index);
+    if (end === -1 || before.split(/[{[]/).length <= before.split(/[}\]]/).length) continue;
+    const run = /,\s*(?:[A-Za-z][\w-]*:\s*)?$/.exec(line.slice(index + 1, end));
+    if (!run) continue;
+    const at = index + 1 + run.index;
+    return { index, char, fixed: `${before.trimStart()}${line.slice(index, at)}${char}${line.slice(at).replace(COMMENT, '').trimEnd()}` };
+  }
+  return undefined;
 }
 
 /**

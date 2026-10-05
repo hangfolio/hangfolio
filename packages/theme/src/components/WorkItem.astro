@@ -1,0 +1,43 @@
+---
+// One project in a list of work (an <ol class="works">), in one of three looks (lib/work.ts):
+// - featured: the home page's "Selected work", with a result line, an exhibit, and links or a
+//   mono footnote;
+// - full: an entry on /projects, with its facts;
+// - compact: a smaller entry on /projects: title, a muted summary and links.
+// The number and the dates (or the margin text) hang in the left margin on wide screens.
+import DateRange from './DateRange.astro';
+import Exhibit from './Exhibit.astro';
+import FactsList from './FactsList.astro';
+import { inlineMd } from '../lib/inline-md.ts';
+import { contentUrl } from '../lib/url.ts';
+import type { WorkView } from '../lib/work.ts';
+
+interface Props {
+  view: WorkView;
+}
+
+const { view } = Astro.props;
+const { margin, result } = view;
+---
+<li class={`hang ${view.variant}`}>
+  <div class="m"><span class="n">{view.number}</span>{'text' in margin ? <span>{margin.text}</span> : <DateRange parts={margin.range} />}</div>
+  <div class="work">
+    <div class="title-row">
+      <h3>{view.title}</h3>
+      {view.kicker && <span class="kicker">{view.kicker}</span>}
+    </div>
+    <p set:html={inlineMd(view.summary)} />
+    {result && (
+      <p class="result"><span class="tag">{result.tag}</span><span set:html={result.parts.map((part) => inlineMd(part)).join(' · ')} />{result.muted && <span class="muted">{result.muted}</span>}</p>
+    )}
+    {view.exhibit && <Exhibit exhibit={view.exhibit} />}
+    {view.facts.length > 0 && <FactsList facts={view.facts} />}
+    {view.footnote ? (
+      <div class="links mono faint">{view.footnote.map((note) => <span>{note}</span>)}</div>
+    ) : view.links.length > 0 && (
+      <div class="links">
+        {view.links.map((link) => ('code' in link ? <code class="inline-code">{link.code}</code> : <a href={contentUrl(link.href)}>{link.label}</a>))}
+      </div>
+    )}
+  </div>
+</li>

@@ -1,0 +1,5 @@
+site.yaml:3:7 E206 This value ends with " but doesn't start with one, so the " would show on your site. Put the value in straight quotes: role: "Marine ecologist"
+site.yaml:4:11 E206 This value starts with a curly “ and ends with a straight ", so both would show on your site. Use straight quotes at both ends: location: "Harbor Point"
+content/experience.yaml:3:11 E206 This value ends with " but doesn't start with one, so the " would show on your site. Put the value in straight quotes: role: "Field engineer"
+content/experience.yaml:6:36 E206 This value starts with “ but nothing closes it, so the “ would show on your site. Put the value in straight quotes: - { section: professional, role: "Survey technician", org: "Bayside Charters" }
+content/experience.yaml:7:48 W206 This value ends with ' but doesn't start with one, so the ' shows on your site. Unless it is an apostrophe, put the value in straight quotes: - { section: earlier, role: "Deckhand", org: "Bayside Charter Co" }

@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
+# fixtures/kitchen-sink: every field the theme reads, filled in, so every component renders.
+# Tamsin Rook, the institute, the people and the projects are all invented.
+name: "Tamsin Rook"
+tagline: "I build tools that tell you *why* a build is slow, not just that it is."
+role: "PhD candidate in Computer Systems"
+affiliation: { name: "Institute of Example Studies", url: "https://example.org" }
+email: "tamsin@rook.test"
+location: "Saltmarsh Bay"
+pronouns: "they/them"
+avatar: "/images/avatar.png"
+avatarAlt: "Tamsin Rook, drawn as a sun over two waves"
+cv: "/files/cv.pdf"
+
+links:
+  - "https://github.com/hangfolio/hangfolio"
+  - { url: "https://hangfolio.github.io/", label: "Notes" }
+  - { url: "https://bsky.app/profile/rook.test", footer: false }
+  - { url: "mailto:lab@rook.test", label: "Lab list", hero: false }
+
+availability:
+  headline: "Open to systems research internships · Summer 2027."
+  detail: "Back to the PhD in the autumn."
+  contact: "I'm looking for a **Summer 2027** internship in systems research, then returning to my PhD."
+  emailSubject: "Summer 2027 internship"
+  until: 2099-12
+
+booking:
+  link: "https://example.org/book/tamsin"
+  label: "Book a call"

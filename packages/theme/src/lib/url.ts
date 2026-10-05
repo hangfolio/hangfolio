@@ -20,6 +20,20 @@ export function url(path: string, base: string = import.meta.env.BASE_URL): stri
   return '/' + segments.join('/') + (trailingSlash ? '/' : '') + suffix;
 }
 
+/** True when a root-relative path already starts with the base: '/hangfolio/x' at base /hangfolio, not '/hangfolios'. */
+export function hasBase(path: string, base: string = import.meta.env.BASE_URL): boolean {
+  const prefix = base.replace(/\/+$/, '');
+  return prefix !== '' && path.startsWith(prefix) && /^(?:$|[/?#])/.test(path.slice(prefix.length));
+}
+
+/**
+ * url() for a link written in content (the inline Markdown of YAML fields). A path that already
+ * starts with the base is left alone, so nothing is prefixed twice; the checks warn W601 about it.
+ */
+export function contentUrl(path: string, base: string = import.meta.env.BASE_URL): string {
+  return path.startsWith('/') && hasBase(path, base) ? path : url(path, base);
+}
+
 /**
  * The absolute form of url(path) on the site's origin. A #fragment resolves against the site's
  * home page, so `absUrl('#person')` is `https://u.github.io/hangfolio/#person`.

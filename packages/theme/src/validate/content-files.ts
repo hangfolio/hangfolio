@@ -1,11 +1,13 @@
-// Reads site.yaml and the files in content/ with positions, and checks each against its schema.
-// Every file is optional except site.yaml. Folders hold Markdown read by the content collections
-// (src/content.ts); a file with syntax problems is not checked against its schema (S11).
+// Reads site.yaml and the files in content/ with positions, and checks each against its schema
+// and for quote marks kept as text. Every file is optional except site.yaml. Folders hold
+// Markdown read by the content collections (src/content.ts); a file with syntax problems is not
+// checked against its schema (S11).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { z } from 'zod';
 import { experience, home, news, post, project, projectsGroups, publication, site } from '../schema/index.ts';
 import type { Issue } from './issue.ts';
+import { quoteIssues } from './quotes.ts';
 import { knownKeys } from './schema-walk.ts';
 import { loadSource, toData, type Source } from './source.ts';
 import { syntaxIssues } from './yaml-hints.ts';
@@ -56,7 +58,7 @@ export function loadFile(root: string, file: string, kind: Kind, schema: z.ZodTy
   const result = schemaIssues(source, schema, raw);
   loaded.data = result.data;
   if (source.markdown && !source.doc && result.issues.length > 0) return { loaded, issues: [noFrontMatter(file, result.issues)] };
-  return { loaded, issues: result.issues };
+  return { loaded, issues: [...quoteIssues(source), ...result.issues] };
 }
 
 /** A Markdown file with no front matter but required fields: one message with the block to add. */

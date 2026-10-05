@@ -11,8 +11,9 @@ import { advanced, availability, booking, pages, profiles, redirect, seo, siteUr
 
 export const NAV_KEYS = ['research', 'projects', 'publications', 'experience', 'writing', 'cv', 'booking', 'contact'] as const;
 
+// Curly quotes are never part of an address; around one (“you@x.edu”) they would break the mailto link.
 const email = text.check((ctx) => {
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ctx.value)) {
+  if (!/^[^\s@“”‘’]+@[^\s@“”‘’]+\.[^\s@“”‘’]+$/.test(ctx.value)) {
     fail(ctx, ctx.value, 'E202', `doesn't look like an email address (you wrote ${show(ctx.value)})`);
   }
 });

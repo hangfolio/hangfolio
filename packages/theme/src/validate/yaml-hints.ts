@@ -1,10 +1,11 @@
 // YAML mistakes in plain words (E101, E102, E103), with the fix for the common ones: a value with
 // ': ' or a reserved first character that needs quotes, curly quotes, an unclosed quote or
-// bracket, a missing space or comma, tabs, and front matter with no closing ---.
+// bracket, a missing space or comma, tabs, and front matter with no closing ---. Quote marks YAML
+// can read but keeps as text are quotes.ts's (E206, W206).
 import { isAlias, isMap, isScalar, visit } from 'yaml';
 import type { Issue } from './issue.ts';
 import type { Source, YamlProblem } from './source.ts';
-import { closeQuote, flowValueFix, openQuote, quote, uncurl, valueOf } from './yaml-lines.ts';
+import { closeQuote, flowValueFix, openQuote, quote, runOnQuote, uncurl, valueOf } from './yaml-lines.ts';
 
 export { quote, valueOf };
 
@@ -45,6 +46,12 @@ function describe(source: Source, problem: YamlProblem): Described {
   // `-"https://…"` is not a list item without the space.
   if (/^\s*-[^\s-]/.test(text)) {
     return { code: 'E101', stop: true, message: `Put a space after the -: ${text.trim().replace(/^-/, '- ')}` };
+  }
+  // `{ role: "Engineer, org: "Example" }`: the unclosed quote ends at the next value's opening one.
+  const runOn = runOnQuote(text);
+  if (runOn) {
+    const col = [...text.slice(0, runOn.index)].length + 1;
+    return { code: 'E101', col, stop: true, message: `This value's ${runOn.char} quote is never closed. Add the closing ${runOn.char}: ${runOn.fixed}` };
   }
   switch (problem.yamlCode) {
     case 'BLOCK_AS_IMPLICIT_KEY':
@@ -91,7 +98,10 @@ function unclosedQuote(source: Source, errorLine: number): Described {
     const open = openQuote(text);
     if (!open) continue;
     const col = [...text.slice(0, open.index)].length + 1;
-    const message = `This value's ${open.char} quote is never closed. Add the closing ${open.char}: ${closeQuote(text, open)}`;
+    const { fixed, curly } = closeQuote(text, open);
+    const message = curly
+      ? `This value's ${open.char} quote is closed with a curly ${curly}, which YAML doesn't read as a quote. Use a straight one: ${fixed}`
+      : `This value's ${open.char} quote is never closed. Add the closing ${open.char}: ${fixed}`;
     return { code: 'E101', line, col, stop: true, message };
   }
   return { code: 'E101', stop: true, message: 'A quote on this line or above is never closed. Add the closing quote at the end of its value.' };

@@ -193,6 +193,7 @@ test('unknown fields are refused, including card: until Google Wallet lands (E20
 
 test('field checks: email, name length, nav keys, the pinned url', () => {
   assert.deepEqual(issuesOf(site, { ...minimal, email: 'wren at halloway' }), ["email E202: doesn't look like an email address (you wrote 'wren at halloway')"]);
+  assert.deepEqual(issuesOf(site, { ...minimal, email: '“wren@halloway.test”' }), ["email E202: doesn't look like an email address (you wrote '“wren@halloway.test”')"]);
   assert.deepEqual(issuesOf(site, { ...minimal, name: 'x'.repeat(81) }), ['name too_big: must be 80 characters or fewer']);
   assert.deepEqual(issuesOf(site, { ...minimal, nav: ['projects', { label: 'Notes', href: '/notes' }, 'reserch'] }), [
     'nav.2 invalid_value: must be one of research, projects, publications, experience, writing, cv, booking, contact',

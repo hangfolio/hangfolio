@@ -1,5 +1,5 @@
 // Wrappers for the content loaders (src/content.ts):
-// - optional(): a missing or empty folder is fine, without Astro's warning;
+// - optional(): a missing or empty folder is fine, without Astro's warnings;
 // - hideExamples(): outside demo mode, entries marked `example: true` never reach the pages
 //   (SPEC 5.2 rule 3);
 // - tolerant(): in `hangfolio dev`, an entry the checks found wrong is left out instead of
@@ -33,12 +33,15 @@ function filteredStore(store: Store, keep: (entry: Entry) => boolean): Store {
 
 export const isExample = (data: unknown) => (data as { example?: unknown } | undefined)?.example === true;
 
+// Stored and removed again in a collection that has no entries; see optional().
+const NO_ENTRIES = '\0hangfolio-no-entries';
+
 export function optional(loader: Loader): Loader {
   const quiet = /does not exist|No files found/;
   return {
     ...loader,
-    load: (context) =>
-      loader.load({
+    load: async (context) => {
+      await loader.load({
         ...context,
         logger: new Proxy(context.logger, {
           get(target, key) {
@@ -47,7 +50,14 @@ export function optional(loader: Loader): Loader {
             return typeof value === 'function' ? value.bind(target) : value;
           },
         }),
-      }),
+      });
+      // getCollection() warns "does not exist or is empty" about a collection that never stored
+      // an entry. Storing one and removing it leaves the collection existing and empty.
+      if (context.store.keys().length === 0) {
+        context.store.set({ id: NO_ENTRIES, data: {} });
+        context.store.delete(NO_ENTRIES);
+      }
+    },
   };
 }
 

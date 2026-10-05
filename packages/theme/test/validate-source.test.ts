@@ -82,6 +82,22 @@ test('an unclosed quote is reported where it opens, with the line fixed', () => 
   ]);
 });
 
+test('an unclosed quote that runs on into the next value, or is closed with a curly quote', () => {
+  // inside { } or [ ], the next value's opening quote closes it and yaml stumbles after that
+  assert.deepEqual(hints('content/experience.yaml', 'entries:\n  - { section: research, role: "Field engineer, org: "Harbor Institute" }\n'), [
+    '2:32 This value\'s " quote is never closed. Add the closing ": - { section: research, role: "Field engineer", org: "Harbor Institute" }',
+  ]);
+  assert.deepEqual(hints('site.yaml', 'lines: ["$ check ./db, "# 3 points"]\n'), ['1:9 This value\'s " quote is never closed. Add the closing ": lines: ["$ check ./db", "# 3 points"]']);
+  // a phone types the closing quote curly; the fix replaces it, unless something inside opened it
+  assert.deepEqual(hints('site.yaml', 'role: "Marine ecologist”\nlocation: "Harbor Point"\n'), [
+    '1:7 This value\'s " quote is closed with a curly ”, which YAML doesn\'t read as a quote. Use a straight one: role: "Marine ecologist"',
+  ]);
+  assert.deepEqual(hints('site.yaml', "role: 'Marine ecologist’   # example\n"), [
+    "1:7 This value's ' quote is closed with a curly ’, which YAML doesn't read as a quote. Use a straight one: role: 'Marine ecologist'",
+  ]);
+  assert.deepEqual(hints('site.yaml', 'tagline: "I said “hi”\n'), ['1:10 This value\'s " quote is never closed. Add the closing ": tagline: "I said “hi”"']);
+});
+
 test('inside { }, a missing comma and text with ": " get different fixes', () => {
   assert.deepEqual(hints('content/news.yaml', 'items:\n  - { date: 2026-09 text: "A talk." }\n'), [
     '2:13 A comma is missing before text. Inside { }, put a comma between fields: - { date: 2026-09, text: "A talk." }',

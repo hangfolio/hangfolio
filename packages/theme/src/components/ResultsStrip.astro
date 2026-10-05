@@ -1,0 +1,37 @@
+---
+// "Results at a glance" (home.yaml `highlights`, SPEC 5.4): 1 to 4 figures, each with what it
+// measures and a source line. A leading "up to " and each " → " get their own spans
+// (lib/results.ts). Phones stack the items; from 900px they share one row, one column each.
+import { site } from 'virtual:hangfolio/site';
+import SectionHead from './SectionHead.astro';
+import { inlineMd } from '../lib/inline-md.ts';
+import { highlightValue, resultColumns } from '../lib/results.ts';
+import type { Home } from '../schema/home.ts';
+
+type Highlights = NonNullable<Home['highlights']>;
+
+interface Props {
+  /** The section's anchor (advanced.anchors.highlights) */
+  id: string;
+  heading: Highlights['heading'];
+  items: Highlights['items'];
+}
+
+const { id, heading, items } = Astro.props;
+const src = site.advanced.labels.src;
+---
+<section class="block tight-gap" aria-labelledby={id} data-section="highlights">
+  <SectionHead id={id} heading={heading} />
+  <ul class="proof" style={`--cols: ${resultColumns(items.length)}`}>
+    {items.map((item) => {
+      const value = highlightValue(item.value);
+      return (
+        <li>
+          <span class={value.nowrap ? 'big nowrap' : 'big'}>{value.pre && <span class="pre">{value.pre}</span>}{value.parts.map((part, i) => <>{i > 0 && <span class="arrow"> → </span>}{part}</>)}</span>
+          <span class="what">{item.what}</span>
+          {item.source && <span class="src">{src} <Fragment set:html={inlineMd(item.source)} /></span>}
+        </li>
+      );
+    })}
+  </ul>
+</section>

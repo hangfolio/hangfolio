@@ -1,0 +1,18 @@
+---
+// A date range as two spans, start and "– end", which stack in the margin on wide screens.
+// The rules (same year, present, years alone, expected) are in lib/dates.ts.
+import { site } from 'virtual:hangfolio/site';
+import { dateRange } from '../lib/dates.ts';
+import { localeTag } from '../lib/site.ts';
+
+interface Props {
+  start?: string;
+  end?: string;
+  expected?: boolean;
+  /** Parts already worked out by dateRange(), instead of start and end */
+  parts?: string[];
+}
+
+const { start, end, expected, parts = dateRange(start, end, { expected, locale: localeTag(site) }) } = Astro.props;
+---
+{parts.length > 0 && <span class="range">{parts.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</span>}

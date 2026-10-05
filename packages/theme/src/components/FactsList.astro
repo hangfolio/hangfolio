@@ -1,0 +1,38 @@
+---
+// A project's facts on /projects (SPEC 5.5): label and value pairs between hairlines. A value is
+// text (inline Markdown), lines (one figure per line, in mono), code, or a note; any of them can
+// be followed by a terminal.
+import ExhibitTerminal from './ExhibitTerminal.astro';
+import { inlineMd } from '../lib/inline-md.ts';
+import type { Fact } from '../lib/work.ts';
+
+interface Props {
+  facts: Fact[];
+}
+
+const { facts } = Astro.props;
+---
+<dl class="facts">
+  {facts.map((fact) => (
+    <div>
+      <dt>{fact.label}</dt>
+      {fact.terminal ? (
+        <dd class="install">
+          {fact.text && <span set:html={inlineMd(fact.text)} />}
+          {fact.lines && <span class="nums">{fact.lines.map((line) => <span>{line}</span>)}</span>}
+          {fact.code && <code class="inline-code">{fact.code}</code>}
+          {fact.note && <span>{fact.note}</span>}
+          <ExhibitTerminal {...fact.terminal} />
+        </dd>
+      ) : fact.lines ? (
+        <dd class="nums">{fact.lines.map((line) => <span>{line}</span>)}</dd>
+      ) : fact.code ? (
+        <dd><code class="inline-code">{fact.code}</code></dd>
+      ) : fact.text ? (
+        <dd set:html={inlineMd(fact.text)} />
+      ) : (
+        <dd>{fact.note}</dd>
+      )}
+    </div>
+  ))}
+</dl>

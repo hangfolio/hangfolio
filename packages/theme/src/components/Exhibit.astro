@@ -1,0 +1,18 @@
+---
+// The figure beside a featured project: a terminal, metrics, bars or an install command.
+import ExhibitBars from './ExhibitBars.astro';
+import ExhibitInstall from './ExhibitInstall.astro';
+import ExhibitMetrics from './ExhibitMetrics.astro';
+import ExhibitTerminal from './ExhibitTerminal.astro';
+import type { Exhibit } from '../lib/exhibits.ts';
+
+interface Props {
+  exhibit: Exhibit;
+}
+
+const { exhibit } = Astro.props;
+---
+{exhibit.terminal && <ExhibitTerminal {...exhibit.terminal} />}
+{exhibit.metrics && <ExhibitMetrics {...exhibit.metrics} />}
+{exhibit.bars && <ExhibitBars {...exhibit.bars} />}
+{exhibit.install && <ExhibitInstall {...exhibit.install} />}
