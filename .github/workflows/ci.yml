@@ -104,16 +104,10 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    env:
-      # Every request goes to a proxy on a closed port. NODE_USE_ENV_PROXY makes Node's own fetch
-      # and https use it too (Node 22.21 and later). Only the lower-case names: workflow env keys
-      # are case-insensitive, so HTTP_PROXY next to http_proxy is a duplicate key. npm, curl and
-      # Node all read the lower-case ones.
-      http_proxy: http://127.0.0.1:9
-      https_proxy: http://127.0.0.1:9
-      all_proxy: http://127.0.0.1:9
-      no_proxy: ''
-      NODE_USE_ENV_PROXY: '1'
+    # Checkout, setup-node and npm ci need the network. The two steps after them point every request
+    # at a proxy on a closed port. NODE_USE_ENV_PROXY makes Node's own fetch and https use it too
+    # (Node 22.21 and later). Only the lower-case names: env keys are case-insensitive, so HTTP_PROXY
+    # next to http_proxy is a duplicate key. npm, curl and Node all read the lower-case ones.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -122,21 +116,27 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: npm ci (the one step allowed to use the network)
+      - name: npm ci
         run: npm ci
-        env:
-          http_proxy: ''
-          https_proxy: ''
-          all_proxy: ''
-          NODE_USE_ENV_PROXY: ''
       - name: Check that the network is blocked
         run: |
           node -e "fetch('https://registry.npmjs.org/').then(() => { console.error('The network is reachable; this job would prove nothing.'); process.exit(1); }, (e) => console.log('blocked:', e.cause?.code ?? e.message))"
+        env:
+          http_proxy: http://127.0.0.1:9
+          https_proxy: http://127.0.0.1:9
+          all_proxy: http://127.0.0.1:9
+          no_proxy: ''
+          NODE_USE_ENV_PROXY: '1'
       - name: Build every site offline
         run: npm run build
         env:
           SITE_PAGES_URL: https://u.github.io/hangfolio
           npm_config_offline: 'true'
+          http_proxy: http://127.0.0.1:9
+          https_proxy: http://127.0.0.1:9
+          all_proxy: http://127.0.0.1:9
+          no_proxy: ''
+          NODE_USE_ENV_PROXY: '1'
 
   e2e:
     name: End-to-end and theme behaviour
