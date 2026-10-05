@@ -106,14 +106,12 @@ jobs:
       contents: read
     env:
       # Every request goes to a proxy on a closed port. NODE_USE_ENV_PROXY makes Node's own fetch
-      # and https use it too (Node 22.21 and later).
-      HTTP_PROXY: http://127.0.0.1:9
-      HTTPS_PROXY: http://127.0.0.1:9
-      ALL_PROXY: http://127.0.0.1:9
+      # and https use it too (Node 22.21 and later). Only the lower-case names: workflow env keys
+      # are case-insensitive, so HTTP_PROXY next to http_proxy is a duplicate key. npm, curl and
+      # Node all read the lower-case ones.
       http_proxy: http://127.0.0.1:9
       https_proxy: http://127.0.0.1:9
       all_proxy: http://127.0.0.1:9
-      NO_PROXY: ''
       no_proxy: ''
       NODE_USE_ENV_PROXY: '1'
     steps:
@@ -127,9 +125,6 @@ jobs:
       - name: npm ci (the one step allowed to use the network)
         run: npm ci
         env:
-          HTTP_PROXY: ''
-          HTTPS_PROXY: ''
-          ALL_PROXY: ''
           http_proxy: ''
           https_proxy: ''
           all_proxy: ''

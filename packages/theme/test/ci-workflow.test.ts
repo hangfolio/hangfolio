@@ -97,7 +97,10 @@ test('the tests that build sites run without the GitHub variables that would mov
 
 test('the no-network build blocks requests and checks that it does', () => {
   const job = workflow.jobs['no-network'] as Job & { env: Record<string, string> };
-  for (const key of ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']) assert.equal(job.env[key], 'http://127.0.0.1:9', key);
+  for (const key of ['http_proxy', 'https_proxy', 'all_proxy']) assert.equal(job.env[key], 'http://127.0.0.1:9', key);
+  // Workflow env keys are case-insensitive: HTTP_PROXY next to http_proxy would be a duplicate.
+  const keys = Object.keys(job.env).map((key) => key.toLowerCase());
+  assert.equal(new Set(keys).size, keys.length, 'an env key appears twice in different case');
   assert.equal(job.env.NODE_USE_ENV_PROXY, '1');
   const runs = job.steps.map((s) => s.run ?? '');
   assert.ok(runs.findIndex((r) => r.includes('fetch(')) < runs.findIndex((r) => r.includes('npm run build')));
