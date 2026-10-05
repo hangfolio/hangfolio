@@ -23,7 +23,7 @@ const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Conte
 test('hangfolio check finds nothing to report in fixtures/kitchen-sink', () => {
   const result = spawnSync(process.execPath, [BIN, 'check'], { cwd: join(REPO, 'fixtures/kitchen-sink'), encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(result.stdout, 'hangfolio check: site.yaml and 16 files in content/\n\nNo errors.\n');
+  assert.equal(result.stdout, 'hangfolio check: site.yaml and 18 files in content/\n\nNo errors.\n');
 });
 
 for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio']) {

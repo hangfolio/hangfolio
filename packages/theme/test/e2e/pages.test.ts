@@ -38,24 +38,25 @@ const htmlFiles = (dist: string) => listFiles(dist).filter((file) => file.endsWi
 const canonicalOf = (html: string) => html.match(/<link rel="canonical" href="([^"]+)">/)?.[1];
 const mainOf = (html: string) => html.match(/<main[^>]*>(.*)<\/main>/s)![1].replace(/ data-astro-cid-\w+/g, '');
 
-// The pages each fixture writes, in each URL format (sorted, as listFiles gives them).
+// The pages each fixture writes, in each URL format (sorted, as listFiles gives them). owner-like
+// also has its Google verification file, which is HTML but not a page.
 const KITCHEN_SINK = {
   preserve: [
-    '404.html', 'contact.html', 'experience.html', 'index.html', 'meet.html', 'projects.html', 'projects/shoal/index.html',
+    '404.html', 'contact.html', 'experience.html', 'index.html', 'meet.html', 'projects.html', 'projects/shoal/index.html', 'publications.html',
     'writing/bottom-up/index.html', 'writing/cache-lied/index.html', 'writing/index.html', 'writing/reading-traces/index.html', 'writing/tracing-overhead/index.html',
   ],
   directory: [
-    '404.html', 'contact/index.html', 'experience/index.html', 'index.html', 'meet/index.html', 'projects/index.html', 'projects/shoal/index.html',
+    '404.html', 'contact/index.html', 'experience/index.html', 'index.html', 'meet/index.html', 'projects/index.html', 'projects/shoal/index.html', 'publications/index.html',
     'writing/bottom-up/index.html', 'writing/cache-lied/index.html', 'writing/index.html', 'writing/reading-traces/index.html', 'writing/tracing-overhead/index.html',
   ],
 };
 const OWNER_LIKE = {
   preserve: [
-    '404.html', 'about.html', 'about/index.html', 'contact.html', 'index.html', 'meet.html', 'projects.html', 'work-experience.html',
+    '404.html', 'about.html', 'about/index.html', 'contact.html', 'google0a1b2c3d4e5f6a7b.html', 'index.html', 'meet.html', 'projects.html', 'publications.html', 'work-experience.html',
     'writing/idle-radio-drain/index.html', 'writing/index.html', 'writing/pondskip-flaky-tests/index.html',
   ],
   directory: [
-    '404.html', 'about.html', 'about/index.html', 'contact/index.html', 'index.html', 'meet/index.html', 'projects/index.html', 'work-experience/index.html',
+    '404.html', 'about.html', 'about/index.html', 'contact/index.html', 'google0a1b2c3d4e5f6a7b.html', 'index.html', 'meet/index.html', 'projects/index.html', 'publications/index.html', 'work-experience/index.html',
     'writing/idle-radio-drain/index.html', 'writing/index.html', 'writing/pondskip-flaky-tests/index.html',
   ],
 };
@@ -91,7 +92,7 @@ for (const [fixture, expected] of [['kitchen-sink', KITCHEN_SINK], ['owner-like'
               assert.ok(!ref.includes('//'), `${file}: ${ref} contains //`);
               if (base) assert.match(ref, new RegExp(`^${base}(/|$)`), `${file}: ${ref} escapes ${base}`);
             }
-            if (file === '404.html' || /^about/.test(file)) continue;
+            if (file === '404.html' || /^about/.test(file) || /^google[\da-f]+\.html$/.test(file)) continue;
             assert.equal(canonicalOf(html), `${pagesUrl}/${addressOf(file)}`, file);
           }
         });
@@ -250,7 +251,8 @@ describe('fixtures/owner-like: the reference design’s paths and ids', () => {
     const html = page('contact.html');
     const nav = [...html.matchAll(/<a href="([^"]+)" class="quiet"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]} ${m[1]}`);
     assert.deepEqual(nav, ['Research /#research', 'Projects /projects', 'Writing /writing/', 'CV /files/cv.pdf', 'Book a 1:1 /meet']);
-    assert.match(html, /<nav aria-label="Elsewhere" class="row"[^>]*>.*<a href="\/contact"[^>]*>Contact<\/a><\/nav>/);
+    // Contact, then RSS while there is a feed, as on the reference design.
+    assert.match(html, /<nav aria-label="Elsewhere" class="row"[^>]*>.*<a href="\/contact"[^>]*>Contact<\/a><a href="\/feed.xml"[^>]*>RSS<\/a><\/nav>/);
   });
 });
 

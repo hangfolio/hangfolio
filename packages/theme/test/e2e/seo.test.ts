@@ -132,7 +132,8 @@ describe('fixtures/kitchen-sink SEO at /hangfolio', () => {
     assert.deepEqual(absUrlProblems(dist, 'https://u.github.io/hangfolio/'), []);
     const xml = readIn(dist)('feed.xml');
     assert.deepEqual(rssProblems(xml), []);
-    assert.equal([...xml.matchAll(/<item>/g)].length, 3);
+    assert.equal([...xml.matchAll(/<item>/g)].length, 4);
+    assert.doesNotMatch(xml, /hermetic toolchains/i, 'the draft stays out');
   });
 });
 
@@ -142,7 +143,8 @@ describe('fixtures/empty SEO', () => {
     const html = readIn(dist)('index.html');
     assert.ok(!existsSync(join(dist, 'feed.xml')));
     assert.doesNotMatch(html, /application\/rss\+xml|>RSS</);
-    assert.deepEqual(locs(readIn(dist)('sitemap.xml')), ['https://u.github.io/']);
+    // The contact page is always there (it needs no content).
+    assert.deepEqual(locs(readIn(dist)('sitemap.xml')), ['https://u.github.io/', 'https://u.github.io/contact']);
     assert.ok(existsSync(join(dist, 'manifest.webmanifest')));
     assert.match(html, /<title>Sol Brennan<\/title>/);
     assert.match(html, /<meta property="profile:first_name" content="Sol"><meta property="profile:last_name" content="Brennan">/);
