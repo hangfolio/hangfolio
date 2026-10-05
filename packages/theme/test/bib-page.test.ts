@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { hasPublicationContent } from '../src/lib/bib-file.ts';
-import { featuredKeys, groupOf, paperGroups, paperView, prepViews, publicationsPath, scholarlyArticle } from '../src/lib/bib-page.ts';
+import { featuredKeys, groupOf, listedEntries, paperGroups, paperView, prepViews, publicationsPath, scholarlyArticle } from '../src/lib/bib-page.ts';
 import { parseBib } from '../src/lib/bib.ts';
 import { availablePages, navItems } from '../src/lib/nav.ts';
 import { publicationsRoute } from '../src/lib/routes.ts';
@@ -62,7 +62,7 @@ const extras = parseOk(publication, {
   equal: ['Okonkwo', 'Halloway'],
   authorNote: '*Co-first authors',
   venueDetail: 'The Example Symposium (EXS ’24)',
-  place: 'Kestrel Harbour, May 13–17, 2024',
+  place: 'Kestrel Harbour, June 2–6, 2024',
   anchor: 'exs24',
   bibtexAnchor: 'bibtex',
   data: { text: '9,400 phones · **six** countries' },
@@ -84,7 +84,7 @@ test('a paper: ids from extras, the DOI on its own line, the links without it, a
   ]);
   assert.equal(view.note, '*Co-first authors');
   assert.equal(view.venue, 'The Example Symposium (EXS ’24)');
-  assert.equal(view.place, 'Kestrel Harbour, May 13–17, 2024');
+  assert.equal(view.place, 'Kestrel Harbour, June 2–6, 2024');
   assert.deepEqual(view.doi, { text: '10.5555/exs24.0042', href: 'https://doi.org/10.5555/exs24.0042' });
   // The url field is the DOI's address, so it is not listed again.
   assert.deepEqual(view.links, [
@@ -124,12 +124,22 @@ test('groups: by kind, in a fixed order, each newest first; an arXiv "journal" i
   );
 });
 
+test('a crossref parent is not listed as a paper, unless the owner edited it', () => {
+  const entries = parseBib(`
+@inproceedings{halloway2024a, title = {A}, author = {Halloway, Wren}, crossref = {EXC24}, year = 2024}
+@proceedings{exc24, title = {Proceedings of EXC}, editor = {Chair, Program}, year = 2024}
+@inproceedings{halloway2023b, title = {B}, author = {Halloway, Wren}, crossref = {wsx23}, year = 2023}
+@proceedings{wsx23, title = {Proceedings of WSX}, editor = {Halloway, W.}, year = 2023}`);
+  assert.deepEqual(listedEntries(entries, site).map((entry) => entry.key), ['halloway2024a', 'halloway2023b', 'wsx23']);
+  assert.deepEqual(paperGroups(entries, new Map(), site).map((group) => `${group.id}: ${group.papers.map((paper) => paper.key).join(' ')}`), ['conference: halloway2024a halloway2023b', 'books: wsx23']);
+});
+
 test('in-preparation items: by order, numbered, text kept as written, the owner marked among the authors', () => {
   const item = (order: number, title: string, more = {}) => parseOk(publication, { status: 'in-preparation', order, title, text: `About *${title}*.`, ...more });
   const views = prepViews(
     [
       { id: 'b', data: item(2, 'Second') as never },
-      { id: 'a', data: item(1, 'First', { margin: 'Go · Java', chip: 'Venue 2027 · in preparation', authors: ['Wren Halloway', { name: 'Ada Advisor', url: 'https://example.org/ada' }] }) as never },
+      { id: 'a', data: item(1, 'First', { margin: 'Rust · C', chip: 'Venue 2027 · in preparation', authors: ['Wren Halloway', { name: 'Ada Advisor', url: 'https://example.org/ada' }] }) as never },
     ],
     site,
   );
@@ -137,7 +147,7 @@ test('in-preparation items: by order, numbered, text kept as written, the owner 
     {
       id: 'a',
       number: '01',
-      margin: 'Go · Java',
+      margin: 'Rust · C',
       title: 'First',
       chip: 'Venue 2027 · in preparation',
       authors: [

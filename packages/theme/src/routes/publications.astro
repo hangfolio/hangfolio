@@ -11,7 +11,7 @@ import PublicationEntry from '../components/PublicationEntry.astro';
 import SectionHead from '../components/SectionHead.astro';
 import Page from '../layouts/Page.astro';
 import { publicationsContent } from '../lib/bib-content.ts';
-import { byYear, paperGroups, prepViews, scholarlyArticle } from '../lib/bib-page.ts';
+import { byYear, listedEntries, paperGroups, prepViews, scholarlyArticle } from '../lib/bib-page.ts';
 import { inlineMd } from '../lib/inline-md.ts';
 import { pageTitle } from '../lib/site.ts';
 import { absUrl } from '../lib/url.ts';
@@ -28,7 +28,7 @@ for (const [key, file] of extras) {
 }
 
 const urls = { page: absUrl(page.path), home: absUrl('/') };
-const schema = byYear(entries).map((entry) => scholarlyArticle(entry, extrasData.get(entry.key), site, urls));
+const schema = byYear(listedEntries(entries, site)).map((entry) => scholarlyArticle(entry, extrasData.get(entry.key), site, urls));
 ---
 <Page
   title={pageTitle(site, page.title ?? 'Publications')}

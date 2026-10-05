@@ -77,7 +77,7 @@ const GROUPS: { id: string; heading: string; types: string[] }[] = [
   { id: 'journal', heading: 'Journal articles', types: ['article'] },
   { id: 'preprints', heading: 'Preprints and reports', types: ['misc', 'unpublished', 'techreport', 'report', 'online', 'electronic', 'www', 'manual'] },
   { id: 'theses', heading: 'Theses', types: ['phdthesis', 'mastersthesis', 'thesis'] },
-  { id: 'books', heading: 'Books and chapters', types: ['book', 'incollection', 'inbook', 'collection', 'booklet'] },
+  { id: 'books', heading: 'Books and chapters', types: ['book', 'incollection', 'inbook', 'collection', 'proceedings', 'booklet'] },
   { id: 'other', heading: 'Other', types: [] },
 ];
 const PREPRINT = /\b(arxiv|preprint|biorxiv|medrxiv|ssrn|corr|research square)\b/i;
@@ -96,9 +96,20 @@ const yearOf = (entry: BibEntry) => Number.parseInt(entry.fields.year ?? '', 10)
 /** Entries newest first; the same year keeps file order. */
 export const byYear = (entries: BibEntry[]) => [...entries].sort((a, b) => yearOf(b) - yearOf(a));
 
+/**
+ * The entries the page lists: all but a crossref parent (the proceedings or book that a paper
+ * names with crossref), unless the site owner is among its authors or editors.
+ */
+export function listedEntries(entries: BibEntry[], site: SiteYaml): BibEntry[] {
+  const parents = new Set(entries.map((entry) => entry.fields.crossref?.trim().toLowerCase()).filter(Boolean));
+  const owner = ownerNames(site);
+  const owned = (entry: BibEntry) => [...(entry.names.author ?? []), ...(entry.names.editor ?? [])].some((person) => isOwner(person, owner));
+  return entries.filter((entry) => !parents.has(entry.key.toLowerCase()) || owned(entry));
+}
+
 /** The papers in their groups, each group newest first; empty groups are left out. */
 export function paperGroups(entries: BibEntry[], extras: Map<string, Extras>, site: SiteYaml): PaperGroup[] {
-  const sorted = byYear(entries);
+  const sorted = byYear(listedEntries(entries, site));
   return GROUPS.map(({ id, heading }) => ({
     id,
     heading,
