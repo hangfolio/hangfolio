@@ -67,7 +67,7 @@ for (const dir of SITES) {
       after(() => rmSync(site, { recursive: true, force: true }));
 
       for (const base of BASES) {
-        test(`base ${base}: builds, and verify finds nothing`, () => {
+        test(`base ${base}: builds, and verify passes`, () => {
           const build = run(site, ['build'], base);
           assert.equal(build.status, 0, `hangfolio build failed:\n${build.output}`);
 

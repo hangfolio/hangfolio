@@ -65,24 +65,32 @@ function linksOf(markdown: string): { target: string; line: number }[] {
   return links;
 }
 
+const decode = (text: string) => {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+};
+
 /** What is wrong with one link from `file`, or undefined when it resolves. */
 function brokenLink(file: string, target: string): string | undefined {
   let path: string;
   let hash = '';
   const own = OWN_REPO.exec(target);
   if (own) {
-    path = join(REPO, decodeURIComponent(own[1]));
+    path = join(REPO, decode(own[1]));
     hash = own[2] ?? '';
   } else if (/^[a-z][a-z\d+.-]*:|^\/\//i.test(target)) {
     return undefined; // another site, or mailto:
   } else {
     const cut = target.search(/[?#]/);
-    const rel = decodeURIComponent(cut === -1 ? target : target.slice(0, cut));
+    const rel = decode(cut === -1 ? target : target.slice(0, cut));
     hash = cut === -1 ? '' : target.slice(cut).replace(/^\?[^#]*/, '');
     path = rel === '' ? file : rel.startsWith('/') ? join(REPO, rel) : resolve(dirname(file), rel);
   }
   if (!existsSync(path)) return `${relative(REPO, path).split(sep).join('/')} does not exist`;
-  const fragment = decodeURIComponent(hash.replace(/^#/, ''));
+  const fragment = decode(hash.replace(/^#/, ''));
   if (!fragment || !path.endsWith('.md') || statSync(path).isDirectory()) return undefined;
   if (/^L\d+(?:-L\d+)?$/.test(fragment)) return undefined; // a line link
   const anchors = anchorsOf(readFileSync(path, 'utf8'));
