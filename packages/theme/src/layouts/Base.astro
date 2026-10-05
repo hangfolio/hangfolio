@@ -1,6 +1,7 @@
 ---
-// Every page's document: head and SEO tags, the pre-paint theme script, icons, the skip link,
-// the JSON-LD graph, and the header and footer around the page body.
+// Every page's document: head and SEO tags, the pre-paint theme script, icons and the manifest,
+// feed and sitemap links (lib/endpoints.ts), the generator line with the theme version and build
+// SHA, the JSON-LD graph (lib/jsonld.ts), the skip link, and the header and footer around the body.
 import '@fontsource-variable/newsreader/opsz.css';
 import '@fontsource-variable/newsreader/opsz-italic.css';
 import '@fontsource/ibm-plex-sans/400.css';
@@ -18,7 +19,8 @@ import ExampleBanner from '../components/ExampleBanner.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { checkError, currentDevState, DROP_STALE_OVERLAY } from '../lib/dev-checks.ts';
-import { siteGraph } from '../lib/jsonld.ts';
+import { generatorContent, nameParts } from '../lib/head.ts';
+import { blogPosting, contactPage, pageNodes, siteGraph } from '../lib/jsonld.ts';
 import { siteDescription } from '../lib/site.ts';
 import { parseTokens } from '../lib/tokens.ts';
 import { absUrl, url } from '../lib/url.ts';
@@ -35,7 +37,8 @@ interface Props {
   ogImage?: string;
   keywords?: string;
   noindex?: boolean;
-  article?: { published: Date; modified?: Date; tags?: readonly string[] };
+  /** A post: its dates and tags, and its headline for JSON-LD (default: the title without the suffix) */
+  article?: { published: Date; modified?: Date; tags?: readonly string[]; headline?: string };
   /** Extra JSON-LD nodes for this page, added to the site graph */
   schema?: Record<string, unknown>[];
 }
@@ -64,8 +67,21 @@ const devIssues = (dev?.others ?? []).filter((issue) => !issue.page || issue.pag
 const canonical = absUrl(path);
 const image = ogImage ? absUrl(ogImage) : undefined;
 const personImage = site.ogImage ?? site.avatar;
-const graph = siteGraph(site, personImage ? absUrl(personImage) : undefined, schema);
+const profile = ogType === 'profile' ? nameParts(site) : undefined;
+
+// The page's JSON-LD: a post gets its BlogPosting and the contact page its ContactPage, unless the
+// page passes a node with the same @id itself (lib/jsonld.ts).
+const suffix = site.advanced.titleSuffix.replaceAll('{name}', site.name);
+const headline = article?.headline ?? (suffix && title.endsWith(suffix) ? title.slice(0, -suffix.length) : title);
+const contact = site.pages.contact;
+const nodes = pageNodes(schema, [
+  article && blogPosting(site, { path, headline, description, published: article.published, modified: article.modified, tags: article.tags }),
+  contact && contact.path === path ? contactPage(path, title) : undefined,
+]);
+const graph = siteGraph(site, personImage ? absUrl(personImage) : undefined, nodes);
 const { light } = parseTokens(tokensCss);
+const { head } = build;
+const verification = path === '/' ? site.advanced.googleVerification?.meta : undefined;
 ---
 <!doctype html>
 <html lang={site.advanced.lang}>
@@ -78,6 +94,7 @@ const { light } = parseTokens(tokensCss);
     {keywords && <meta name="keywords" content={keywords} />}
     <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'} />
     {!noindex && <link rel="canonical" href={canonical} />}
+    {verification && <meta name="google-site-verification" content={verification} />}
 
     <meta property="og:locale" content={site.advanced.locale} />
     <meta property="og:site_name" content={site.name} />
@@ -86,6 +103,8 @@ const { light } = parseTokens(tokensCss);
     <meta property="og:url" content={canonical} />
     {image && <meta property="og:image" content={image} />}
     <meta property="og:type" content={ogType} />
+    {profile && <meta property="profile:first_name" content={profile.given} />}
+    {profile?.family && <meta property="profile:last_name" content={profile.family} />}
     {article && (
       <>
         <meta property="article:published_time" content={article.published.toISOString()} />
@@ -112,8 +131,11 @@ const { light } = parseTokens(tokensCss);
       })();
     </script>
 
-    {build.icons.map((icon) => <link rel={icon.rel} href={url(`/${icon.file}`)} type={icon.type} sizes={icon.sizes} />)}
-    <meta name="generator" content={Astro.generator} />
+    {head.icons.map((icon) => <link rel={icon.rel} type={icon.type} sizes={icon.sizes} href={url(icon.href)} color={icon.mask ? light.accent : undefined} />)}
+    <link rel="manifest" href={url(head.manifest)} />
+    {head.feed && <link rel="alternate" type="application/rss+xml" title={head.feed.title} href={url(head.feed.path)} />}
+    <link rel="sitemap" href={url(head.sitemap)} />
+    <meta name="generator" content={generatorContent(build.version, Astro.generator, build.sha)} />
 
     <script type="application/ld+json" set:html={JSON.stringify(graph).replace(/</g, '\\u003c')} />
   </head>

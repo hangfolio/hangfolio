@@ -1,7 +1,8 @@
 ---
 // Site footer: the profile links and advanced.footer.links from site.yaml, then the copyright
-// line and the month the site was built. TODO(M4, M6): Contact and RSS links once those pages exist.
-import { site } from 'virtual:hangfolio/site';
+// line and the month the site was built. The RSS link shows while there is a feed (lib/endpoints.ts).
+// TODO(M4): the Contact link once that page exists.
+import { build, site } from 'virtual:hangfolio/site';
 import { localeTag } from '../lib/site.ts';
 import { url } from '../lib/url.ts';
 
@@ -9,6 +10,7 @@ const footer = site.advanced.footer;
 const links = [
   ...site.links.filter((link) => link.footer).map((link) => ({ label: link.label, href: link.url })),
   ...footer.links,
+  ...(build.head.feed ? [{ label: 'RSS', href: build.head.feed.path }] : []),
 ];
 
 // "Last updated" is the month the site was built and deployed, in advanced.timezone
