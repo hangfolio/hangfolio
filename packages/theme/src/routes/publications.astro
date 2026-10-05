@@ -35,6 +35,7 @@ const schema = byYear(listedEntries(entries, site)).map((entry) => scholarlyArti
   description={page.description ?? `Publications by ${site.name}.`}
   path={path}
   nav="publications"
+  section="publications"
   heading={page.heading ?? 'Publications'}
   schema={schema}
 >

@@ -47,6 +47,8 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       }
       assert.match(html, new RegExp(`<a href="${base}/publications" class="quiet"[^>]*aria-current="page"[^>]*>Publications</a>`));
       assert.match(html, new RegExp(`<link rel="canonical" href="${pagesUrl}/publications">`));
+      // The custom.css hook every page has (docs/customizing.md).
+      assert.match(html, /<main id="main" class="page" tabindex="-1" data-section="publications">/);
     });
 
     test('the heading and lede, the groups inside #papers, then #prep with the aside', () => {
