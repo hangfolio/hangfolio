@@ -10,6 +10,7 @@ import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { runCheck } from '../src/validate/cli.ts';
 import { annotations, stepSummary } from '../src/validate/github.ts';
+import { VERSION } from '../src/validate/issue.ts';
 import type { Report } from '../src/validate/index.ts';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
@@ -55,7 +56,7 @@ test('exit codes: 0 without errors, 1 with an error, 2 for an unknown option', a
       '    3 | sumary: "Counts kelp from drone photos."',
       '      | ^',
       '',
-      `1 error. Help: https://github.com/hangfolio/hangfolio/blob/hangfolio@0.0.0/docs/troubleshooting.md (#e201)`,
+      `1 error. Help: https://github.com/hangfolio/hangfolio/blob/hangfolio@${VERSION}/docs/troubleshooting.md (#e201)`,
       '',
     ].join('\n'),
   );
@@ -85,7 +86,7 @@ test('--github: one annotation per issue, escaped, with paths from the checkout'
   assert.equal(
     lines[0],
     '::error file=site/site.yaml,line=3,col=10,endLine=3,endColumn=20,title=E101 YAML syntax::' +
-      "This value contains ': ' and needs quotes: tagline: \"a: b, 100%25\"%0AHelp: https://github.com/hangfolio/hangfolio/blob/hangfolio@0.0.0/docs/troubleshooting.md#e101",
+      `This value contains ': ' and needs quotes: tagline: "a: b, 100%25"%0AHelp: https://github.com/hangfolio/hangfolio/blob/hangfolio@${VERSION}/docs/troubleshooting.md#e101`,
   );
   assert.match(lines[1], /^::notice file=site\/astro\.config\.mjs,line=1,col=1,title=N701 Plumbing file outdated::.*%0AReplace it with:%0Aline one%0Aline two%0A%0AHelp: /);
   assert.match(lines[2], /^::warning file=site\/content\/news\.yaml,line=4,col=7,title=W403 Example entry hidden::/);
@@ -95,7 +96,8 @@ test('--github: one annotation per issue, escaped, with paths from the checkout'
 test('--github: the job summary lists every issue, the hidden examples apart, and the plumbing fix', () => {
   const summary = stepSummary(report, env);
   assert.match(summary, /^## hangfolio check\n\n\*\*1 error, 0 warnings, 1 notice\.\*\* The site was not built;/);
-  assert.match(summary, /\| error \| \[`site\.yaml:3:10`\]\(https:\/\/github\.com\/juniper\/site\/blob\/abc123\/site\/site\.yaml#L3\) \| \[E101\]\(https:\/\/github\.com\/hangfolio\/hangfolio\/blob\/hangfolio@0\.0\.0\/docs\/troubleshooting\.md#e101\) \|/);
+  const e101 = `| error | [\`site.yaml:3:10\`](https://github.com/juniper/site/blob/abc123/site/site.yaml#L3) | [E101](https://github.com/hangfolio/hangfolio/blob/hangfolio@${VERSION}/docs/troubleshooting.md#e101) |`;
+  assert.ok(summary.includes(e101), summary);
   assert.match(summary, /### Hidden on your site: 1 example\n/);
   assert.match(summary, /This news item is an example \\\| hidden\./);
   assert.match(summary, /<summary>N701 astro\.config\.mjs: the replacement text \(<a href="https:\/\/github\.com\/juniper\/site\/edit\/main\/site\/astro\.config\.mjs">edit it<\/a>\)<\/summary>\n\n```\nline one\nline two\n```/);

@@ -1,8 +1,28 @@
 {
   "name": "hangfolio",
-  "version": "0.0.0",
-  "description": "A personal site for researchers and engineers, built with Astro and published on GitHub Pages.",
+  "version": "0.1.0",
+  "description": "A personal website for researchers and engineers on GitHub Pages: an Astro theme with results up front, publications from BibTeX, light and dark modes, and clear error messages.",
+  "keywords": [
+    "astro",
+    "astro-theme",
+    "academic",
+    "portfolio",
+    "researcher",
+    "github-pages",
+    "template",
+    "bibtex"
+  ],
+  "homepage": "https://github.com/hangfolio/hangfolio#readme",
+  "bugs": {
+    "url": "https://github.com/hangfolio/hangfolio/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hangfolio/hangfolio.git",
+    "directory": "packages/theme"
+  },
   "license": "MIT",
+  "author": "Harris Ahmad",
   "type": "module",
   "bin": {
     "hangfolio": "bin/hangfolio.mjs"
@@ -28,13 +48,9 @@
   "engines": {
     "node": "^22.12.0 || ^24.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hangfolio/hangfolio.git",
-    "directory": "packages/theme"
+  "publishConfig": {
+    "access": "public"
   },
-  "homepage": "https://github.com/hangfolio/hangfolio#readme",
-  "bugs": "https://github.com/hangfolio/hangfolio/issues",
   "scripts": {
     "build": "node scripts/build.mjs",
     "schema": "node scripts/schema.mjs",

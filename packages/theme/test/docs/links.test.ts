@@ -16,7 +16,7 @@ const TROUBLESHOOTING = join(REPO, 'docs/troubleshooting.md');
 // Links to this repository's files on GitHub, at any branch or tag.
 const OWN_REPO = /^https:\/\/github\.com\/hangfolio\/hangfolio\/(?:blob|tree)\/[^/]+\/([^#?]*)(?:\?[^#]*)?(#.*)?$/;
 
-/** The Markdown files whose links are checked: docs/, the READMEs and AGENTS files. */
+/** The Markdown files whose links are checked: docs/, the READMEs, AGENTS, CONTRIBUTING and SECURITY. */
 function markdownFiles(): string[] {
   const found: string[] = [];
   const walk = (dir: string) => {
@@ -28,7 +28,7 @@ function markdownFiles(): string[] {
     }
   };
   if (existsSync(join(REPO, 'docs'))) walk(join(REPO, 'docs'));
-  for (const file of ['README.md', 'AGENTS.md', 'starter/README.md', 'starter/AGENTS.md', 'fixtures/README.md']) {
+  for (const file of ['README.md', 'AGENTS.md', 'CONTRIBUTING.md', 'SECURITY.md', 'packages/theme/README.md', 'starter/README.md', 'starter/AGENTS.md', 'fixtures/README.md']) {
     if (existsSync(join(REPO, file))) found.push(join(REPO, file));
   }
   return found.sort();

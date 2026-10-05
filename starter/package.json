@@ -9,7 +9,7 @@
     "preview": "hangfolio preview"
   },
   "dependencies": {
-    "hangfolio": "0.0.0"
+    "hangfolio": "0.1.0"
   },
   "engines": {
     "node": ">=22.12"
