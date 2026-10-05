@@ -26,17 +26,22 @@ export type CitationView = {
   links: { label: string; href: string }[];
 };
 
+// Letters that keep their look without an accent to drop: Søren is Soren, Straßer is Strasser.
+const LETTERS: Record<string, string> = { ø: 'o', æ: 'ae', œ: 'oe', ß: 'ss', ł: 'l', đ: 'd', ð: 'd', þ: 'th', ı: 'i' };
+
 /** Lower case, accents and punctuation removed: "Núñez-Ruiz, A." is "nunez ruiz a". */
 export function normalizeName(text: string): string {
   return text
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
+    .replace(/[øæœßłđðþı]/g, (letter) => LETTERS[letter])
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim();
 }
 
-type Person = { given: string[]; family: string };
+/** `words` is the whole name, for a name written without a comma, whose family name may be several words. */
+type Person = { given: string[]; family: string; words?: string[] };
 
 /** "Rowan Vale" or "Vale, Rowan" as given names and a family name (the last word without a comma). */
 export function personOf(text: string): Person {
@@ -49,26 +54,50 @@ export function personOf(text: string): Person {
 /** "R" matches "Rowan", and so does "Rowan"; nothing else does. */
 const sameGiven = (a: string, b: string) => a === b || (a.length === 1 && b.startsWith(a)) || (b.length === 1 && a.startsWith(b));
 
+const SUFFIXES = new Set(['jr', 'sr', 'ii', 'iii', 'iv']);
+
+/** A name as the owner wrote it: "Vale, R." is exact; "Gabriel García Márquez" keeps all its words. */
+function ownerPerson(text: string): Person {
+  const person = personOf(text);
+  if (text.includes(',')) return person;
+  const words = normalizeName(text).split(' ').filter((word, i, all) => word && !(i > 0 && i === all.length - 1 && SUFFIXES.has(word)));
+  return { ...person, words };
+}
+
 /** The names that count as the site owner: `name` (split by advanced.nameParts if set) and nameVariants. */
 export function ownerNames(site: Pick<SiteYaml, 'name' | 'nameVariants' | 'advanced'>): Person[] {
   const parts = site.advanced.nameParts;
-  const main = parts ? { given: normalizeName(parts.given).split(' '), family: normalizeName(parts.family) } : personOf(site.name);
-  return [main, ...site.nameVariants.map(personOf)];
+  const main = parts ? { given: normalizeName(parts.given).split(' '), family: normalizeName(parts.family) } : ownerPerson(site.name);
+  return [main, ...site.nameVariants.map(ownerPerson)];
+}
+
+/** The owner's given names when `family` is their family name; undefined when it is not. */
+function givenWith(name: Person, family: string): string[] | undefined {
+  if (!family) return undefined;
+  if (!name.words) return name.family === family ? name.given : undefined;
+  const parts = family.split(' ');
+  if (parts.length > name.words.length) return undefined;
+  const rest = name.words.length - parts.length;
+  return name.words.slice(rest).join(' ') === family ? name.words.slice(0, rest) : undefined;
 }
 
 /**
- * True when an author is one of `names`: the same family name after accents and case are set
- * aside, and given names that agree as far as both go, where an initial matches a whole name.
+ * True when an author is one of `names`: the same family name (with or without a prefix such as
+ * "van der") after accents, case and punctuation are set aside, and first names that agree,
+ * where an initial matches a whole name. "Vale, Rowan", "R. Vale" and "Rowan Vale" all match
+ * the name Rowan Vale; a family name of several words matches the end of the name.
  */
 export function isOwner(author: BibName, names: Person[]): boolean {
   if (author.others) return false;
   const person = author.literal !== undefined ? personOf(author.literal) : { given: normalizeName(author.given ?? '').split(' ').filter(Boolean), family: normalizeName([author.prefix, author.family].filter(Boolean).join(' ')) };
-  return names.some((name) => {
-    const family = name.family === person.family || name.family === normalizeName(author.family ?? '');
-    if (!family) return false;
-    const given = name.given.filter(Boolean);
-    return person.given.length === 0 || given.length === 0 || sameGiven(person.given[0], given[0]);
-  });
+  const families = [person.family, normalizeName(author.family ?? '')];
+  return names.some((name) =>
+    families.some((family) => {
+      const given = givenWith(name, family)?.filter(Boolean);
+      if (!given) return false;
+      return person.given.length === 0 || given.length === 0 || sameGiven(person.given[0], given[0]);
+    }),
+  );
 }
 
 /** How `equal` may name an author: "Berg" or "van der Berg"; a literal name as written. */
@@ -83,23 +112,31 @@ function surnames(author: BibName): string[] {
 const LINKS: [string, string][] = [
   ['pdf', 'PDF'],
   ['doi', 'DOI'],
+  ['arxiv', 'arXiv'],
   ['url', 'Link'],
   ['code', 'Code'],
   ['slides', 'Slides'],
   ['poster', 'Poster'],
   ['video', 'Video'],
   ['website', 'Website'],
+  ['html', 'HTML'],
+  ['supp', 'Supplement'],
+  ['blog', 'Blog'],
 ];
 
-/** A link field as an address: a DOI becomes https://doi.org/…, and a bare file name a file in /files/. */
+/**
+ * A link field as an address: a DOI becomes https://doi.org/…, an arXiv id https://arxiv.org/abs/…,
+ * and a bare file name a file in /files/.
+ */
 export function linkHref(field: string, value: string): string {
   const text = value.trim();
   if (field === 'doi') return /^https?:/i.test(text) ? text : `https://doi.org/${text.replace(/^doi:\s*/i, '')}`;
+  if (field === 'arxiv' && !/^https?:/i.test(text)) return `https://arxiv.org/abs/${text.replace(/^arxiv:\s*/i, '')}`;
   if (/^[a-z][a-z\d+.-]*:/i.test(text) || text.includes('/')) return text;
   return `/files/${text}`;
 }
 
-const VENUE_FIELDS = ['journal', 'booktitle', 'school', 'institution'];
+const VENUE_FIELDS = ['journal', 'booktitle', 'school', 'institution', 'howpublished', 'publisher'];
 
 export function citationView(entry: BibEntry, extras: Extras | undefined, site: SiteYaml): CitationView {
   const { fields } = entry;
@@ -112,7 +149,8 @@ export function citationView(entry: BibEntry, extras: Extras | undefined, site: 
   }));
 
   const title = fields.title && bibHtml(fields.title) + (/[.?!]$/.test(plain(fields.title).trim()) ? '' : '.');
-  const venueField = VENUE_FIELDS.find((field) => fields[field]);
+  // howpublished often holds just \url{…}, which is a link, not a venue
+  const venueField = VENUE_FIELDS.find((field) => fields[field] && !(field === 'howpublished' && /:\/\/|<a\b/.test(fields[field])));
   const venue = extras?.venueDetail ? escapeHtml(extras.venueDetail) : venueField && bibHtml(fields[venueField]);
 
   const links: CitationView['links'] = [];
