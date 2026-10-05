@@ -492,7 +492,9 @@ describe('preflight: reading the Pages settings (S4) and waiting for them', () =
     assert.equal(waited.outputs['build-type'], 'workflow');
     assert.deepEqual(waited.sleeps, ['15', '15']);
     assert.match(waited.stdout, /Waiting for GitHub Pages: open https:\/\/github\.com\/rowan-vale\/website\/settings\/pages/);
-    const timedOut = await pages(['404'], { RUN_NUMBER: '5', HANGFOLIO_POLL_LIMIT: '1' });
+    // The loop counts whole seconds ($SECONDS), so a 1-second limit can end after a single poll
+    // when the clock ticks right away; 2 seconds always leaves at least one full second of polls.
+    const timedOut = await pages(['404'], { RUN_NUMBER: '5', HANGFOLIO_POLL_LIMIT: '2' });
     assert.equal(timedOut.outputs['build-type'], 'none');
     assert.ok(timedOut.calls.length > 2);
   });
