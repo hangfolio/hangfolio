@@ -1,0 +1,87 @@
+% hangfolio spike S9: torture file. Every person, venue, DOI and URL here is invented.
+% Comments may hold braces { like this } and LaTeX \'e that must stay untouched.
+
+Free text between entries is a comment in BibTeX, so this line is ignored.
+
+@string{exc = "Proceedings of the Example Conference"}
+@STRING( pa = {Port Alder} )
+@string{eup = "Example University" # " Press"}
+@string{rv = "Vale, Rowan"}
+@preamble{ "\providecommand{\noopsort}[1]{}" }
+@comment{ A block comment with {nested} braces. }
+
+@article{nunez2023accents,
+  author  = {N{\'u}{\~n}ez, Ana Luc{\'\i}a and M{\"u}ller, J{\"o}rg and Gar\c{c}on, Fran{\c c}ois
+             and {\O}stergaard, S{\o}ren and Dvo{\v{r}}{\'a}k, Ji\v{r}\'{\i} and Stra{\ss}er, Ilse},
+  title   = {Caf\'e, Na\"{\i}ve and R\'esum\'e: \'{E}tudes on {\"U}bersetzung --- the {$\alpha$}-Conversion},
+  journal = {Journal of Imaginary {\&} Example Results},
+  year    = 2023,
+  month   = sep,
+  volume  = {12},
+  number  = "3",
+  pages   = {101--117},
+  note    = {``Quoted'' text, en--dash, 50\% off, \S~4, \textit{italic} and \textbf{bold}},
+}
+
+% The child comes before its crossref parent, as BibTeX requires.
+@inproceedings{vale2024bounded,
+  title     = {Bounded Staleness for {Edge} Caches},
+  author    = rv # " and Investigator, Pat",
+  crossref  = {exc24},
+  pages     = {1--12},
+  doi       = {10.5555/exc24_0001},
+  url       = {https://example.org/papers/vale_2024%20final.pdf},
+  month     = may # "~13--17",
+  abstract  = {Hidden from the BibTeX block. It has 100\% {braces} too.},
+  keywords  = {caching, edge},
+  file      = {:vale2024.pdf:PDF},
+  example   = {true},
+  selected  = {true}
+}
+
+@article{broken2022comma,
+  title  = {This Entry Is Missing a Comma}
+  author = {Vale, Rowan},
+  year   = {2022}
+}
+
+@misc(okafor2021nested,
+  title        = "The {{GPU}} {Kernel {of {Truth}}}: {\"U}ber-Nested {B}races",
+  author       = "Okafor, Chidi and Ōta, Ren and {The Example Consortium}",
+  howpublished = {\url{https://example.org/a_b%20c}},
+  year         = "2021",
+)
+
+@ARTICLE{kjaer2020comment,
+  AUTHOR  = {Kj{\ae}r, S{\o}ren and {van der} Berg, Lotte and Berg, Jr., Anders},
+  % TITLE = {A commented-out title that must be ignored},
+  TITLE   = {Comments {Inside} Entries},
+  JOURNAL = {Example Letters},
+  YEAR    = {2020},
+  MONTH   = dec,
+}
+
+@proceedings{exc24,
+  title     = exc # " (EXC '24)",
+  booktitle = exc # " (EXC '24)",
+  editor    = {Chair, Program},
+  year      = {2024},
+  address   = pa,
+  publisher = eup,
+}
+
+% Pasted from Google Scholar ("Cite", then "BibTeX") without indentation:
+@inproceedings{vale2025tail,
+title={Taming tail latency in example systems},
+author={Vale, Rowan and Hrub{\'y}, Tom{\'a}{\v{s}} and others},
+booktitle={Proceedings of the 2025 Example Symposium on Systems},
+pages={45--58},
+year={2025},
+organization={Example Society}
+}
+@article{vale2019early,
+title={An early note on {LRU} caches},
+author={Vale, Rowan},
+journal={arXiv preprint arXiv:1901.00001},
+year={2019}
+}

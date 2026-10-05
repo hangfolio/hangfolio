@@ -13,6 +13,7 @@ export const TITLES = {
   W205: 'Text is long',
   E206: 'Stray quote',
   W206: 'Quotes shown as text',
+  W301: 'BibTeX problem',
   E302: 'Broken reference',
   E303: 'Used twice',
   E401: 'Example value',

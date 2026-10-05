@@ -4,6 +4,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findAvatar } from '../lib/avatar.ts';
+import { readBib as parseBibFile } from '../lib/bib.ts';
 import { resolveSiteUrl } from '../lib/site-url.ts';
 import { isDemoIdentity, starterValues, type StarterValues } from '../lib/starter-values.ts';
 import { absUrl } from '../lib/url.ts';
@@ -60,6 +61,7 @@ export async function validateSite(root: string, options: Options = {}): Promise
   const bibText = readBib(root);
   const bib = bibText && { file: bibText.file, entries: scanBib(bibText.text) };
   issues.push(...siteResult.issues, ...content.issues, ...plumbing(root));
+  if (bibText) issues.push(...parseBibFile(bibText.text).problems.map((problem) => ({ code: 'W301' as const, file: bibText.file, line: problem.line, col: problem.col, message: problem.message })));
 
   const { origin, base } = resolveSiteUrl(site?.url, env);
   const home = absUrl('/', origin, base);
