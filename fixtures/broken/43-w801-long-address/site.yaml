@@ -1,3 +1,4 @@
 name: "Juniper Ash"
 email: "juniper@ash.test"
 url: "https://coastal-instrumentation-group.github.io/low-cost-tide-gauges-for-small-harbours"
+pages: { card: true }

@@ -73,9 +73,13 @@ export const booking = z
     path: pagePath.default('/meet'),
     lede: md.optional(),
     emailSubject: text.default('Meeting request'),
-    keepPageWhenOff: bool(false),
+    keepPageWhenOff: bool(false).describe('true: with neither calcom nor link (booking paused), the page stays and points to email.'),
   })
-  .check(exactlyOne(['calcom', 'link']));
+  .check((ctx) => {
+    // Neither calcom nor link means booking is paused; that is allowed only to keep the page.
+    if (ctx.value.keepPageWhenOff && ctx.value.calcom === undefined && ctx.value.link === undefined) return;
+    exactlyOne(['calcom', 'link'])(ctx);
+  });
 
 const pageFields = { title: text.optional(), description: text.optional(), heading: text.optional(), lede: md.optional() };
 const page = (extra: Record<string, z.ZodType> = {}) =>
@@ -90,7 +94,7 @@ export const pages = z
     writing: page(),
     contact: page(),
     meet: page(),
-    card: page().describe('The phone-friendly card with a QR code to your site; on at /card.'),
+    card: page().describe('Reserved for a later version; leave it out.'),
     notFound: z.union([z.boolean(), z.strictObject(pageFields)]).optional(),
   })
   .prefault({});

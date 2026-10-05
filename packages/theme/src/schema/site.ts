@@ -3,9 +3,11 @@
 // Only name and email are required, so a site with just those two builds (fixtures/empty).
 // Defaults that depend on values example mode may hide (locationLong from location, ogImage
 // from avatar) are left to the pages, so a hidden example value never leaks through them.
-// A `card:` block is an unknown field (E201) until Google Wallet lands in v0.2.
+// The card page is deferred past v0.1: pages.card stays in the schema but is off unless set,
+// and no page is built for it. A `card:` block is an unknown field (E201) until Google Wallet lands.
 import { z } from 'zod';
 import { affiliation, filePath, md, navLink, oneOf, text } from './common.ts';
+import { redirectFile, samePage } from '../lib/paths.ts';
 import { fail, show, type Issues } from './issues.ts';
 import { advanced, availability, booking, pages, profiles, redirect, seo, siteUrl, theme } from './site-parts.ts';
 
@@ -51,8 +53,7 @@ type Fields = z.output<typeof fields>;
 type PageKey = Exclude<keyof Fields['pages'], 'notFound'>;
 type PageOptions = { path: string; title?: string; description?: string; heading?: string; lede?: string; prepAside?: string };
 
-// `/writing/`, `/writing`, `/writing.html` and `/writing/index.html` are the same page.
-const route = (path: string) => path.replace(/(\/index)?\.html$/, '').replace(/\/+$/, '') || '/';
+const route = samePage;
 const dir = (path: string) => `${path.replace(/\/+$/, '')}/`;
 
 type Owner = { what: string; at: PropertyKey[]; written: boolean };
@@ -82,7 +83,8 @@ function resolvePages(site: Fields, ctx: Issues) {
   const resolved = {} as Record<PageKey, false | PageOptions>;
   for (const key of Object.keys(defaults) as PageKey[]) {
     const value = site.pages[key];
-    if (value === false) {
+    // Every page is on unless turned off, except the card, which is off unless turned on.
+    if (value === false || (key === 'card' && value === undefined)) {
       resolved[key] = false;
       continue;
     }
@@ -94,7 +96,17 @@ function resolvePages(site: Fields, ctx: Issues) {
     const at = written ? ['pages', key, 'path'] : (source[key] ?? ['pages', key]);
     claim(resolved[key].path, { what: `the ${key} page`, at, written });
   }
-  site.redirects.forEach((entry, i) => claim(entry.from, { what: `redirect ${i + 1}`, at: ['redirects', i, 'from'], written: true }));
+  // A redirect writes exactly its `from` file, so /about.html and /about/ can both redirect.
+  const files = new Map<string, number>();
+  site.redirects.forEach((entry, i) => {
+    const at = ['redirects', i, 'from'];
+    const page = owners.get(route(entry.from));
+    if (page) return fail(ctx, entry.from, 'E303', `is also the address of ${page.what} (${show(entry.from)}); give each page its own path`, at);
+    const file = redirectFile(entry.from, site.advanced.urlFormat);
+    const first = files.get(file);
+    if (first !== undefined) return fail(ctx, entry.from, 'E303', `writes the same file as redirect ${first + 1} (${file.slice(1)}); give each redirect its own path`, at);
+    files.set(file, i);
+  });
 
   const notFound = site.pages.notFound;
   return { ...resolved, notFound: notFound === false ? (false as const) : typeof notFound === 'object' ? notFound : {} };

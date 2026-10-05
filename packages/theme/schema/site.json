@@ -211,6 +211,7 @@
         },
         "keepPageWhenOff": {
           "default": false,
+          "description": "true: with neither calcom nor link (booking paused), the page stays and points to email.",
           "type": "boolean"
         }
       },
@@ -533,7 +534,7 @@
           ]
         },
         "card": {
-          "description": "The phone-friendly card with a QR code to your site; on at /card.",
+          "description": "Reserved for a later version; leave it out.",
           "anyOf": [
             {
               "type": "boolean"

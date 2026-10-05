@@ -88,7 +88,9 @@ test('W802: without sharp, only a JPEG or PNG of 64 KB or less goes into card.vc
 });
 
 test('N803 shows only in dev, on the card page, and W801 counts the address', async () => {
-  const dir = site({});
+  // The card page is deferred past v0.1: off by default, and its checks run only when it is turned on.
+  assert.deepEqual((await validateSite(site({}), { mode: 'dev', env: {} })).issues, []);
+  const dir = site({ 'site.yaml': `${ID}pages: { card: true }\n` });
   const dev = await validateSite(dir, { mode: 'dev', env: {} });
   assert.deepEqual(dev.issues, [
     { code: 'N803', message: 'In local preview the QR code on /card points to http://localhost:4321/. Your deployed card points to your real address.', page: '/card' },

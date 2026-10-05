@@ -30,7 +30,7 @@ test('defaults for a site with only name and email', () => {
       writing: { path: '/writing/' },
       contact: { path: '/contact' },
       meet: { path: '/meet' },
-      card: { path: '/card' },
+      card: false,
       notFound: {},
     },
     advanced: {
@@ -112,15 +112,23 @@ test('affiliation as a string, and the other shorthands in site.yaml', () => {
   assert.deepEqual(parsed.availability, { headline: 'Open to collaborations.', until: '2027' });
 });
 
-test('booking needs calcom or link, not both', () => {
+test('booking needs calcom or link, not both; neither only to keep the page while booking is paused', () => {
   assert.deepEqual(issuesOf(site, { ...minimal, booking: { label: 'Talk to me' } }), ['booking E202: needs one of calcom or link']);
+  assert.deepEqual(parseOk(site, { ...minimal, booking: { keepPageWhenOff: true } }).booking, {
+    label: 'Book a 1:1',
+    path: '/meet',
+    emailSubject: 'Meeting request',
+    keepPageWhenOff: true,
+  });
+  assert.deepEqual(issuesOf(site, { ...minimal, booking: { keepPageWhenOff: false } }), ['booking E202: needs one of calcom or link']);
   assert.deepEqual(issuesOf(site, { ...minimal, booking: { calcom: 'a/b', link: 'https://example.org/book' } }), [
     'booking E202: needs only one of calcom or link, but has calcom and link',
   ]);
   assert.deepEqual(parseOk(site, { ...minimal, booking: { link: 'https://example.org/book', path: 'book' } }).pages.meet, { path: '/book' });
 });
 
-test('pages.card: false turns the card off, and a path moves it (PLAN M2 acceptance)', () => {
+test('pages.card: off unless turned on (deferred past v0.1), and a path moves it (PLAN M2 acceptance)', () => {
+  assert.equal(parseOk(site, minimal).pages.card, false);
   assert.equal(parseOk(site, { ...minimal, pages: { card: false } }).pages.card, false);
   assert.deepEqual(parseOk(site, { ...minimal, pages: { card: { path: '/qr' } } }).pages.card, { path: '/qr' });
   assert.deepEqual(parseOk(site, { ...minimal, pages: { card: { title: 'Card', lede: 'Scan me.' } } }).pages.card, {
@@ -151,7 +159,9 @@ test('two pages at one path are E303, reported where the path was written', () =
   assert.deepEqual(issuesOf(site, { ...minimal, pages: { card: { path: '/projects' } } }), [
     "pages.card.path E303: is also the address of the projects page ('/projects'); give each page its own path",
   ]);
-  assert.deepEqual(issuesOf(site, { ...minimal, pages: { projects: { path: '/card/' } } }), [
+  // the card page is off by default, so its path is free
+  assert.deepEqual(issuesOf(site, { ...minimal, pages: { projects: { path: '/card/' } } }), []);
+  assert.deepEqual(issuesOf(site, { ...minimal, pages: { card: true, projects: { path: '/card/' } } }), [
     "pages.projects.path E303: is also the address of the card page ('/card'); give each page its own path",
   ]);
   assert.deepEqual(issuesOf(site, { ...minimal, pages: { card: { path: '/' } } }), [
@@ -159,6 +169,14 @@ test('two pages at one path are E303, reported where the path was written', () =
   ]);
   assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/projects.html', to: '/' }] }), [
     "redirects.0.from E303: is also the address of the projects page ('/projects.html'); give each page its own path",
+  ]);
+  // a redirect writes exactly its file: /about.html and /about/ are two files; /about and /about.html are one
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/about.html', to: '/' }, { from: '/about/', to: '/' }] }), []);
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/about.html', to: '/' }, { from: 'about', to: '/' }] }), [
+    "redirects.1.from E303: writes the same file as redirect 1 (about.html); give each redirect its own path",
+  ]);
+  assert.deepEqual(issuesOf(site, { ...minimal, redirects: [{ from: '/contact/', to: '/' }] }), [
+    "redirects.0.from E303: is also the address of the contact page ('/contact/'); give each page its own path",
   ]);
   // the booking page only takes its path when there is a booking block
   assert.deepEqual(issuesOf(site, { ...minimal, pages: { card: { path: '/meet' } } }), []);
