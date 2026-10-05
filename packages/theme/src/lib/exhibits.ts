@@ -49,6 +49,12 @@ export function barRows(bars: Bars): BarRow[] {
   return bars.rows.map((row) => ({ label: row.label, value: valueText(row.value, row.unit), width: barWidth(row.value, max), tone: row.tone }));
 }
 
+/** The longest label and value, in characters, which set the label and value columns' widths. */
+export function barColumns(rows: BarRow[]): { label: number; value: number } {
+  const longest = (texts: string[]) => Math.max(0, ...texts.map((text) => [...text].length));
+  return { label: longest(rows.map((row) => row.label)), value: longest(rows.map((row) => row.value)) };
+}
+
 /**
  * The bars' accessible name: the chart is one image to a screen reader, so its label carries
  * every value: "Cold-start time: Before 840 ms, After 310 ms".

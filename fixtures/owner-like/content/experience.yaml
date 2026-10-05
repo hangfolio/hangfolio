@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/experience.json
+entries:
+  - section: research
+    role: "Graduate Research Assistant"
+    org: "Northlake Institute of Technology"
+    short: "Northlake Institute"
+    location: "Port Alder"
+    start: 2025-01
+    end: present
+    bullets: ["Power-aware scheduling for edge clusters and serverless inference."]
+    home: "Edge inference scheduling under power caps; I also run the lab's 40-node testbed."
+  - section: professional
+    role: "Backend Engineer"
+    org: "Fernway"
+    short: "Fernway, Oslo (remote)"
+    location: "Oslo (remote)"
+    start: 2024-07
+    end: 2024-12
+    bullets: ["Rewrote the search indexer; added audit logs for admins."]
+    home: "Rewrote the search indexer so new listings show up in seconds, not hours; added admin audit logs."
+  - section: professional
+    role: "Platform Engineer"
+    org: "Calder Labs"
+    short: "Calder Labs (contract, remote)"
+    start: 2024-05
+    end: 2024-12
+    bullets: ["Billing and usage metering for a drone-survey platform."]
+    home: "Billing and usage metering for a drone-survey platform; moved 30 TB of imagery to tiered storage with no downtime."
+  - section: professional
+    role: "Software Engineer"
+    org: "Mobile Health Lab, Calder Polytechnic"
+    short: "Mobile Health Lab, Calder Poly"
+    start: 2023-10
+    end: 2024-03
+    bullets: ["Larkspur Health: offline sync for field clinics."]
+    home: "Larkspur Health: offline sync for 300 field clinics, from 8s to 700ms per visit."
+  - section: research
+    role: "Research Assistant"
+    org: "Edge Systems Group, Calder Polytechnic"
+    start: 2022-05
+    end: 2023-12
+    bullets: ["Wrote the phone-side logger for the NSX ’24 study."]
+    home: "Wrote the phone-side logger for NSX ’24."
+  - section: teaching
+    role: "Teaching Assistant"
+    org: "Northlake Institute of Technology"
+    when: ["Fall 2025", "Spring 2026"]
+    bullets: ["Operating Systems labs."]
+  - section: education
+    role: "PhD, Computer Science"
+    org: "Northlake Institute of Technology"
+    start: 2025-01
+    end: 2029-05
+    expected: true
+    homeLine: { text: "PhD, Computer Science, Northlake Institute", years: "2025 – 2029 (expected)" }
+  - section: education
+    role: "BS, Computer Science"
+    org: "Calder Polytechnic"
+    start: 2020-09
+    end: 2024-05
+    homeLine: { text: "BS, Computing, Calder Poly", years: "2020 – 2024" }
+  - section: programs
+    role: "Teaching Fellow"
+    org: "Northlake Institute of Technology"
+    start: 2026-07
+    homeLine: { text: "Northlake Teaching Fellowship, one of 12 graduate fellows", years: "2026" }

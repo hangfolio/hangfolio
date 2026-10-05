@@ -1,0 +1,25 @@
+---
+// The home page's Education lines (lib/home.ts homeEducation): each entry's homeLine text, then
+// its years in mono. With a `label`, the lines hang under it in the margin, below a hairline:
+// the Experience section's last block, which carries the education anchor as its `id`. Without
+// one, they are the body of their own section.
+import Hang from './Hang.astro';
+import type { Job } from '../lib/home.ts';
+
+interface Props {
+  entries: Job[];
+  /** The margin label ("Education") when the lines join the Experience section */
+  label?: string;
+  id?: string;
+}
+
+const { entries, label, id } = Astro.props;
+const lines = entries.flatMap((entry) => (entry.homeLine ? [entry.homeLine] : []));
+---
+{label !== undefined ? (
+  <Hang class="edu" id={id} label={label}>
+    <ul class="edu-lines">{lines.map((line) => <li><span>{line.text}</span><span class="yr">{line.years}</span></li>)}</ul>
+  </Hang>
+) : (
+  <ul class="edu-lines">{lines.map((line) => <li><span>{line.text}</span><span class="yr">{line.years}</span></li>)}</ul>
+)}

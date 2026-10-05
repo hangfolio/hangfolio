@@ -1,5 +1,6 @@
 // How content reaches the pages: the loader for one YAML file (content/news.yaml and friends),
-// site.yaml read through its schema for defineSiteConfig(), and example entries left out.
+// the one for content/publications.bib, site.yaml read through its schema for defineSiteConfig(),
+// and example entries left out.
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -7,6 +8,7 @@ import { join } from 'node:path';
 import { after, test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import type { Loader, LoaderContext } from 'astro/loaders';
+import { bibFile } from '../src/lib/bib-file.ts';
 import { optional } from '../src/lib/loaders.ts';
 import { readSiteConfig } from '../src/lib/read-site.ts';
 import { yamlFile } from '../src/lib/yaml-file.ts';
@@ -137,4 +139,33 @@ test('optional(): a folder with no entries is an empty collection that exists, s
   await run('full', ['a', 'b']);
   assert.deepEqual([...collections.get('full')!.keys()], ['a', 'b']);
   assert.deepEqual(warnings, []);
+});
+
+test('publications.bib: one entry per BibTeX entry, by key; example entries only in demo mode; follows edits', async () => {
+  const site = join(root, 'site.yaml');
+  const file = join(root, 'refs.bib');
+  writeFileSync(file, '@article{mine2024, title={Mine}, author={Halloway, Wren}, year={2024}}\n@article{demo2024, example={true}, title={Demo}, year={2024}}\n');
+
+  writeFileSync(site, 'name: "Wren Halloway"\nemail: "wren@halloway.test"\n');
+  const owner = context();
+  await bibFile('refs.bib').load(owner.ctx);
+  assert.deepEqual([...owner.entries.keys()], ['mine2024']);
+  assert.deepEqual(owner.entries.get('mine2024')?.data, {
+    key: 'mine2024',
+    type: 'article',
+    fields: { title: 'Mine', year: '2024' },
+    names: { author: [{ given: 'Wren', family: 'Halloway' }] },
+  });
+  writeFileSync(file, '@misc{later, title={Later}}\n');
+  await owner.fire('change', file);
+  assert.deepEqual([...owner.entries.keys()], ['later']);
+  unlinkSync(file);
+  await owner.fire('unlink', file);
+  assert.equal(owner.entries.size, 0);
+
+  writeFileSync(file, '@article{mine2024, title={Mine}}\n@article{demo2024, example={true}, title={Demo}}\n');
+  writeFileSync(site, 'name: "Rowan Vale"\nemail: "rowan@example.edu"\n');
+  const demo = context();
+  await bibFile('refs.bib').load(demo.ctx);
+  assert.deepEqual([...demo.entries.keys()], ['mine2024', 'demo2024']);
 });

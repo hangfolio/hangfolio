@@ -52,3 +52,11 @@ export function dateRange(
   if (expected && parts.length > 0) parts.push('(expected)');
   return parts;
 }
+
+/** A post's date as lists show it: "Sep 14, 2026" in the site's locale, read in UTC. */
+export function postDate(date: Date, locale = 'en-US'): string {
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+/** 2026-09-14, for a <time datetime>. */
+export const isoDate = (date: Date) => date.toISOString().slice(0, 10);

@@ -1,0 +1,22 @@
+---
+// A paper as one sentence: the authors (the site owner's name underlined, * for equal
+// contribution), the title in quotes, the venue in italics and the place, then the note for the
+// * marks; under it, the links in brackets. lib/citation.ts works out what it shows.
+import type { CitationView } from '../lib/citation.ts';
+import { contentUrl } from '../lib/url.ts';
+
+interface Props {
+  view: CitationView;
+}
+
+const { authors, title, venue, place, note, links } = Astro.props.view;
+const rest = Boolean(title || venue || place);
+// "A, B." before the title; no second full stop after "et al." or "Jr."
+const stop = authors.at(-1)?.name.endsWith('.') ? '' : '.';
+const afterAuthors = authors.length === 0 ? '' : stop + (rest ? ' ' : '');
+// The venue and place end with a full stop, unless the last of them already has one
+const last = place ?? venue?.replace(/<[^>]*>/g, '');
+const end = last && !/[.?!]$/.test(last.trim()) ? '.' : '';
+---
+<p>{authors.map((author, i) => <>{i > 0 && ', '}{author.me ? <span class="me">{author.name}</span> : author.name}{author.equal && '*'}</>)}{afterAuthors}{title && <span class="ptitle">“<Fragment set:html={title} />”</span>}{venue && <>{title && ' '}<em class="venue" set:html={venue} /></>}{place && (venue ? `, ${place}` : `${title ? ' ' : ''}${place}`)}{end}{note && <> <span class="note">{note}</span></>}</p>
+{links.length > 0 && <div class="links mono">{links.map((link) => <a href={contentUrl(link.href)}>[{link.label}]</a>)}</div>}

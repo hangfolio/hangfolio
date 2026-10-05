@@ -1,0 +1,25 @@
+---
+// The home page's Experience list (lib/home.ts homeJobs): the role, then the organisation (its
+// `short` name when it has one), and the one-line `home` summary, with the dates in the margin.
+// An entry's `when` text (teaching terms) replaces its dates.
+import DateRange from './DateRange.astro';
+import Hang from './Hang.astro';
+import type { Job } from '../lib/home.ts';
+
+interface Props {
+  jobs: Job[];
+}
+
+const { jobs } = Astro.props;
+---
+<ol class="jobs">
+  {jobs.map((job) => (
+    <Hang as="li">
+      <DateRange slot="m" start={job.start} end={job.end} expected={job.expected} when={job.when} />
+      <div>
+        <h3>{job.role} <span class="org">· {job.short ?? job.org}</span></h3>
+        <p>{job.home}</p>
+      </div>
+    </Hang>
+  ))}
+</ol>

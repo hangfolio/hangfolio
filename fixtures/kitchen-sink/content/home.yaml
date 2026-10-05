@@ -7,3 +7,14 @@ highlights:
     - { value: "18/18", what: "seeded cache bugs found, 0 false alarms", source: "[Driftnet data](/files/driftnet.pdf)" }
     - { value: "9 min → 70s", what: "median CI run for 300 engineers", source: "[Example Systems](https://example.org)" }
     - { value: "1,240", what: "monthly downloads", source: "[Quay](https://example.org/quay) on the package index" }
+research:
+  problem: "Remote build caches promise that the same inputs give the same outputs, but nothing checks the promise, so a stale artifact can ship without anyone noticing."
+  approach:
+    - { title: "Cache-miss tracing", chip: "Shoal · Rust", text: "Record which inputs each build action read, then explain every miss by the input that changed." }
+    - { title: "Batched fsync", chip: "2027 venue · in preparation", text: "Group `fsync` calls across tenants without breaking any tenant's durability promise." }
+    - { title: "Staleness audits", text: "Measure how often caches in the wild serve [stale artifacts](/files/driftnet.pdf)." }
+  status: "One paper published and one in preparation, with support from the institute's **build lab**."
+  featured: rook2024driftnet
+  teaching: "TA, Operating Systems (Fall 2024) and Compilers (Spring 2025)."
+  link: { label: "All notes", profile: "notes" }
+counts: { experience: 4 }

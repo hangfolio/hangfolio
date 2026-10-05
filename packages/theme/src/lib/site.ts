@@ -19,3 +19,8 @@ export function siteDescription(site: SiteYaml): string {
 export function localeTag(site: SiteYaml): string {
   return site.advanced.locale.replace('_', '-');
 }
+
+/** A post's page (SPEC 5.9): /{writingPath}/{file name}/, e.g. /writing/what-fsync-promises/. */
+export function postPath(site: SiteYaml, id: string): string {
+  return `${site.advanced.writingPath.replace(/\/+$/, '')}/${id}/`;
+}

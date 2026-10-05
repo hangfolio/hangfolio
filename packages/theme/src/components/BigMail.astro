@@ -1,0 +1,12 @@
+---
+// The email address in large serif type, as a mailto link (with a subject when one is given).
+import { site } from 'virtual:hangfolio/site';
+import { mailto } from '../lib/hero.ts';
+
+interface Props {
+  subject?: string;
+}
+
+const { subject } = Astro.props;
+---
+<a href={mailto(site.email, subject)} class="mail">{site.email}</a>

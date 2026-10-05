@@ -1,0 +1,20 @@
+---
+// Posts as date and title, two to a row where there is room (the home page's Writing list).
+// Each title links to the post's page (lib/site.ts postPath).
+import { site } from 'virtual:hangfolio/site';
+import { isoDate, postDate } from '../lib/dates.ts';
+import { localeTag, postPath } from '../lib/site.ts';
+import { url } from '../lib/url.ts';
+
+interface Props {
+  posts: { id: string; data: { title: string; date: Date } }[];
+}
+
+const { posts } = Astro.props;
+const locale = localeTag(site);
+---
+<ul class="posts">
+  {posts.map((post) => (
+    <li><time datetime={isoDate(post.data.date)}>{postDate(post.data.date, locale)}</time><a href={url(postPath(site, post.id))}>{post.data.title}</a></li>
+  ))}
+</ul>

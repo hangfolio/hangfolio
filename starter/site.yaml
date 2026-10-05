@@ -20,7 +20,7 @@ links:                                               # example: replace with you
 
 availability:                                        # example: edit or delete the whole block
   headline: "Open to research internships · Summer 2027."
-  detail: "Returning to the PhD afterwards."
+  detail: "After that, back to the lab."
   contact: "I'm looking for a **Summer 2027** research internship, then returning to my PhD."
   emailSubject: "Summer 2027 internship"
   until: 2027-06-01

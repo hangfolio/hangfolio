@@ -1,43 +1,119 @@
 ---
 // The home page (SPEC 5.4): the hero, then the sections in home.yaml `sections` order, each with
 // its id from advanced.anchors. Without home.yaml, or while it is the example, the defaults apply
-// and each section shows only when its content exists.
-// TODO(M3): the research, experience, education, news, writing and contact sections.
+// (every section, the default counts and headings). A section with nothing to show is left out;
+// which ones show, and where the education lines go, is worked out in lib/home.ts.
 import { getCollection, getEntry } from 'astro:content';
 import { site } from 'virtual:hangfolio/site';
+import EducationList from '../components/EducationList.astro';
+import ExperienceList from '../components/ExperienceList.astro';
 import Hero from '../components/Hero.astro';
+import HomeContact from '../components/HomeContact.astro';
+import NewsList from '../components/NewsList.astro';
+import PostList from '../components/PostList.astro';
+import ResearchBlock from '../components/ResearchBlock.astro';
 import ResultsStrip from '../components/ResultsStrip.astro';
 import SectionHead from '../components/SectionHead.astro';
 import WorkItem from '../components/WorkItem.astro';
 import Base from '../layouts/Base.astro';
+import type { BibEntry } from '../lib/bib.ts';
+import { citationView, type Extras } from '../lib/citation.ts';
+import { homeEducation, homeJobs, homeNews, homePosts, planSections, showsResearch } from '../lib/home.ts';
 import { availablePages } from '../lib/nav.ts';
 import { localeTag, pageTitle } from '../lib/site.ts';
-import { featuredProjects, workView } from '../lib/work.ts';
+import { featuredProjects, resolveHeadingLink, workView } from '../lib/work.ts';
 import { home as homeSchema } from '../schema/home.ts';
 
 const home = (await getEntry('home', 'home'))?.data ?? homeSchema.parse({});
-const featured = featuredProjects(await getCollection('projects'));
 const anchors = site.advanced.anchors;
 const locale = localeTag(site);
-const projectsPage = availablePages(site).has('projects') && site.pages.projects;
-const allProjects = projectsPage ? { label: 'All projects', href: projectsPage.path } : undefined;
+const research = showsResearch(home) ? home.research : undefined;
+const available = availablePages(site, { research: Boolean(research) });
+/** A section heading's link to one of the site's pages, once that page exists. */
+const pageLink = (key: 'projects' | 'publications' | 'experience' | 'writing', label: string) => {
+  const page = site.pages[key];
+  return available.has(key) && page ? { label, href: page.path } : undefined;
+};
+
+const featured = featuredProjects(await getCollection('projects'));
+const experience = (await getEntry('experience', 'experience'))?.data.entries ?? [];
+const jobs = homeJobs(experience, home.counts.experience);
+const education = homeEducation(experience);
+const news = homeNews((await getEntry('news', 'news'))?.data.items ?? [], home.counts.news);
+// Posts exist only while the writing pages are on.
+const posts = site.pages.writing ? homePosts(await getCollection('writing'), home.counts.writing) : [];
+
+// The featured paper: its BibTeX entry, and its extras file if it has one
+const key = research?.featured;
+const entry = key ? ((await getEntry('bib', key))?.data as BibEntry | undefined) : undefined;
+const extras = key ? (await getEntry('publications', key))?.data : undefined;
+const paper = entry && citationView(entry, extras?.status === 'in-preparation' ? undefined : (extras as Extras | undefined), site);
+
+const plan = planSections(home.sections, anchors, {
+  highlights: Boolean(home.highlights),
+  work: featured.length > 0,
+  research: Boolean(research),
+  experience: jobs.length > 0,
+  education: education.length > 0,
+  news: news.length > 0,
+  writing: posts.length > 0,
+  contact: true,
+});
 ---
 <Base title={pageTitle(site)} path="/" ogType="profile">
   <Hero home={home} />
-  {home.sections.map((section) => {
+  {plan.map(({ section, id, education: educationId }) => {
     if (section === 'highlights' && home.highlights) {
-      return <ResultsStrip id={anchors.highlights} heading={home.highlights.heading} items={home.highlights.items} />;
+      return <ResultsStrip id={id} heading={home.highlights.heading} items={home.highlights.items} />;
     }
-    if (section === 'work' && featured.length > 0) {
+    if (section === 'work') {
       return (
-        <section class="block" aria-labelledby={anchors.work} data-section="work">
-          <SectionHead id={anchors.work} heading={home.headings.work} link={allProjects} />
+        <section class="block" aria-labelledby={id} data-section="work">
+          <SectionHead id={id} heading={home.headings.work} link={pageLink('projects', 'All projects')} />
           <ol class="works">
             {featured.map((entry, i) => <WorkItem view={workView(entry, 'featured', { n: i + 1, site, locale })} />)}
           </ol>
         </section>
       );
     }
+    if (section === 'research' && research) {
+      const link = resolveHeadingLink(research.link, site) ?? pageLink('publications', 'Publications');
+      return <ResearchBlock id={id} research={research} link={link} paper={paper} />;
+    }
+    if (section === 'experience') {
+      return (
+        <section class="block" aria-labelledby={id} data-section="experience">
+          <SectionHead id={id} heading={home.headings.experience} link={pageLink('experience', 'Full history')} />
+          <ExperienceList jobs={jobs} />
+          {educationId && <EducationList entries={education} label={home.headings.education} id={educationId} />}
+        </section>
+      );
+    }
+    if (section === 'education') {
+      return (
+        <section class="block" aria-labelledby={id} data-section="education">
+          <SectionHead id={id} heading={home.headings.education} />
+          <EducationList entries={education} />
+        </section>
+      );
+    }
+    if (section === 'news') {
+      return (
+        <section class="block tight-gap" aria-labelledby={id} data-section="news">
+          <SectionHead id={id} heading={home.headings.news} />
+          <NewsList items={news} />
+        </section>
+      );
+    }
+    if (section === 'writing') {
+      return (
+        <section class="block tight-gap" aria-labelledby={id} data-section="writing">
+          <SectionHead id={id} heading={home.headings.writing} link={pageLink('writing', 'All writing')} />
+          <PostList posts={posts} />
+        </section>
+      );
+    }
+    if (section === 'contact') return <HomeContact id={id} heading={home.headings.contact} />;
     return null;
   })}
 </Base>

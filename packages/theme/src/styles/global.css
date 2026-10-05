@@ -482,10 +482,6 @@ main:focus {
   gap: .25rem;
 }
 
-.ext {
-  flex: none;
-}
-
 /* The avatar hangs in the left margin, like the dates below it */
 @media (min-width: 1120px) {
   .hero-id {
@@ -878,7 +874,8 @@ main:focus {
   font-weight: 500;
 }
 
-/* Bars: label, track, value; the columns line up across rows */
+/* Bars: label, track, value. --label and --value are the longest label and value in ch
+   (ExhibitBars.astro), so the columns line up across rows. */
 .bars {
   gap: .625rem;
   padding: .875rem 1rem;
@@ -886,14 +883,16 @@ main:focus {
 }
 
 .bar-rows {
-  display: grid;
-  grid-template-columns: minmax(2.75rem, max-content) minmax(4rem, 1fr) minmax(4.25rem, max-content);
-  align-items: center;
-  gap: .5rem .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
 }
 
 .bar-row {
-  display: contents;
+  display: grid;
+  grid-template-columns: max(2.75rem, var(--label, 0ch)) minmax(0, 1fr) max(4.25rem, var(--value, 0ch));
+  align-items: center;
+  gap: .75rem;
 }
 
 .track {
@@ -909,7 +908,7 @@ main:focus {
   background: var(--accent);
 }
 
-.fill.faint {
+.fill.low {
   background: var(--faint);
 }
 
@@ -927,6 +926,257 @@ main:focus {
 .bars figcaption strong {
   font-weight: 500;
   color: var(--fg);
+}
+
+/* ---------- Research (ResearchBlock.astro, Citation.astro) ---------- */
+
+.research {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* The problem and status, in the serif */
+.essay {
+  font-family: var(--serif);
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.approach {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+
+.approach > li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: .75rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.approach > li > div {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  min-width: 0;
+}
+
+.approach .num {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.9;
+  color: var(--faint);
+}
+
+.title-row.tight {
+  gap: .25rem .75rem;
+}
+
+.title-row.tight h3 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.approach p {
+  font-size: .9375rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* The featured paper */
+.pub {
+  padding-top: .5rem;
+}
+
+.pub-body {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.pub-body h3 {
+  line-height: 1.5;
+}
+
+.pub-body p {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The site owner's name in an author list */
+.me {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+  font-weight: 600;
+}
+
+.pub-body .ptitle {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+}
+
+.pub-body .venue {
+  font-family: var(--serif);
+  font-size: 1.0625rem;
+}
+
+.pub-body .note {
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.smallcaps {
+  font-variant: small-caps;
+}
+
+.small-text {
+  font-size: .9375rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* ---------- Experience and education (ExperienceList.astro, EducationList.astro) ---------- */
+
+.jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.jobs > li > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.jobs h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.org {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.jobs p {
+  font-size: .9375rem;
+  line-height: 1.6;
+}
+
+/* Education at the end of the Experience section, under a hairline */
+.edu {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+
+.hang.edu > .m {
+  letter-spacing: .12em;
+}
+
+.edu-lines {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  font-size: .9375rem;
+  line-height: 1.55;
+}
+
+.edu-lines li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 .75rem;
+}
+
+.yr {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  color: var(--muted);
+}
+
+/* ---------- News and writing (NewsList.astro, PostList.astro) ---------- */
+
+.news {
+  display: flex;
+  flex-direction: column;
+  gap: .875rem;
+}
+
+.news .m {
+  line-height: 1.6;
+}
+
+.news p {
+  font-size: .9375rem;
+  line-height: 1.6;
+}
+
+/* Two posts to a row where there is room */
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 1.75rem 3rem;
+}
+
+.posts li {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+}
+
+.posts time {
+  font-family: var(--mono);
+  font-size: .75rem;
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.posts a {
+  font-family: var(--serif);
+  font-size: 1.1875rem;
+  line-height: 1.35;
+  font-weight: 500;
+  text-wrap: pretty;
+}
+
+/* ---------- Contact (HomeContact.astro, BigMail.astro) ---------- */
+
+.block.contact {
+  gap: 1.25rem;
+}
+
+/* The email address in large type */
+.mail {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  font-family: var(--serif);
+  font-size: 2.25rem;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -.012em;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .essay {
+    font-size: 1.0625rem;
+  }
+
+  .mail {
+    font-size: 1.625rem;
+    min-height: 2.75rem;
+  }
 }
 
 /* ---------- Interior pages ---------- */

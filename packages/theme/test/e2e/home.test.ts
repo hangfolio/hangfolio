@@ -1,8 +1,10 @@
-// M3: fixtures/kitchen-sink's home page renders the hero, the availability box, the results strip
-// and every kind of featured work item and exhibit, at base / and /hangfolio, with every internal
-// link under the base. In the installed Chrome: the strip's columns, bars drawn to scale, the
-// availability pulse stopping for reduced motion, no sideways scrolling on a phone, and text
-// contrast of at least 4.5:1 in both themes.
+// M3: fixtures/kitchen-sink's home page renders every home component at base / and /hangfolio,
+// with every internal link under the base: the hero and availability box, the results strip,
+// every kind of featured work item and exhibit, the research section with its featured paper,
+// experience with the education lines, news, writing and the contact section. In the installed
+// Chrome: the strip's columns, bars drawn to scale, the availability pulse stopping for reduced
+// motion, posts two to a row, margin notes hanging on wide screens, no sideways scrolling on a
+// phone, and text contrast of at least 4.5:1 in both themes.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -21,7 +23,7 @@ const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Conte
 test('hangfolio check finds nothing to report in fixtures/kitchen-sink', () => {
   const result = spawnSync(process.execPath, [BIN, 'check'], { cwd: join(REPO, 'fixtures/kitchen-sink'), encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(result.stdout, 'hangfolio check: site.yaml and 6 files in content/\n\nNo errors.\n');
+  assert.equal(result.stdout, 'hangfolio check: site.yaml and 14 files in content/\n\nNo errors.\n');
 });
 
 for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio']) {
@@ -79,10 +81,73 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       for (const level of ['critical', 'high', 'medium', 'low']) assert.match(main, new RegExp(`<span class="sev ${level}">\\[${level.toUpperCase()}\\]</span>`));
       assert.match(main, /<div class="well metrics" role="group" aria-label="ablation">/);
       assert.match(main, /<div class="links mono faint"><span>In preparation for a 2027 venue<\/span><span>No public link yet<\/span><\/div>/);
-      assert.match(main, /<div class="bar-rows" role="img" aria-label="Stale hits per million lookups: Default 412, Pinned 139, Hashed 6">/);
+      assert.match(main, /<div class="bar-rows" role="img" aria-label="Stale hits per million lookups: Default 412, Pinned 139, Hashed 6" style="--label: 7ch; --value: 3ch">/);
       assert.deepEqual([...main.matchAll(/style="width: ([\d.]+%)"/g)].map((m) => m[1]), ['100%', '33.7%', '1.5%']);
       assert.match(main, /<div class="well terminal install" role="group" aria-label="Install">/);
       assert.match(main, /<a href="https:\/\/hangfolio\.github\.io\/">Write-up<\/a><code class="inline-code">cargo install shoal<\/code>/);
+    });
+
+    test('the sections in their default order, with the ids from advanced.anchors', () => {
+      const ids = [...main.matchAll(/<section (?:id="[^"]+" )?class="block[^"]*" aria-labelledby="([^"]+)" data-section="([^"]+)"/g)].map((m) => `${m[2]}:${m[1]}`);
+      assert.deepEqual(ids, ['highlights:results', 'work:work', 'research:research-h', 'experience:exp', 'news:news', 'writing:writing', 'contact:contact']);
+      assert.match(html, new RegExp(`<a href="${base}/#research" class="quiet"[^>]*>Research</a><a href="${base}/files/cv.pdf" class="quiet"[^>]*>CV</a>`));
+    });
+
+    test('research: the section carries the anchor, the paper is #publication, the owner is underlined', () => {
+      assert.match(main, /<section id="research" class="block" aria-labelledby="research-h" data-section="research"><div class="sec-head"><h2 id="research-h" class="eyebrow">Research<\/h2><a href="https:\/\/hangfolio\.github\.io\/">All notes<\/a><\/div>/);
+      const labels = [...main.matchAll(/<div class="m label">([^<]+)<\/div>/g)].map((m) => m[1]);
+      assert.deepEqual(labels, ['Problem', 'Approach', 'Status', 'Teaching', 'Education']);
+      assert.deepEqual([...main.matchAll(/<span class="num">(\d+)<\/span>/g)].map((m) => m[1]), ['01', '02', '03']);
+      assert.match(main, /<h3>Cache-miss tracing<\/h3><span class="chip">Shoal · Rust<\/span>/);
+      assert.match(main, new RegExp(`serve <a href="${base}/files/driftnet.pdf">stale artifacts</a>`));
+      assert.match(
+        main,
+        /<div class="hang pub" id="publication"><div class="m"><span>2024<\/span><\/div><div class="pub-body"><h3 class="eyebrow faint">Publication<\/h3><p>Adaeze Okonkwo\*, <span class="me">Tamsin Rook<\/span>\*, Björn Lindqvist, Ilse Marrow\. <span class="ptitle">“Driftnet: How Often Do Remote Build Caches Serve Stale Artifacts\?”<\/span> <em class="venue">The Example Symposium on Build Systems \(EXSB ’24\)<\/em>, Kestrel Harbour\. <span class="note">\*Co-first authors<\/span><\/p>/,
+      );
+      const links = [...main.matchAll(/<div class="links mono">(.*?)<\/div>/g)].at(-1)![1];
+      assert.equal(
+        links,
+        `<a href="${base}/files/driftnet.pdf">[PDF]</a><a href="https://doi.org/10.5555/exsb24.0042">[DOI]</a><a href="https://github.com/hangfolio/hangfolio">[Code]</a>` +
+          '<a href="https://example.org/driftnet">[Dataset]</a><a href="https://hangfolio.github.io/">[Talk notes]</a>',
+      );
+      assert.match(main, /<div class="m label">Teaching<\/div><p class="small-text">TA, Operating Systems \(Fall 2024\) and Compilers \(Spring 2025\)\.<\/p>/);
+    });
+
+    test('experience: the first four entries with a home line, then the education lines under #education', () => {
+      const jobs = [...main.matchAll(/<h3>([^<]+) <span class="org">· ([^<]+)<\/span><\/h3>/g)].map((m) => `${m[1]} · ${m[2]}`);
+      assert.deepEqual(jobs, ['Graduate Research Assistant · Example Studies', 'Teaching Assistant · Institute of Example Studies', 'Software Engineering Intern · Lantern Example Co.', 'Build Engineer · Example Systems']);
+      assert.match(main, /<div class="m"><span><span class="nowrap">Fall 2024,<\/span> <span class="nowrap">Spring 2025<\/span><\/span><\/div>/);
+      assert.match(main, /<span class="range"><span>Jun<\/span> <span>– Aug 2024<\/span><\/span>/);
+      assert.doesNotMatch(main, /Freelance|Small web tools/);
+      assert.match(main, /<\/ol><div class="hang edu" id="education"><div class="m label">Education<\/div><ul class="edu-lines">/);
+      const lines = [...main.matchAll(/<li><span>([^<]+)<\/span><span class="yr">([^<]+)<\/span><\/li>/g)].map((m) => `${m[1]} | ${m[2]}`);
+      assert.deepEqual(lines, [
+        'PhD, Computer Systems, Institute of Example Studies | 2023 – 2028 (expected)',
+        'BSc, Computer Science, Example Polytechnic | 2017 – 2021',
+        'Example Systems Summer School, one of 40 participants | 2025',
+      ]);
+    });
+
+    test('news, writing and contact: four news items, the two newest posts, the address and links', () => {
+      const months = [...main.matchAll(/<time datetime="([\d-]+)">([A-Z][a-z]+ \d{4})<\/time>/g)].map((m) => `${m[1]} ${m[2]}`);
+      assert.deepEqual(months, ['2026-09-14 Sep 2026', '2026-06 Jun 2026', '2025-07 Jul 2025', '2024-05 May 2024']);
+      assert.match(main, new RegExp(`<p>Wrote up <a href="${base}/writing/cache-lied/">why our build cache lied to us</a>.</p>`));
+      assert.match(
+        main,
+        new RegExp(
+          `<ul class="posts"><li><time datetime="2026-09-14">Sep 14, 2026</time><a href="${base}/writing/cache-lied/">Why our build cache lied to us</a></li>` +
+            `<li><time datetime="2025-11-02">Nov 2, 2025</time><a href="${base}/writing/bottom-up/">Reading a build log from the bottom up</a></li></ul>`,
+        ),
+      );
+      assert.doesNotMatch(main, /hermetic toolchains|tracing every build action/);
+      assert.match(
+        main,
+        new RegExp(
+          '<section class="block contact" aria-labelledby="contact" data-section="contact"><div class="sec-head"><h2 id="contact" class="eyebrow">Get in touch</h2></div>' +
+            '<a href="mailto:tamsin@rook\\.test\\?subject=Summer%202027%20internship" class="mail">tamsin@rook\\.test</a>' +
+            `<div class="links"><a href="${base}/files/cv.pdf">Résumé \\(PDF\\)</a><a href="https://example\\.org/book/tamsin">Book a call</a></div></section>`,
+        ),
+      );
     });
   });
 }
@@ -149,6 +214,30 @@ describe('the kitchen-sink home page in Chrome', { skip: !existsSync(CHROME) && 
 
     const phone = await open({ width: 375 });
     assert.ok(await phone.page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth));
+    await phone.ctx.close();
+  });
+
+  test('posts sit two to a row with room for them, and stack on a phone', async () => {
+    const postTops = (page: Page) => page.$$eval('.posts > li', (items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
+    const wide = await open({ width: 1280 });
+    assert.equal(new Set(await postTops(wide.page)).size, 1);
+    await wide.ctx.close();
+    const phone = await open({ width: 375 });
+    assert.equal(new Set(await postTops(phone.page)).size, 2);
+    await phone.ctx.close();
+  });
+
+  test('on wide screens the margin notes hang left of the text; on a phone they sit above it', async () => {
+    const lefts = (page: Page) =>
+      page.$$eval('#research .hang > .m.label, .jobs .hang > .m, .news .hang > .m, #education > .m', (notes) =>
+        notes.map((note) => note.getBoundingClientRect().right - note.nextElementSibling!.getBoundingClientRect().left),
+      );
+    const wide = await open({ width: 1440 });
+    for (const gap of await lefts(wide.page)) assert.ok(gap <= -30, `margin note ends ${gap}px from its text`);
+    await wide.ctx.close();
+    const phone = await open({ width: 375 });
+    const tops = await phone.page.$$eval('.jobs .hang', (items) => items.map((item) => item.querySelector('.m')!.getBoundingClientRect().bottom <= item.lastElementChild!.getBoundingClientRect().top + 1));
+    assert.ok(tops.every(Boolean));
     await phone.ctx.close();
   });
 

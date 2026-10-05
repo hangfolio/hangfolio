@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/projects-groups.json
+groups:
+  - { title: "Research", headingId: "research-h" }
+  - { title: "Developer tools" }

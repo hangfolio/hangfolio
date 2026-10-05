@@ -1,0 +1,25 @@
+---
+// News items (content/news.yaml, SPEC 5.8): the month in the margin and the text (inline
+// Markdown) beside it. Months are read in UTC; a day in the date is not shown.
+import { site } from 'virtual:hangfolio/site';
+import Hang from './Hang.astro';
+import { monthYear } from '../lib/dates.ts';
+import type { NewsItem } from '../lib/home.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+import { localeTag } from '../lib/site.ts';
+
+interface Props {
+  items: NewsItem[];
+}
+
+const { items } = Astro.props;
+const locale = localeTag(site);
+---
+<ul class="news">
+  {items.map((item) => (
+    <Hang as="li">
+      <time slot="m" datetime={item.date}>{monthYear(item.date, locale)}</time>
+      <p set:html={inlineMd(item.text)} />
+    </Hang>
+  ))}
+</ul>

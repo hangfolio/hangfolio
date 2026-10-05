@@ -1,0 +1,3 @@
+# fixtures/owner-like: a robots.txt in public/ wins over the generated one
+User-agent: *
+Allow: /

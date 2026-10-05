@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
+# fixtures/owner-like: a fictional site with the same shape as the reference design's home page
+# (the same sections, item counts and roughly the same text lengths), plus the generic settings
+# that site needs. The local fidelity check compares the two home pages side by side.
+# Kasia Morrow, the institute, the companies, the people and the projects are all invented.
+name: "Kasia Morrow"
+tagline: "Edge clusters live on a power budget. I write the schedulers that keep them fast, and the developer tools I wish I had."
+role: "PhD student in edge and mobile systems"
+affiliation: { name: "Northlake Institute of Technology", url: "https://example.org/nit" }
+email: "kasia@morrow.example"
+location: "Port Alder"
+locationLong: "Port Alder, Northlake"
+pronouns: "she/her"
+avatar: "/images/avatar.jpg"
+cv: "/files/cv.pdf"
+
+links:
+  - { url: "https://example.org/kmorrow/code", label: "GitHub", id: "github" }
+  - { url: "https://example.org/kmorrow/profile", label: "LinkedIn" }
+  - { url: "https://example.org/kmorrow/citations", label: "Scholar" }
+  - { url: "https://example.org/kmorrow/orcid", label: "ORCID" }
+
+availability:
+  headline: "Seeking systems research or infrastructure internships · Summer 2027."
+  detail: "Then back to Northlake to finish the PhD in 2029."
+  contact: "I'm looking for a **Summer 2027** internship in systems research or infrastructure."
+  emailSubject: "Summer 2027 internship"
+
+booking:
+  link: "https://example.org/book/kmorrow"
+  keepPageWhenOff: true
+
+nav: [research, projects, writing, cv, booking]
+
+pages:
+  experience: { path: "/work-experience" }
+
+redirects:
+  - { from: "/about/", to: "/" }
+
+seo:
+  keywords: ["edge computing", "power-aware scheduling", "serverless inference", "developer tools"]
+
+advanced:
+  brand: "kmorrow.example"
+  timezone: "America/New_York"
+  titleSuffix: " | Kasia Morrow"
+  sitemapAliases: ["/sitemap-static.xml"]
+  googleVerification: { file: "google0a1b2c3d4e5f6a7b" }
+  # The reference design's ids, written out so they stay put if the defaults change
+  anchors: { highlights: results, work: work, research: research, experience: exp, education: education, news: news, writing: writing, contact: contact }

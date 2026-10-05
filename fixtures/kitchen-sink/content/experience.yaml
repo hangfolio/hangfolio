@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/experience.json
+entries:
+  - section: research
+    role: "Graduate Research Assistant"
+    org: "Institute of Example Studies"
+    short: "Example Studies"
+    location: "Saltmarsh Bay"
+    start: 2023-09
+    end: present
+    bullets: ["Built Shoal, a tracer that explains build-cache misses."]
+    home: "Build-cache tracing and fsync batching, in Rust and C++."
+  - section: teaching
+    role: "Teaching Assistant"
+    org: "Institute of Example Studies"
+    when: ["Fall 2024", "Spring 2025"]
+    bullets: ["Ran the Operating Systems and Compilers labs."]
+    home: "Operating Systems and Compilers labs, 80 students each term."
+  - section: professional
+    role: "Software Engineering Intern"
+    org: "Lantern Example Co."
+    location: "Remote"
+    start: 2024-06
+    end: 2024-08
+    bullets: ["Moved the release pipeline onto a hermetic toolchain."]
+    home: "A hermetic toolchain for the release pipeline."
+  - section: professional
+    role: "Build Engineer"
+    org: "Example Systems Ltd."
+    short: "Example Systems"
+    location: "Saltmarsh Bay"
+    start: 2021-06
+    end: 2023-08
+    bullets: ["Cut the median CI run from 9 minutes to 70 seconds for 300 engineers."]
+    home: "Cut the median CI run from 9 minutes to 70 seconds for 300 engineers."
+  - section: earlier
+    role: "Freelance developer"
+    org: "Self-employed"
+    start: 2019
+    end: 2021
+    desc: "Small web tools for local businesses."
+    home: "Small web tools for local businesses."
+  - section: education
+    role: "PhD, Computer Systems"
+    org: "Institute of Example Studies"
+    start: 2023-09
+    end: 2028-05
+    expected: true
+    homeLine: { text: "PhD, Computer Systems, Institute of Example Studies", years: "2023 – 2028 (expected)" }
+  - section: education
+    role: "BSc, Computer Science"
+    org: "Example Polytechnic"
+    start: 2017-09
+    end: 2021-05
+    homeLine: { text: "BSc, Computer Science, Example Polytechnic", years: "2017 – 2021" }
+  - section: programs
+    role: "Participant"
+    org: "Example Systems Summer School"
+    start: 2025-07
+    homeLine: { text: "Example Systems Summer School, one of 40 participants", years: "2025" }

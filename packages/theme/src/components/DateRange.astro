@@ -1,6 +1,8 @@
 ---
 // A date range as two spans, start and "– end", which stack in the margin on wide screens.
-// The rules (same year, present, years alone, expected) are in lib/dates.ts.
+// The rules (same year, present, years alone, expected) are in lib/dates.ts. An experience
+// entry's `when` text replaces the dates: its segments are joined with commas, and each one
+// stays on one line ("Spring 2023, / Fall 2023").
 import { site } from 'virtual:hangfolio/site';
 import { dateRange } from '../lib/dates.ts';
 import { localeTag } from '../lib/site.ts';
@@ -11,8 +13,12 @@ interface Props {
   expected?: boolean;
   /** Parts already worked out by dateRange(), instead of start and end */
   parts?: string[];
+  /** Free text instead of the dates, e.g. ["Spring 2023", "Fall 2023"] */
+  when?: string[];
 }
 
-const { start, end, expected, parts = dateRange(start, end, { expected, locale: localeTag(site) }) } = Astro.props;
+const { start, end, expected, when, parts = dateRange(start, end, { expected, locale: localeTag(site) }) } = Astro.props;
 ---
-{parts.length > 0 && <span class="range">{parts.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</span>}
+{when && when.length > 0 ? (
+  <span>{when.map((segment, i) => <>{i > 0 && ' '}<span class="nowrap">{segment}{i < when.length - 1 && ','}</span></>)}</span>
+) : parts.length > 0 && <span class="range">{parts.map((part, i) => <>{i > 0 && ' '}<span>{part}</span></>)}</span>}

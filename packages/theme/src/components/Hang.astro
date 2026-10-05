@@ -1,0 +1,17 @@
+---
+// The marginalia layout: a note that hangs in the left margin on wide screens (dates, a
+// number, a label) and the content beside it. On narrower screens the note sits above.
+// Pass `label` for a small-caps label ("Problem"), or put the note in the `m` slot.
+interface Props {
+  as?: 'div' | 'li' | 'article';
+  class?: string;
+  id?: string;
+  label?: string;
+}
+
+const { as: Tag = 'div', class: className, id, label } = Astro.props;
+---
+<Tag class={className ? `hang ${className}` : 'hang'} id={id}>
+  {label !== undefined ? <div class="m label">{label}</div> : <div class="m"><slot name="m" /></div>}
+  <slot />
+</Tag>

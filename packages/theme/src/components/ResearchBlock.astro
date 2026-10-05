@@ -1,0 +1,60 @@
+---
+// The home page's research section (home.yaml `research`, SPEC 5.4), each part under a label
+// that hangs in the margin: the problem, the approach (numbered steps, each with an optional
+// chip), the status, then the featured paper (a Citation) and teaching. The section carries the
+// anchor (advanced.anchors.research) and its heading the anchor plus "-h"; the paper is
+// #publication, so links into the research section keep working.
+import Citation from './Citation.astro';
+import Hang from './Hang.astro';
+import SectionHead from './SectionHead.astro';
+import type { CitationView } from '../lib/citation.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+import type { Home } from '../schema/home.ts';
+
+interface Props {
+  /** The section's anchor */
+  id: string;
+  research: NonNullable<Home['research']>;
+  /** The heading's link: research.link, or the publications page */
+  link?: { label: string; href: string };
+  /** The featured paper (research.featured) */
+  paper?: CitationView;
+}
+
+const { id, research, link, paper } = Astro.props;
+const { problem, approach, status, teaching } = research;
+---
+<section id={id} class="block" aria-labelledby={`${id}-h`} data-section="research">
+  <SectionHead id={`${id}-h`} heading={research.heading ?? 'Research'} link={link} />
+  {(problem || approach.length > 0 || status) && (
+    <div class="research">
+      {problem && <Hang label="Problem"><p class="essay" set:html={inlineMd(problem)} /></Hang>}
+      {approach.length > 0 && (
+        <Hang label="Approach">
+          <ol class="approach">
+            {approach.map((step, i) => (
+              <li>
+                <span class="num">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <div class="title-row tight"><h3>{step.title}</h3>{step.chip && <span class="chip">{step.chip}</span>}</div>
+                  <p set:html={inlineMd(step.text)} />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Hang>
+      )}
+      {status && <Hang label="Status"><p class="essay" set:html={inlineMd(status)} /></Hang>}
+    </div>
+  )}
+  {paper && (
+    <Hang class="pub" id="publication">
+      {paper.year && <span slot="m">{paper.year}</span>}
+      <div class="pub-body">
+        <h3 class="eyebrow faint">Publication</h3>
+        <Citation view={paper} />
+      </div>
+    </Hang>
+  )}
+  {teaching && <Hang label="Teaching"><p class="small-text" set:html={inlineMd(teaching)} /></Hang>}
+</section>

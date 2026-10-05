@@ -38,14 +38,17 @@ export function yamlFile(path: string, hideExamples?: (data: Data) => Data | und
         if (shown) store.set({ id, data: shown, filePath: path, digest: generateDigest(text) });
       };
       await sync();
-
-      // In dev, follow the file being created, edited and deleted.
-      watcher?.add(dirname(file));
-      for (const event of ['add', 'change', 'unlink']) {
-        watcher?.on(event, (changed: string) => {
-          if (changed === file) sync().catch((error) => logger.error((error as Error).message));
-        });
-      }
+      followFile(file, sync, { watcher, logger });
     },
   };
+}
+
+/** In dev, runs `sync` again whenever the file is created, edited or deleted. */
+export function followFile(file: string, sync: () => Promise<void>, { watcher, logger }: Pick<LoaderContext, 'watcher' | 'logger'>) {
+  watcher?.add(dirname(file));
+  for (const event of ['add', 'change', 'unlink']) {
+    watcher?.on(event, (changed: string) => {
+      if (changed === file) sync().catch((error) => logger.error((error as Error).message));
+    });
+  }
 }

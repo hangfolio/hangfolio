@@ -1,0 +1,1 @@
+{ "name": "Kasia Morrow", "short_name": "Morrow", "icons": [{ "src": "../favicon.svg", "sizes": "any", "type": "image/svg+xml" }], "start_url": "../", "display": "browser" }

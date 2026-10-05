@@ -5,12 +5,16 @@ import type { SiteYaml } from './site.ts';
 
 export type NavItem = { key?: string; label: string; href: string };
 
-/** The keys whose page exists. TODO(M3, M4): add each page as it is built and has content. */
-export function availablePages(site: SiteYaml): Set<string> {
-  return new Set(site.cv ? ['cv'] : []);
+/**
+ * The keys whose page exists. `research` is the home page's research section (lib/home.ts
+ * showsResearch). TODO(M4): add each page as it is built and has content.
+ */
+export function availablePages(site: SiteYaml, { research = false }: { research?: boolean } = {}): Set<string> {
+  return new Set([...(research ? ['research'] : []), ...(site.cv ? ['cv'] : [])]);
 }
 
 function itemFor(key: string, site: SiteYaml): NavItem | undefined {
+  if (key === 'research') return { key, label: 'Research', href: `/#${site.advanced.anchors.research}` };
   if (key === 'cv' && site.cv) return { key, label: 'CV', href: site.cv };
   return undefined;
 }

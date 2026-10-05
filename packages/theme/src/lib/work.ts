@@ -54,6 +54,13 @@ export function resolveLinks(links: Project['links'], site: SiteYaml): WorkLink[
   });
 }
 
+/** A heading's link ({label, href}, or {label?, profile}) as label and href; undefined when its profile is gone. */
+export function resolveHeadingLink(link: { label: string; href: string } | { label?: string; profile: string } | undefined, site: SiteYaml) {
+  if (!link || 'href' in link) return link;
+  const profile = site.links.find((entry) => entry.id === link.profile);
+  return profile && { label: link.label ?? profile.label, href: profile.url };
+}
+
 export function workView(entry: ProjectEntry, variant: WorkVariant, options: { n: number; site: SiteYaml; locale?: string }): WorkView {
   const { data } = entry;
   const home = variant === 'featured' ? data.home : undefined;

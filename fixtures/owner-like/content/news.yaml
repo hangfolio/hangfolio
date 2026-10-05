@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/news.json
+items:
+  - { date: 2026-08, text: "Released [Lanternfish](https://example.org/lanternfish) on npm" }
+  - { date: 2026-08, text: "New post: how [pondskip](https://example.org/pondskip/notes) tells flaky tests from real ones" }
+  - { date: 2026-07, text: "Named a Northlake Teaching Fellow for 2026" }
+  - { date: 2025-01, text: "Began the PhD at Northlake with Imre Vasko" }
+  - { date: 2024-05, text: "Paper at the Example Conference on Mobile Systems ([NSX ’24](#publication))" }

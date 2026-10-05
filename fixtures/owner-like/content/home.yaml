@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/home.json
+intro: "I'm in the third year of a CS PhD at Northlake Institute of Technology with [Dr. Imre Vasko](https://example.org/~vasko), after two years on backend teams at Fernway and Calder Labs."
+now: "measuring cold starts in serverless edge inference, writing up the power-capped scheduler, and getting Lanternfish to a 1.0 release this winter."
+highlights:
+  items:
+    - { value: "up to 41%", what: "less energy per job, and 3× fewer misses", source: "[power-capped scheduler](#research), in preparation for a 2027 systems venue" }
+    - { value: "27/27", what: "faults found, 0 misfires", source: "[Lanternfish benchmark](#work) on 9 clusters" }
+    - { value: "8s → 700ms", what: "sync per visit for 300 field clinics", source: "[Larkspur, Calder Poly](https://example.org/larkspur)" }
+    - { value: "964", what: "npm downloads", source: "[Lanternfish](https://example.org/lanternfish) 702 + [pondskip](https://example.org/pondskip) 262" }
+research:
+  problem: "Edge clusters run inference next to the people who use it, but each site has a hard power cap, and a burst of requests either trips the cap or waits in a queue while GPUs sit idle on the next rack. Serverless platforms at the edge make this worse: every cold start pays to load a model again, so the cheapest schedule on paper becomes the slowest one in practice, and operators fall back to keeping every node warm all day."
+  approach:
+    - { title: "Power-capped edge scheduling", chip: "2027 venue · in preparation", text: "Moves work between GPU and CPU nodes ahead of demand so each site stays under its cap. Across three sites and two hardware mixes: up to 41% less energy per request and 3× fewer latency misses than a static cap." }
+    - { title: "Cold starts in serverless edge inference", chip: "2027 venue · in preparation", text: "How often does edge inference pay for a cold start, and which models are worth keeping warm when power is capped? Traces from three production sites, replayed one day at a time against each keep-warm policy, with energy read from the rack meters rather than estimated." }
+    - { title: "Testbed and tooling", chip: "Rust · 3 sites", text: "A power-metered testbed, a trace replayer and a fault injector." }
+  status: "Papers on 01 and 02 are being written for a 2027 systems venue. The Northlake edge lab funds the testbed."
+  featured: morrow2024idle
+  teaching: "Teaching assistant for Operating Systems (Northlake), and for Computer Networks and Embedded Design (Calder)."

@@ -12,7 +12,7 @@ const extras = z.strictObject({
   authorNote: text.default('*Equal contribution'),
   anchor: htmlId.optional().describe('The entry\'s #id. Default: the BibTeX key.'),
   bibtexAnchor: htmlId.optional().describe('The BibTeX block\'s #id. Default: bibtex-<anchor>.'),
-  venueDetail: text.optional(),
+  venueDetail: text.optional().describe('The venue as shown, e.g. "The Example Conference 2024 (EXC ’24)". Default: journal or booktitle.'),
   place: text.optional().describe('For example "Lisbon, May 13–17, 2024".'),
   data: z.strictObject({ tag: text.default('Data'), text: md }).optional(),
   schema: z.record(z.string(), z.unknown()).optional().describe('JSON-LD fields that replace the generated ones.'),

@@ -1,7 +1,7 @@
 // What a project shows as a WorkItem (lib/work.ts) and how its exhibit is read (lib/exhibits.ts).
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { barRows, barsLabel, barWidth, terminalLines, valueText } from '../src/lib/exhibits.ts';
+import { barColumns, barRows, barsLabel, barWidth, terminalLines, valueText } from '../src/lib/exhibits.ts';
 import { featuredProjects, resolveLinks, workView } from '../src/lib/work.ts';
 import { project } from '../src/schema/project.ts';
 import { site as siteSchema } from '../src/schema/site.ts';
@@ -172,5 +172,9 @@ describe('exhibits', () => {
     ]);
     assert.equal(barsLabel(bars), 'Queue delay: Peak 12.7 ms, Calm 4.2 ms');
     assert.equal(barsLabel({ ...bars, label: 'Delay' }), 'Delay: Peak 12.7 ms, Calm 4.2 ms');
+    // The longest label and value in characters (code points, so "é" counts once)
+    assert.deepEqual(barColumns(barRows(bars)), { label: 4, value: 7 });
+    assert.deepEqual(barColumns([{ label: 'Caché', value: '3×', width: '100%', tone: 'accent' }]), { label: 5, value: 2 });
+    assert.deepEqual(barColumns([]), { label: 0, value: 0 });
   });
 });

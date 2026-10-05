@@ -164,6 +164,7 @@
           "pattern": "^[A-Za-z0-9][\\w-]*$"
         },
         "venueDetail": {
+          "description": "The venue as shown, e.g. \"The Example Conference 2024 (EXC ’24)\". Default: journal or booktitle.",
           "type": "string",
           "minLength": 1
         },

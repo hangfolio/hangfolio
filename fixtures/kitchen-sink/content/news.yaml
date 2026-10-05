@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/news.json
+items:
+  - { date: 2026-09-14, text: "Wrote up [why our build cache lied to us](/writing/cache-lied/)." }
+  - { date: 2026-06, text: "Released **Shoal** 1.0; the [code is public](https://github.com/hangfolio/hangfolio)." }
+  - { date: 2025-07, text: "Joined the Example Systems Summer School." }
+  - { date: 2024-05, text: "Presented [Driftnet](/files/driftnet.pdf) at EXSB ’24." }
+  - { date: 2023-09, text: "Started the PhD at the Institute of Example Studies." }

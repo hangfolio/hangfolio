@@ -1,6 +1,7 @@
 ---
 // A terminal window: one line per entry. `$ ` starts a prompt, `# ` a comment, and [CRITICAL],
-// [HIGH], [MEDIUM] or [LOW] at the start gets a severity badge (lib/exhibits.ts).
+// [HIGH], [MEDIUM] or [LOW] at the start gets a severity badge (lib/exhibits.ts). Lines keep their
+// spaces; a comment wraps like prose unless it has a run of spaces to keep.
 import { terminalLines } from '../lib/exhibits.ts';
 
 interface Props {
@@ -15,7 +16,7 @@ const { label, lines, class: extra } = Astro.props;
 <div class:list={['well terminal', extra]} role="group" aria-label={label}>
   {terminalLines(lines).map((line) => {
     if (line.kind === 'prompt') return <div class="pre-wrap"><span class="c" aria-hidden="true">$ </span>{line.text}</div>;
-    if (line.kind === 'comment') return <div class="c pre-wrap">{line.text}</div>;
+    if (line.kind === 'comment') return <div class={/\s\s|\t/.test(line.text) ? 'c pre-wrap' : 'c'}>{line.text}</div>;
     if (line.kind === 'severity') return <div class="pre-wrap"><span class={`sev ${line.severity.toLowerCase()}`}>[{line.severity}]</span> {line.text}</div>;
     if (line.kind === 'blank') return <div class="pre-wrap" aria-hidden="true">{' '}</div>;
     return <div class="pre-wrap">{line.text}</div>;

@@ -1,0 +1,31 @@
+---
+// The home page's "Get in touch" section: the email address in large type (BigMail, with the
+// availability's subject while it applies), then the Résumé and booking links.
+import { demo, site } from 'virtual:hangfolio/site';
+import BigMail from './BigMail.astro';
+import SectionHead from './SectionHead.astro';
+import { currentAvailability, heroActions } from '../lib/hero.ts';
+import { availablePages } from '../lib/nav.ts';
+import { url } from '../lib/url.ts';
+
+interface Props {
+  /** The heading's anchor (advanced.anchors.contact) */
+  id: string;
+  heading: string;
+  /** The moment availability.until is compared with: the build's own time by default */
+  now?: Date;
+}
+
+const { id, heading, now = new Date() } = Astro.props;
+const { resume, booking } = heroActions(site, { bookingPage: availablePages(site).has('booking'), demo, now });
+---
+<section class="block contact" aria-labelledby={id} data-section="contact">
+  <SectionHead id={id} heading={heading} />
+  <BigMail subject={currentAvailability(site, now)?.emailSubject} />
+  {(resume || booking) && (
+    <div class="links">
+      {resume && <a href={url(resume.href)}>{resume.pdf ? 'Résumé (PDF)' : 'Résumé'}</a>}
+      {booking && <a href={url(booking.href)}>{booking.label}</a>}
+    </div>
+  )}
+</section>

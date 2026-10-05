@@ -4,6 +4,7 @@
 // `example: true` never reach the pages (SPEC 5.2 rule 3); the checks list them as W403.
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { bibFile } from './lib/bib-file.ts';
 import { hideExamples, isExample, optional, tolerant } from './lib/loaders.ts';
 import { yamlFile } from './lib/yaml-file.ts';
 import { experience, home, news, post, project, projectsGroups, publication } from './schema/index.ts';
@@ -25,6 +26,8 @@ export const collections = {
     loader: markdown('publications', { generateId: ({ entry }) => entry.replace(/\.mdx?$/, '') }),
     schema: publication,
   }),
+  // The entries of content/publications.bib, by key (lib/bib.ts BibEntry).
+  bib: defineCollection({ loader: optional(bibFile('content/publications.bib')) }),
   // One entry each, named after the file: getEntry('home', 'home').
   home: defineCollection({ loader: yamlFile('content/home.yaml', (data) => (isExample(data) ? undefined : data)), schema: home }),
   projectGroups: defineCollection({ loader: yamlFile('content/projects.yaml'), schema: projectsGroups }),

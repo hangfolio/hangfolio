@@ -100,7 +100,7 @@ describe('render: a full site at base /hangfolio', () => {
     );
   });
 
-  test('SectionHead and DateRange', async () => {
+  test('SectionHead and DateRange (dates, or `when` text instead)', async () => {
     assert.equal(
       await r.render('SectionHead', { id: 'work', heading: 'Selected work', link: { label: 'All projects', href: '/projects' } }),
       '<div class="sec-head"><h2 id="work" class="eyebrow">Selected work</h2><a href="/hangfolio/projects">All projects</a></div>',
@@ -108,6 +108,8 @@ describe('render: a full site at base /hangfolio', () => {
     assert.equal(await r.render('DateRange', { start: '2024-06', end: '2024-08' }), '<span class="range"><span>Jun</span> <span>– Aug 2024</span></span>');
     assert.equal(await r.render('DateRange', { start: '2025-01', end: '2029-05', expected: true }), '<span class="range"><span>Jan 2025</span> <span>– May 2029</span> <span>(expected)</span></span>');
     assert.equal(await r.render('DateRange', {}), '');
+    assert.equal(await r.render('DateRange', { start: '2024-01', when: ['Spring 2025'] }), '<span><span class="nowrap">Spring 2025</span></span>');
+    assert.equal(await r.render('DateRange', { start: '2024-01', when: [] }), '<span class="range"><span>Jan 2024</span></span>');
   });
 
   test('WorkItem featured: number and dates in the margin, result line, exhibit and links', async () => {
@@ -189,13 +191,14 @@ describe('render: a full site at base /hangfolio', () => {
     );
   });
 
-  test('ExhibitTerminal: prompts, comments, severity badges, blank lines; text is escaped', async () => {
-    const lines = ['$ shoal explain <target>', '# 2 misses', '[CRITICAL] a', '[HIGH] b', '[MEDIUM] c', '[LOW] d', '', 'done  in 0.8s'];
+  test('ExhibitTerminal: prompts, comments (spaces kept only when they run), severity badges, blank lines; text is escaped', async () => {
+    const lines = ['$ shoal explain <target>', '# 2 misses', '#   cause    count', '[CRITICAL] a', '[HIGH] b', '[MEDIUM] c', '[LOW] d', '', 'done  in 0.8s'];
     assert.equal(
       await r.render('ExhibitTerminal', { label: 'Sample output', lines }),
       '<div class="well terminal" role="group" aria-label="Sample output">' +
         '<div class="pre-wrap"><span class="c" aria-hidden="true">$ </span>shoal explain &lt;target&gt;</div>' +
-        '<div class="c pre-wrap"># 2 misses</div>' +
+        '<div class="c"># 2 misses</div>' +
+        '<div class="c pre-wrap">#   cause    count</div>' +
         '<div class="pre-wrap"><span class="sev critical">[CRITICAL]</span> a</div>' +
         '<div class="pre-wrap"><span class="sev high">[HIGH]</span> b</div>' +
         '<div class="pre-wrap"><span class="sev medium">[MEDIUM]</span> c</div>' +
@@ -224,7 +227,7 @@ describe('render: a full site at base /hangfolio', () => {
     assert.doesNotMatch(await r.render('ExhibitMetrics', { title: 't', rows: metrics.rows }), /<\/dl><div>/);
   });
 
-  test('ExhibitBars: widths value / max to 0.1%, tones, units, a label with every value, and the caption', async () => {
+  test('ExhibitBars: widths value / max to 0.1%, tones, units, column widths, a label with every value, and the caption', async () => {
     const bars = {
       label: 'Queue delay',
       rows: [{ label: 'Peak', value: 12.7, unit: 'ms', tone: 'accent' }, { label: 'Calm', value: 4.2, unit: 'ms', tone: 'faint' }],
@@ -232,9 +235,9 @@ describe('render: a full site at base /hangfolio', () => {
     };
     assert.equal(
       await r.render('ExhibitBars', bars),
-      '<figure class="well bars"><div class="bar-rows" role="img" aria-label="Queue delay: Peak 12.7 ms, Calm 4.2 ms">' +
-        '<div class="bar-row"><span>Peak</span><span class="track"><span class="fill accent" style="width: 100%"></span></span><span class="val">12.7 ms</span></div>' +
-        '<div class="bar-row"><span>Calm</span><span class="track"><span class="fill faint" style="width: 33.1%"></span></span><span class="val">4.2 ms</span></div>' +
+      '<figure class="well bars"><div class="bar-rows" role="img" aria-label="Queue delay: Peak 12.7 ms, Calm 4.2 ms" style="--label: 4ch; --value: 7ch">' +
+        '<div class="bar-row"><span>Peak</span><span class="track"><span class="fill" style="width: 100%"></span></span><span class="val">12.7 ms</span></div>' +
+        '<div class="bar-row"><span>Calm</span><span class="track"><span class="fill low" style="width: 33.1%"></span></span><span class="val">4.2 ms</span></div>' +
         '</div><figcaption><strong>~3×</strong> longer at peak</figcaption></figure>',
     );
   });
