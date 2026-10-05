@@ -16,7 +16,7 @@ const BIN = join(REPO, 'packages/theme/bin/hangfolio.mjs');
 test('hangfolio check finds nothing to report in fixtures/owner-like', () => {
   const result = spawnSync(process.execPath, [BIN, 'check'], { cwd: join(REPO, 'fixtures/owner-like'), encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(result.stdout, 'hangfolio check: site.yaml and 14 files in content/\n\nNo errors.\n');
+  assert.equal(result.stdout, 'hangfolio check: site.yaml and 16 files in content/\n\nNo errors.\n');
 });
 
 for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio']) {

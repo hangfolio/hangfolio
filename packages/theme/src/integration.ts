@@ -9,8 +9,9 @@ import type { AstroIntegration } from 'astro';
 import { AstroError } from 'astro/errors';
 import { exampleBanner } from './lib/banner.ts';
 import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
+import { hasPublicationContent } from './lib/bib-file.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
-import { ROUTES } from './lib/routes.ts';
+import { publicationsRoute, ROUTES, type Route } from './lib/routes.ts';
 import type { SiteYaml } from './lib/site.ts';
 import { terminalReport, wantsColor } from './validate/format.ts';
 import { counts, docsUrl, severity, validateSite, type Report } from './validate/index.ts';
@@ -29,6 +30,7 @@ const ICONS = [
 export default function hangfolio({ root, site, siteFile, urlFormat }: Options): AstroIntegration {
   let publicDir: URL;
   let report: Report | undefined;
+  let routes: Route[] = ROUTES;
   const print = (r: Report) => process.stdout.write(`\n${terminalReport(r, { color: wantsColor(process.stdout, process.env) })}\n`);
 
   return {
@@ -36,9 +38,6 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
     hooks: {
       'astro:config:setup': async ({ command, config, injectRoute, addWatchFile, updateConfig }) => {
         addWatchFile(siteFile);
-        for (const { pattern, entry } of ROUTES) {
-          injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
-        }
         if (command !== 'preview') {
           report = await validateSite(root, { mode: command === 'dev' ? 'dev' : 'build' });
           print(report);
@@ -58,6 +57,12 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
             };
             setDevState(devStateOf(report), refresh);
           }
+        }
+        // The publications page exists only with something on it; in dev it is always there.
+        const visible = report?.visible ?? site;
+        routes = [...ROUTES, ...publicationsRoute(visible, command === 'dev' || hasPublicationContent(root, report?.demo ?? false))];
+        for (const { pattern, entry } of routes) {
+          injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
         }
         const icons = ICONS.filter((icon) => existsSync(new URL(icon.file, config.publicDir)));
         const values = {
@@ -103,7 +108,7 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
         // Example files leave the build once site.yaml is the owner's (SPEC 5.2 rule 4).
         if (report && !report.demo) await rm(fileURLToPath(new URL('example/', dir)), { recursive: true, force: true });
         if (urlFormat !== 'preserve') return;
-        const patterns = ROUTES.filter((route) => route.dir).map((route) => route.pattern);
+        const patterns = routes.filter((route) => route.dir).map((route) => route.pattern);
         await relocateDirRoutes({ patterns, assets, dir, publicDir, logger });
       },
     },

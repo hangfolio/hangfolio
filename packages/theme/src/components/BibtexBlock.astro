@@ -1,0 +1,123 @@
+---
+// A paper's BibTeX as the user wrote it (the hidden fields left out), under a "BibTeX" label,
+// with a Copy button. The button is progressive: it stays hidden unless the Clipboard API is
+// there, copies exactly the text shown, and if copying fails it selects the text instead. A
+// live region says what happened.
+interface Props {
+  /** The block's id (bibtex-<anchor>, or extras' bibtexAnchor) */
+  id: string;
+  text: string;
+  /** The block's accessible name, e.g. "BibTeX entry for the EXC ’24 paper" */
+  label: string;
+}
+
+const { id, text, label } = Astro.props;
+---
+<div class="part" id={id} data-bibtex>
+  <div class="sec-head">
+    <h4 class="eyebrow">BibTeX</h4>
+    <button type="button" class="copy" hidden><span class="lbl">Copy</span><span class="visually-hidden"> BibTeX</span></button>
+  </div>
+  <pre class="bib" role="region" tabindex="0" aria-label={label}><code>{text}</code></pre>
+  <p class="visually-hidden" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  for (const block of document.querySelectorAll<HTMLElement>('[data-bibtex]')) {
+    const button = block.querySelector<HTMLButtonElement>('button.copy');
+    const label = button?.querySelector('.lbl');
+    const source = block.querySelector('code');
+    const status = block.querySelector('[role="status"]');
+    if (!button || !label || !source || !status || !navigator.clipboard || !window.isSecureContext) continue;
+    let timer: number | undefined;
+    button.hidden = false;
+
+    const show = (text: string, announce: string) => {
+      label.textContent = text;
+      status.textContent = announce;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        label.textContent = 'Copy';
+        status.textContent = '';
+      }, 2000);
+    };
+
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(source.textContent ?? '');
+        show('Copied', 'BibTeX copied to the clipboard');
+      } catch {
+        // Select the entry instead, so it can be copied by hand
+        const range = document.createRange();
+        range.selectNodeContents(source);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        show('Selected', 'Could not copy automatically; the BibTeX entry is selected');
+      }
+    });
+  }
+</script>
+
+<style>
+  .part {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    min-width: 0;
+    padding-top: 1rem;
+  }
+
+  .copy {
+    order: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 6rem;
+    min-height: 2rem;
+    padding: 0 .75rem;
+    /* --line-ink keeps the button edge at 3:1 or more against --bg in both themes */
+    border: 1px solid var(--line-ink);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: .8125rem;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .copy[hidden] {
+    display: none;
+  }
+
+  .bib {
+    max-width: 100%;
+    padding: .875rem 1rem;
+    border: 1px solid var(--well-line);
+    border-radius: 4px;
+    background: var(--well);
+    color: var(--fg);
+    font-size: .8125rem;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    tab-size: 2;
+  }
+
+  .bib code {
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 720px) {
+    .copy {
+      min-height: 2.75rem;
+    }
+  }
+</style>

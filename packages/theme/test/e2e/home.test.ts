@@ -23,7 +23,7 @@ const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Conte
 test('hangfolio check finds nothing to report in fixtures/kitchen-sink', () => {
   const result = spawnSync(process.execPath, [BIN, 'check'], { cwd: join(REPO, 'fixtures/kitchen-sink'), encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(result.stdout, 'hangfolio check: site.yaml and 14 files in content/\n\nNo errors.\n');
+  assert.equal(result.stdout, 'hangfolio check: site.yaml and 16 files in content/\n\nNo errors.\n');
 });
 
 for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio']) {
@@ -90,7 +90,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
     test('the sections in their default order, with the ids from advanced.anchors', () => {
       const ids = [...main.matchAll(/<section (?:id="[^"]+" )?class="block[^"]*" aria-labelledby="([^"]+)" data-section="([^"]+)"/g)].map((m) => `${m[2]}:${m[1]}`);
       assert.deepEqual(ids, ['highlights:results', 'work:work', 'research:research-h', 'experience:exp', 'news:news', 'writing:writing', 'contact:contact']);
-      assert.match(html, new RegExp(`<a href="${base}/#research" class="quiet"[^>]*>Research</a><a href="${base}/files/cv.pdf" class="quiet"[^>]*>CV</a>`));
+      assert.match(html, new RegExp(`<a href="${base}/#research" class="quiet"[^>]*>Research</a><a href="${base}/publications" class="quiet"[^>]*>Publications</a><a href="${base}/files/cv.pdf" class="quiet"[^>]*>CV</a>`));
     });
 
     test('research: the section carries the anchor, the paper is #publication, the owner is underlined', () => {
@@ -108,7 +108,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       assert.equal(
         links,
         `<a href="${base}/files/driftnet.pdf">[PDF]</a><a href="https://doi.org/10.5555/exsb24.0042">[DOI]</a><a href="https://github.com/hangfolio/hangfolio">[Code]</a>` +
-          '<a href="https://example.org/driftnet">[Dataset]</a><a href="https://hangfolio.github.io/">[Talk notes]</a>',
+          `<a href="https://example.org/driftnet">[Dataset]</a><a href="https://hangfolio.github.io/">[Talk notes]</a><a href="${base}/publications#bibtex-rook2024driftnet">[BibTeX]</a>`,
       );
       assert.match(main, /<div class="m label">Teaching<\/div><p class="small-text">TA, Operating Systems \(Fall 2024\) and Compilers \(Spring 2025\)\.<\/p>/);
     });

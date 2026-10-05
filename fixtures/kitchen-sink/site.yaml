@@ -28,3 +28,8 @@ availability:
 booking:
   link: "https://example.org/book/tamsin"
   label: "Book a call"
+
+pages:
+  publications:
+    lede: "Papers on build caches and storage, with the *BibTeX* for each."
+    prepAside: "Both drafts use the [Shoal](https://example.org/shoal) traces. No public link yet."

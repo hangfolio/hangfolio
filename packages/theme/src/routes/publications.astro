@@ -1,0 +1,78 @@
+---
+// The publications page (SPEC 5.6), at pages.publications.path: the papers from
+// content/publications.bib, grouped by kind and newest first, inside #papers; then the
+// in-preparation items under #prep, and the prep aside. Each paper adds a ScholarlyArticle to
+// the page's JSON-LD. The integration adds this page only when there is something to show,
+// except in dev, where it says how to start.
+import { render } from 'astro:content';
+import { site } from 'virtual:hangfolio/site';
+import InPrepList from '../components/InPrepList.astro';
+import PublicationEntry from '../components/PublicationEntry.astro';
+import SectionHead from '../components/SectionHead.astro';
+import Page from '../layouts/Page.astro';
+import { publicationsContent } from '../lib/bib-content.ts';
+import { byYear, paperGroups, prepViews, scholarlyArticle } from '../lib/bib-page.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+import { pageTitle } from '../lib/site.ts';
+import { absUrl } from '../lib/url.ts';
+
+const page = site.pages.publications || { path: '/publications' };
+const { entries, extras, extrasData, prep } = await publicationsContent();
+const groups = paperGroups(entries, extrasData, site);
+const items = prepViews(prep, site);
+
+// A paper's summary is the body of its extras file.
+const summaries = new Map();
+for (const [key, file] of extras) {
+  if (file.body?.trim()) summaries.set(key, (await render(file)).Content);
+}
+
+const urls = { page: absUrl(page.path), home: absUrl('/') };
+const schema = byYear(entries).map((entry) => scholarlyArticle(entry, extrasData.get(entry.key), site, urls));
+---
+<Page
+  title={pageTitle(site, page.title ?? 'Publications')}
+  description={page.description ?? `Publications by ${site.name}.`}
+  path={page.path}
+  nav="publications"
+  heading={page.heading ?? 'Publications'}
+  schema={schema}
+>
+  {page.lede && <p class="lede" slot="meta" set:html={inlineMd(page.lede)} />}
+  {groups.length > 0 && (
+    <div class="groups" id="papers">
+      {groups.map((group) => (
+        <section class="block" aria-labelledby={group.id}>
+          <SectionHead id={group.id} heading={group.heading} />
+          {group.papers.map((paper) => {
+            const Summary = summaries.get(paper.key);
+            return Summary ? <PublicationEntry view={paper}><Summary /></PublicationEntry> : <PublicationEntry view={paper} />;
+          })}
+        </section>
+      ))}
+    </div>
+  )}
+  {items.length > 0 && (
+    <section class="block" aria-labelledby="prep">
+      <SectionHead id="prep" heading="In preparation" />
+      <InPrepList items={items} aside={page.prepAside} />
+    </section>
+  )}
+  {groups.length === 0 && items.length === 0 && (
+    <p>Nothing here yet. Paste your BibTeX into content/publications.bib, or add a paper in preparation in content/publications/.</p>
+  )}
+</Page>
+
+<style>
+  .groups {
+    display: flex;
+    flex-direction: column;
+    gap: 5.5rem;
+  }
+
+  @media (max-width: 720px) {
+    .groups {
+      gap: 4rem;
+    }
+  }
+</style>

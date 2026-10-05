@@ -6,6 +6,7 @@ venueDetail: "The Example Conference on Mobile Systems (NSX ’24)"
 place: "Lisbon"
 anchor: "nsx24"
 bibtexAnchor: "bibtex"
+data: { text: "9,400 phones · 6 countries · 31 days of traces" }
 links:
   - { label: "Code & data", url: "https://example.org/kmorrow/idle-radios" }
   - { label: "Explainer", url: "https://example.org/idle-radios" }
