@@ -1,35 +1,37 @@
 # yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/site.json
-# Your site's settings. Change the text inside the quotes; keep the spacing.
-# Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/site-yaml.md
+# START HERE. Your site's settings: change the text inside the quotes and keep the spacing.
+# Lines marked "# example" are the made-up demo person's. Replace the five marked "required";
+# change or delete the others. Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/site-yaml.md
 
-name: "Rowan Vale"                                   # example: your name
-tagline: "I build storage systems that stay correct when machines fail."   # example
-role: "PhD student in Computer Science"              # example
-affiliation: { name: "Example University", url: "https://example.edu" }   # example
-email: "rowan@example.edu"                           # example
-location: "Port Alder, WA"                           # example: change or delete
-# pronouns: "she/her"                                # optional: remove the # to show
-avatar: "/example/avatar.jpg"                        # example: upload yours to public/images/
-cv: "/example/cv.pdf"                                # example: upload yours to public/files/
+name: "Rowan Vale"                                     # example (required): your name
+tagline: "I build storage systems that stay correct when machines fail."   # example (required)
+role: "PhD student in Computer Science"                # example (required): your position
+affiliation: { name: "Example University", url: "https://example.edu" }   # example (required); or just "Your University"
+email: "rowan@example.edu"                             # example (required): your email address
+location: "Port Alder, WA"                             # example: change or delete
+# pronouns: "she/her"                                  # optional: remove the # to show
+# nameVariants: ["R. Vale"]                            # optional: other spellings of your name in author lists
+avatar: "/example/avatar.jpg"                          # example: upload your photo to public/images/ and put its path here
+ogImage: "/example/og.png"                             # example: the picture shown when your site is shared; delete to use your photo
+cv: "/example/cv.pdf"                                  # example: upload your CV to public/files/ and put its path here
 
-links:                                               # example: replace with yours
-  - "https://github.com/hangfolio"
-  - "https://scholar.google.com/"
-  - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }
-  - { url: "https://www.linkedin.com/", contact: false }
+links:                                                 # example: your profiles, in the order they show
+  - "https://github.com/hangfolio"                     # example
+  - "https://scholar.google.com/"                      # example
+  - { url: "https://orcid.org/0000-0002-1825-0097", label: "ORCID" }   # example
+  - { url: "https://www.linkedin.com/", contact: false }               # example: contact: false keeps it off /contact
 
-availability:                                        # example: edit or delete the whole block
-  headline: "Open to research internships · Summer 2027."
-  detail: "After that, back to the lab."
-  contact: "I'm looking for a **Summer 2027** research internship, then returning to my PhD."
-  emailSubject: "Summer 2027 internship"
-  until: 2027-06-01
+availability:                                          # example: edit or delete the whole block
+  headline: "Open to research internships · Summer 2027."               # example
+  detail: "Returning to the PhD afterwards."                            # example
+  contact: "I'm looking for a **Summer 2027** research internship, then returning to my PhD."   # example
+  emailSubject: "Summer 2027 internship"                                # example: the subject of the Email button
+  until: 2027-06-01                                                     # example: the box hides itself after this date
 
-booking:                                             # example: edit or delete the whole block
-  calcom: "rowan-vale/30min"
+booking:                                               # example: edit or delete the whole block
+  calcom: "rowan-vale/30min"                           # example: your Cal.com name/event, or link: "https://…" for any booking page
 
-# ---------- optional, rarely needed ----------
-# theme: { accent: "#2c5aa0" }
+# ---------- optional, rarely needed (remove the # to use a line) ----------
 # nav: [research, projects, writing, cv, booking]
 # pages: { experience: { path: "/experience" }, meet: false }
 # redirects: [{ from: "/about.html", to: "/" }]

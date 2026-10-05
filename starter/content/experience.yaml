@@ -1,7 +1,47 @@
 # yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/experience.json
-# Each entry with example: true stays hidden on your site. Delete "example: true, " to publish it.
+# Your jobs, research, teaching and education, shown on /experience in this order within each
+# section. To add your own, copy an entry (from its "- section:" line down) and change the text.
+# Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contentexperienceyaml
 entries:
-  - { example: true, section: research, role: "Graduate Research Assistant", org: "Example University", location: "Port Alder, WA", start: 2025-01, end: present, bullets: ["Built a fault-injection harness for key-value stores."], home: "Fault injection for storage engines." }
-  - { example: true, section: professional, role: "Software Engineering Intern", org: "Example Corp", start: 2024-06, end: 2024-08, bullets: ["Cut API latency from 3s to 300ms with a read-through cache."], home: "Cache layer for the orders API." }
-  - { example: true, section: teaching, role: "Teaching Assistant, Distributed Systems", org: "Example University", when: ["Fall 2025"], bullets: ["Ran weekly labs for 60 students."] }
-  - { example: true, section: education, role: "PhD, Computer Science", org: "Example University", start: 2025-01, end: 2029-05, expected: true, homeLine: { text: "PhD, CS, Example University", years: "2025 – 2029 (expected)" } }
+  - section: research                      # example: professional, research, teaching, education, programs or earlier
+    example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
+    role: "Graduate Research Assistant"    # example
+    org: "Example University"              # example
+    location: "Port Alder, WA"             # example
+    start: 2025-01                         # example
+    end: present                           # example
+    bullets: ["Built a fault-injection harness for key-value stores."]   # example
+    home: "Fault injection for storage engines."                         # example: shows the entry on the home page
+
+  - section: professional                  # example
+    example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
+    role: "Software Engineering Intern"    # example
+    org: "Example Corp"                    # example
+    start: 2024-06                         # example
+    end: 2024-08                           # example
+    bullets: ["Cut API latency from 3s to 300ms with a read-through cache."]   # example
+    home: "Cache layer for the orders API."                                     # example
+
+  - section: teaching                      # example
+    example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
+    role: "Teaching Assistant, Distributed Systems"   # example
+    org: "Example University"              # example
+    when: ["Fall 2025"]                    # example: text instead of dates
+    bullets: ["Ran weekly labs for 60 students."]   # example
+
+  - section: education                     # example
+    example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
+    role: "PhD, Computer Science"          # example
+    org: "Example University"              # example
+    start: 2025-01                         # example
+    end: 2029-05                           # example
+    expected: true                         # example: adds "(expected)"
+    homeLine: { text: "PhD, CS, Example University", years: "2025 – 2029 (expected)" }   # example: the home page line
+
+  - section: education                     # example
+    example: true   # ← delete this line to publish this entry (it stays hidden while this line is here)
+    role: "BS, Computer Science"           # example
+    org: "Example College"                 # example
+    start: 2020-09                         # example
+    end: 2024-05                           # example
+    homeLine: { text: "BS, CS, Example College", years: "2020 – 2024" }   # example

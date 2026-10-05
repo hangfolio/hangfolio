@@ -81,10 +81,10 @@ describe('starter scenario', () => {
     const check = run('check');
     assert.equal(check.status, 1, check.output);
     const errors = reported(check.output).filter((line) => / E\d{3}$/.test(line));
-    assert.deepEqual(errors, ['site.yaml:6 E401', 'site.yaml:7 E401', 'site.yaml:8 E401']);
-    assert.match(check.output, /site\.yaml:6:1 {2}error E401 {2}tagline is still the example text\. Write your own sentence\./);
-    assert.match(check.output, /site\.yaml:7:1 {2}error E401 {2}role is still the example text\. Write your own\./);
-    assert.match(check.output, /site\.yaml:8:1 {2}error E401 {2}affiliation is still the example \(Example University\)\. Write yours\./);
+    assert.deepEqual(errors, ['site.yaml:7 E401', 'site.yaml:8 E401', 'site.yaml:9 E401']);
+    assert.match(check.output, /site\.yaml:7:1 {2}error E401 {2}tagline is still the example text\. Write your own sentence\./);
+    assert.match(check.output, /site\.yaml:8:1 {2}error E401 {2}role is still the example text\. Write your own\./);
+    assert.match(check.output, /site\.yaml:9:1 {2}error E401 {2}affiliation is still the example \(Example University\)\. Write yours\./);
 
     rmSync(DIST, { recursive: true, force: true });
     const build = run('build');
@@ -102,29 +102,35 @@ describe('starter scenario', () => {
     const check = run('check');
     assert.equal(check.status, 0, check.output);
     assert.deepEqual(reported(check.output), [
-      'site.yaml:10 W402', // location
-      'site.yaml:12 W404', // avatar
-      'site.yaml:13 W404', // cv
-      'site.yaml:16 W402', // the four links
-      'site.yaml:17 W402',
-      'site.yaml:18 W402',
-      'site.yaml:19 W402',
-      'site.yaml:21 W402', // availability
-      'site.yaml:28 W402', // booking
-      'content/experience.yaml:4 W403',
-      'content/experience.yaml:5 W403',
-      'content/experience.yaml:6 W403',
+      'site.yaml:11 W402', // location
+      'site.yaml:14 W404', // avatar
+      'site.yaml:15 W404', // ogImage
+      'site.yaml:16 W404', // cv
+      'site.yaml:19 W402', // the four links
+      'site.yaml:20 W402',
+      'site.yaml:21 W402',
+      'site.yaml:22 W402',
+      'site.yaml:24 W402', // availability
+      'site.yaml:31 W402', // booking
       'content/experience.yaml:7 W403',
-      'content/home.yaml:2 W403',
-      'content/news.yaml:4 W403',
-      'content/news.yaml:5 W403',
+      'content/experience.yaml:17 W403',
+      'content/experience.yaml:26 W403',
+      'content/experience.yaml:33 W403',
+      'content/experience.yaml:42 W403',
+      'content/home.yaml:4 W403',
+      'content/news.yaml:7 W403',
+      'content/news.yaml:11 W403',
+      'content/news.yaml:15 W403',
+      'content/projects/lattice.md:2 W403',
+      'content/projects/quorum-notes.md:2 W403',
       'content/projects/tidepool.md:2 W403',
-      'content/publications.bib:4 W403',
+      'content/publications.bib:12 W403',
+      'content/publications/crash-replay.md:2 W403',
       'content/publications/vale2024bounded.md:2 W403',
       'content/writing/what-fsync-promises.md:2 W403',
       'public/example W404',
     ]);
-    assert.match(check.output, /\nNo errors, 21 examples hidden\./);
+    assert.match(check.output, /\nNo errors, 27 examples hidden\./);
 
     const build = run('build');
     assert.equal(build.status, 0, build.output);
@@ -132,7 +138,7 @@ describe('starter scenario', () => {
     const text = listFiles(DIST).filter((f) => /\.(html|xml|txt|js|css|json|webmanifest)$/.test(f)).map((f) => [f, read(f)] as const);
     for (const [file, content] of text) {
       assert.doesNotMatch(content, /\/example\//, file);
-      assert.doesNotMatch(content, /Rowan|Example University|Tidepool|Port Alder|rowan-vale/, file);
+      assert.doesNotMatch(content, /Rowan|Example University|Example College|Example Corp|Tidepool|Lattice|Quorum notes|Port Alder|rowan-vale|example\.edu/, file);
     }
     for (const file of pages()) {
       assert.doesNotMatch(read(file), /xbanner/, file);

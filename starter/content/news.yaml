@@ -1,5 +1,16 @@
 # yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/news.json
-# Newest first. Each item with example: true stays hidden on your site. Delete "example: true, " to publish it.
+# Short news items, newest first. The home page shows the latest four. To add one, copy an item
+# (from its "- date:" line down) and change the text. Links like [text](/projects) work as written.
+# Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contentnewsyaml
 items:
-  - { example: true, date: 2026-08, text: "Released [Tidepool](/projects/tidepool/) 1.0." }
-  - { example: true, date: 2024-05, text: "Presented [bounded staleness](/publications#vale2024bounded) at EXC ’24." }
+  - date: 2026-08                          # example: 2026-08 or 2026-08-14
+    example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
+    text: "Released [Tidepool](/projects/tidepool/) 1.0."   # example
+
+  - date: 2025-01
+    example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
+    text: "Started my PhD at Example University."           # example
+
+  - date: 2024-05
+    example: true   # ← delete this line to publish this item (it stays hidden while this line is here)
+    text: "Presented [bounded staleness](/publications#vale2024bounded) at EXC ’24."   # example

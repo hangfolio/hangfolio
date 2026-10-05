@@ -74,8 +74,9 @@ test('example entries: list items, the marker line, and hashes that ignore the m
   const text = readFileSync(`${STARTER}content/experience.yaml`, 'utf8');
   const { loaded } = loadFile(STARTER, 'content/experience.yaml', 'experience', experience);
   const entries = exampleEntries([loaded]);
-  assert.equal(entries.length, 4);
-  assert.deepEqual(entries.map((e) => [e.line, e.col, e.alone]), [[4, 7, false], [5, 7, false], [6, 7, false], [7, 7, false]]);
+  assert.equal(entries.length, 5);
+  // The starter writes each marker on its own line, so it can be deleted whole.
+  assert.deepEqual(entries.map((e) => [e.line, e.col, e.alone]), [[7, 5, true], [17, 5, true], [26, 5, true], [33, 5, true], [42, 5, true]]);
   assert.ok(entries.every((e) => starterValues().entries.experience.includes(e.hash)));
   assert.ok(text.includes('example: true'));
   // Key order, quoting and the marker itself don't change the hash; the content does.

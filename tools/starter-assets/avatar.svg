@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- The demo person's placeholder portrait: an illustration, never a photo. CC0 1.0. -->
+  <rect width="400" height="400" fill="#e9eef5"/>
+  <!-- Tide-pool rings behind the figure -->
+  <circle cx="200" cy="178" r="158" fill="#dce5f2"/>
+  <circle cx="200" cy="178" r="126" fill="none" stroke="#c3d3ea" stroke-width="10"/>
+  <path d="M0 330 C 70 300, 130 300, 200 322 S 330 344, 400 318 L 400 400 L 0 400 Z" fill="#cfdbee"/>
+  <!-- Shoulders -->
+  <path d="M78 400 C 84 318, 136 286, 200 286 C 264 286, 316 318, 322 400 Z" fill="#2c5aa0"/>
+  <path d="M168 288 L 200 330 L 232 288 Z" fill="#e9eef5"/>
+  <!-- Neck and head -->
+  <rect x="178" y="236" width="44" height="56" rx="18" fill="#9fbbe3"/>
+  <ellipse cx="200" cy="186" rx="64" ry="72" fill="#b8cff4"/>
+  <!-- Hair -->
+  <path d="M128 214 C 118 130, 168 100, 206 102 C 254 104, 282 140, 272 214 C 266 186, 256 166, 240 154 C 214 168, 176 168, 148 156 C 138 172, 132 190, 128 214 Z" fill="#1d3f75"/>
+  <!-- Glasses -->
+  <g fill="none" stroke="#1d3f75" stroke-width="5">
+    <circle cx="176" cy="192" r="17"/>
+    <circle cx="224" cy="192" r="17"/>
+    <path d="M193 192 L 207 192"/>
+  </g>
+  <!-- Smile -->
+  <path d="M182 226 C 192 236, 208 236, 218 226" fill="none" stroke="#1d3f75" stroke-width="5" stroke-linecap="round"/>
+</svg>

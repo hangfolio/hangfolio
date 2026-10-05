@@ -1,17 +1,19 @@
 # yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/home.json
+# The words on your home page around the other sections. Optional: without this file the home page
+# is built from your other content. Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contenthomeyaml
 example: true   # ← delete this line once the text below is yours (it stays hidden while this line is here)
-intro: "PhD student at [Example University](https://example.edu), advised by [Dr. Ada Advisor](https://example.edu/~ada). Before that I built storage at Example Corp."
-now: "a crash-consistency checker and a cache paper."
-highlights:
+intro: "PhD student at [Example University](https://example.edu), advised by [Dr. Ada Advisor](https://example.edu/~ada). Before that I built storage at Example Corp."   # example: the paragraph under your tagline
+now: "a crash-consistency checker and a cache paper."   # example: the "Now:" line
+highlights:                                             # example: 1 to 4 numbers that sum up your work
   items:
-    - { value: "up to 40%", what: "lower p99 latency", source: "[Bounded staleness](/publications#vale2024bounded), EXC ’24" }
-    - { value: "12/12", what: "seeded crash bugs found", source: "[Tidepool](/projects/tidepool/)" }
-    - { value: "3s → 300ms", what: "API latency", source: "[Example Corp](/experience)" }
-research:
-  problem: "Caches at the edge serve stale data with no bound on how stale."
-  approach:
-    - { title: "Bounded staleness", chip: "EXC ’24", text: "A lease protocol that caps staleness at a configured bound." }
-    - { title: "Crash replay", chip: "In preparation", text: "Replaying crash points to find lost writes." }
-  status: "One paper published; one in preparation."
-  featured: vale2024bounded
-  teaching: "TA, Distributed Systems (Fall 2025)"
+    - { value: "up to 40%", what: "lower p99 latency", source: "[Bounded staleness](/publications#vale2024bounded), EXC ’24" }   # example
+    - { value: "12/12", what: "seeded crash bugs found", source: "[Tidepool](/projects/tidepool/)" }                             # example
+    - { value: "3s → 300ms", what: "API latency", source: "[Example Corp](/experience)" }                                        # example
+research:                                               # example: the Research section
+  problem: "Caches at the edge serve stale data with no bound on how stale."   # example
+  approach:                                             # example: the steps of your research
+    - { title: "Bounded staleness", chip: "EXC ’24", text: "A lease protocol that caps staleness at a configured bound." }   # example
+    - { title: "Crash replay", chip: "In preparation", text: "Replaying crash points to find lost writes." }                 # example
+  status: "One paper published; one in preparation."   # example
+  featured: vale2024bounded                             # example: a key from content/publications.bib
+  teaching: "TA, Distributed Systems (Fall 2025)"       # example
