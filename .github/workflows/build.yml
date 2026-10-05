@@ -534,8 +534,11 @@ jobs:
         run: npm run build
 
       - name: Verify the built site
+        env:
+          # The same address as the build, so verify checks the links for the address it was built for.
+          SITE_PAGES_URL: ${{ inputs.site-url || steps.pages.outputs.base_url }}
         shell: bash
-        run: npx --no hangfolio verify dist
+        run: npx --no hangfolio verify dist --github
 
       - name: Upload the site for publishing
         id: upload

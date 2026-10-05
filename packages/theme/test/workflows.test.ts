@@ -108,7 +108,7 @@ describe('workflow structure', () => {
   test('the build job installs, checks, builds, verifies and uploads in that order', () => {
     const steps = BUILD.jobs.build.steps!;
     const at = (pattern: RegExp) => steps.findIndex((s) => pattern.test(s.uses ?? s.run ?? ''));
-    const order = [/^actions\/checkout@/, /^actions\/setup-node@/, /npm ci/, /^actions\/configure-pages@/, /^npx --no hangfolio check --github$/, /^npm run build$/, /^npx --no hangfolio verify dist$/, /^actions\/upload-pages-artifact@/];
+    const order = [/^actions\/checkout@/, /^actions\/setup-node@/, /npm ci/, /^actions\/configure-pages@/, /^npx --no hangfolio check --github$/, /^npm run build$/, /^npx --no hangfolio verify dist --github$/, /^actions\/upload-pages-artifact@/];
     const found = order.map(at);
     assert.ok(found.every((i, n) => i >= 0 && (n === 0 || i > found[n - 1])), String(found));
     const byId = Object.fromEntries(steps.filter((s) => s.id).map((s) => [s.id, s]));
@@ -117,6 +117,9 @@ describe('workflow structure', () => {
     assert.deepEqual(byId.upload.with, { path: 'dist' });
     const build = steps.find((s) => s.run === 'npm run build')!;
     assert.equal(build.env?.SITE_PAGES_URL, '${{ inputs.site-url || steps.pages.outputs.base_url }}');
+    // verify checks the site for the address it was built for.
+    const verify = steps.find((s) => s.run?.startsWith('npx --no hangfolio verify'))!;
+    assert.equal(verify.env?.SITE_PAGES_URL, build.env?.SITE_PAGES_URL);
     const node = steps[1].with!;
     assert.equal(node['node-version'], '${{ needs.preflight.outputs.node-version }}');
     assert.equal(node.cache, "${{ needs.preflight.outputs.lockfile == 'true' && 'npm' || '' }}");
