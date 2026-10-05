@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/site.json
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@0/schema/site.json
 # START HERE. Your site's settings: change the text inside the quotes and keep the spacing.
 # Lines marked "# example" are the made-up demo person's. Replace the five marked "required";
 # change or delete the others. Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/site-yaml.md

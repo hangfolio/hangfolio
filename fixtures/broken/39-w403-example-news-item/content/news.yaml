@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/news.json
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@0/schema/news.json
 # Newest first. Each item with example: true stays hidden on your site. Delete "example: true, " to publish it.
 items:
   - { date: 2026-09, text: "Deployed the first gauge." }

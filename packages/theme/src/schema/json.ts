@@ -1,11 +1,18 @@
 // JSON Schemas for editors (SPEC 5.1): what a person may write in each file, so github.dev,
 // Codespaces and VS Code offer autocomplete and flag mistakes while typing. They describe the
 // input (shorthands included); checks that need code, like dates and paths, run only in zod.
+import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { SCHEMAS } from './index.ts';
 
-/** Where the published schemas are served; the starter's yaml-language-server lines point here. */
-export const SCHEMA_URL = 'https://unpkg.com/hangfolio@1/schema/';
+const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+
+/**
+ * Where the published schemas are served, pinned to the theme's major version (hangfolio@0 while
+ * it is 0.x, so the link resolves from the first release); the starter's yaml-language-server
+ * lines point here.
+ */
+export const SCHEMA_URL = `https://unpkg.com/hangfolio@${version.split('.')[0]}/schema/`;
 
 /** Drops the ±MAX_SAFE_INTEGER bounds zod gives every integer; they only add noise. */
 function tidy(node: unknown): unknown {

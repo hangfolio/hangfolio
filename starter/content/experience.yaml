@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/experience.json
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@0/schema/experience.json
 # Your jobs, research, teaching and education, shown on /experience in this order within each
 # section. To add your own, copy an entry (from its "- section:" line down) and change the text.
 # Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contentexperienceyaml

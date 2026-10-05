@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://unpkg.com/hangfolio@1/schema/news.json",
+  "$id": "https://unpkg.com/hangfolio@0/schema/news.json",
   "title": "hangfolio: content/news.yaml",
   "type": "object",
   "properties": {

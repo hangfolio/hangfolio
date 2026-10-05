@@ -17,10 +17,13 @@ test('schema/ matches the zod schemas (run `npm run build` to update it)', () =>
   }
 });
 
-test("the starter's site.yaml points at the published site schema", () => {
-  const firstLine = readFileSync(new URL('starter/site.yaml', REPO), 'utf8').split('\n')[0];
-  assert.equal(firstLine, `# yaml-language-server: $schema=${SCHEMA_URL}site.json`);
-  assert.ok(SCHEMA_URL.startsWith(`https://unpkg.com/${pkg.name}@`));
+test("the starter's YAML files point at the published schemas of the theme's major version", () => {
+  const files = { 'site.yaml': 'site', 'content/home.yaml': 'home', 'content/experience.yaml': 'experience', 'content/news.yaml': 'news', 'content/projects.yaml': 'projects-groups' };
+  for (const [file, name] of Object.entries(files)) {
+    const firstLine = readFileSync(new URL(`starter/${file}`, REPO), 'utf8').split('\n')[0];
+    assert.equal(firstLine, `# yaml-language-server: $schema=${SCHEMA_URL}${name}.json`, file);
+  }
+  assert.equal(SCHEMA_URL, `https://unpkg.com/${pkg.name}@${pkg.version.split('.')[0]}/schema/`);
   assert.ok(pkg.files.includes('schema'));
   assert.equal(pkg.exports['./schema/*'], './schema/*');
   assert.equal(jsonSchema('site').$id, `${SCHEMA_URL}site.json`);

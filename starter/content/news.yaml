@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/news.json
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@0/schema/news.json
 # Short news items, newest first. The home page shows the latest four. To add one, copy an item
 # (from its "- date:" line down) and change the text. Links like [text](/projects) work as written.
 # Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contentnewsyaml
