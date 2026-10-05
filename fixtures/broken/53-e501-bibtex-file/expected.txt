@@ -1,0 +1,4 @@
+content/publications.bib:7:1 E501 pdf = {guages.pdf} links to public/files/guages.pdf, which doesn't exist. Did you mean gauges.pdf? A file name on its own means a file in public/files/.
+content/publications.bib:14:1 E501 website = {tides.org} links to public/files/tides.org, which doesn't exist. If it's a web address, write website = {https://tides.org}.
+content/publications.bib:21:1 E501 slides = {talks/buoys.pdf} links to public/talks/buoys.pdf, which doesn't exist. There is no public/talks folder.
+content/publications.bib:26:3 W403 You edited this example, but it still says example = {true}, so it's hidden. Delete line 26 to publish it.

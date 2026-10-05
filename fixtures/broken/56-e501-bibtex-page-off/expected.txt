@@ -1,0 +1,1 @@
+content/publications.bib:7:1 E501 pdf = {gauges.pdf} links to public/files/gauges.pdf, which doesn't exist. A file name on its own means a file in public/files/, and there is no such folder yet: create it and put gauges.pdf in it.
