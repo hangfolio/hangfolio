@@ -55,5 +55,12 @@ entries:
   - section: programs
     role: "Participant"
     org: "Example Systems Summer School"
+    location: "Kestrel Harbour"
     start: 2025-07
+    bullets: ["One of 40 participants; presented Shoal at the poster session."]
     homeLine: { text: "Example Systems Summer School, one of 40 participants", years: "2025" }
+    gallery:
+      caption: "Example Systems Summer School, *Kestrel Harbour*"
+      images:
+        - { thumb: "/images/summer-school/hall-thumb.png", full: "/images/summer-school/hall.png", alt: "The lecture hall, drawn as rows of seats facing a screen", width: 240, height: 320 }
+        - { thumb: "/images/summer-school/badge-thumb.png", full: "/images/summer-school/badge.png", alt: "A summer school badge on a lanyard, drawn in the site colours", width: 240, height: 320 }

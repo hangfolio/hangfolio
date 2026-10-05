@@ -569,6 +569,8 @@ main:focus {
   height: .5rem;
 }
 
+/* The home page's box pulses (the contact page's status line holds still, as on the reference
+   design), and holds still for visitors who ask for reduced motion */
 @media (prefers-reduced-motion: no-preference) {
   .status.box .dot {
     animation: ping 2.4s ease-out infinite;

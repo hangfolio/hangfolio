@@ -18,6 +18,7 @@ import { exampleEntries } from './entries.ts';
 import { entryIssues, siteExamples, visibleSite } from './example.ts';
 import { largeFiles, missingFiles } from './files.ts';
 import { sortIssues, type Issue } from './issue.ts';
+import { redirectIssues } from './redirects.ts';
 import { referenceIssues } from './references.ts';
 
 export type Mode = 'check' | 'build' | 'dev';
@@ -87,6 +88,7 @@ export async function validateSite(root: string, options: Options = {}): Promise
 
   if (visible) {
     issues.push(...referenceIssues({ loaded: content.loaded, bib, linkIds: visible.links.map((l) => l.id), hiddenLinkIds, hiddenFiles, hiddenKeys }));
+    if (siteFile) issues.push(...redirectIssues(siteFile, visible, shown));
   }
   const fileTargets = shown.filter((f) => f.raw).map((loaded) => ({ loaded, data: withoutHiddenItems(loaded, !demo) }));
   if (siteFile && visible) fileTargets.unshift({ loaded: siteFile, data: visible });

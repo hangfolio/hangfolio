@@ -23,7 +23,7 @@ const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Conte
 test('hangfolio check finds nothing to report in fixtures/kitchen-sink', () => {
   const result = spawnSync(process.execPath, [BIN, 'check'], { cwd: join(REPO, 'fixtures/kitchen-sink'), encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } });
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.equal(result.stdout, 'hangfolio check: site.yaml and 14 files in content/\n\nNo errors.\n');
+  assert.equal(result.stdout, 'hangfolio check: site.yaml and 16 files in content/\n\nNo errors.\n');
 });
 
 for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio']) {
@@ -56,7 +56,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       assert.match(main, /<p class="lede">I build tools that tell you <em>why<\/em> a build is slow, not just that it is\.<\/p>/);
       assert.match(main, /<p class="now"><span class="strong">Now:<\/span> a tracing layer for build caches, and a paper on <code>fsync<\/code> batching\.<\/p>/);
       assert.match(main, /<p class="status box"><span class="dot" aria-hidden="true"><\/span><span><strong>Open to systems research internships · Summer 2027\.<\/strong> <span class="muted">Back to the PhD in the autumn\.<\/span><\/span><\/p>/);
-      assert.match(main, /<span>Résumé<\/span><span class="pdf">PDF<\/span><\/a><a href="mailto:tamsin@rook\.test\?subject=Summer%202027%20internship">Email<\/a><a href="https:\/\/example\.org\/book\/tamsin">Book a call<\/a>/);
+      assert.match(main, new RegExp(`<span>Résumé</span><span class="pdf">PDF</span></a><a href="mailto:tamsin@rook\\.test\\?subject=Summer%202027%20internship">Email</a><a href="${base}/meet">Book a call</a>`));
       const profiles = [...main.matchAll(/<li><a class="soft" href="([^"]+)">([^<]+)<svg class="ext"/g)].map((m) => `${m[2]} ${m[1]}`);
       assert.deepEqual(profiles, ['GitHub https://github.com/hangfolio/hangfolio', 'Notes https://hangfolio.github.io/', 'Bluesky https://bsky.app/profile/rook.test']);
     });
@@ -90,7 +90,18 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
     test('the sections in their default order, with the ids from advanced.anchors', () => {
       const ids = [...main.matchAll(/<section (?:id="[^"]+" )?class="block[^"]*" aria-labelledby="([^"]+)" data-section="([^"]+)"/g)].map((m) => `${m[2]}:${m[1]}`);
       assert.deepEqual(ids, ['highlights:results', 'work:work', 'research:research-h', 'experience:exp', 'news:news', 'writing:writing', 'contact:contact']);
-      assert.match(html, new RegExp(`<a href="${base}/#research" class="quiet"[^>]*>Research</a><a href="${base}/files/cv.pdf" class="quiet"[^>]*>CV</a>`));
+      const nav = [...html.matchAll(/<a href="([^"]+)" class="quiet"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]} ${m[1]}`);
+      assert.deepEqual(nav, [
+        `Research ${base}/#research`,
+        `Projects ${base}/projects`,
+        `Experience ${base}/experience`,
+        `Writing ${base}/writing/`,
+        `CV ${base}/files/cv.pdf`,
+        `Book a call ${base}/meet`,
+        `Contact ${base}/contact`,
+      ]);
+      const heads = [...main.matchAll(/<h2 id="([^"]+)" class="eyebrow">[^<]+<\/h2><a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => `${m[1]}: ${m[3]} ${m[2]}`);
+      assert.deepEqual(heads, [`work: All projects ${base}/projects`, 'research-h: All notes https://hangfolio.github.io/', `exp: Full history ${base}/experience`, `writing: All writing ${base}/writing/`]);
     });
 
     test('research: the section carries the anchor, the paper is #publication, the owner is underlined', () => {
@@ -145,7 +156,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
         new RegExp(
           '<section class="block contact" aria-labelledby="contact" data-section="contact"><div class="sec-head"><h2 id="contact" class="eyebrow">Get in touch</h2></div>' +
             '<a href="mailto:tamsin@rook\\.test\\?subject=Summer%202027%20internship" class="mail">tamsin@rook\\.test</a>' +
-            `<div class="links"><a href="${base}/files/cv.pdf">Résumé \\(PDF\\)</a><a href="https://example\\.org/book/tamsin">Book a call</a></div></section>`,
+            `<div class="links"><a href="${base}/files/cv.pdf">Résumé \\(PDF\\)</a><a href="${base}/meet">Book a call</a></div></section>`,
         ),
       );
     });

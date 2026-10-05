@@ -1,0 +1,81 @@
+---
+// A post (SPEC 5.9) at /{writingPath}/{file name}/: the title, the date (and the update), the
+// reading time ("N min read", or the `minutes` pin), the body, and the byline (PostFooter).
+// In MDX, <Note> and <Terminal> work without imports.
+import { render } from 'astro:content';
+import { site } from 'virtual:hangfolio/site';
+import Note from '../components/Note.astro';
+import PostFooter from '../components/PostFooter.astro';
+import Terminal from '../components/Terminal.astro';
+import Page from '../layouts/Page.astro';
+import { posts } from '../lib/collections.ts';
+import { isoDate, postDate } from '../lib/dates.ts';
+import { pagePath } from '../lib/nav.ts';
+import { localeTag, pageTitle, postPath } from '../lib/site.ts';
+import { absUrl, url } from '../lib/url.ts';
+import { postMinutes } from '../lib/writing.ts';
+
+export async function getStaticPaths() {
+  return (await posts()).map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+type Post = Awaited<ReturnType<typeof posts>>[number];
+const { post } = Astro.props as { post: Post };
+const { Content } = await render(post);
+const { title, description, date, updated, tags } = post.data;
+const path = postPath(site, post.id);
+const index = pagePath(site, 'writing');
+const indexHeading = (site.pages.writing && site.pages.writing.heading) || 'Writing';
+const locale = localeTag(site);
+const home = absUrl('/');
+
+const schema = [
+  {
+    '@type': 'BlogPosting',
+    '@id': `${absUrl(path)}#article`,
+    headline: title,
+    description,
+    datePublished: isoDate(date),
+    ...(updated ? { dateModified: isoDate(updated) } : {}),
+    author: { '@id': `${home}#person` },
+    publisher: { '@id': `${home}#person` },
+    mainEntityOfPage: absUrl(path),
+    ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+    inLanguage: locale,
+  },
+];
+---
+<Page
+  title={pageTitle(site, title)}
+  description={description}
+  path={path}
+  nav="writing"
+  section="post"
+  ogType="article"
+  article={{ published: date, modified: updated, tags }}
+  schema={schema}
+  heading={title}
+>
+  {index && <p slot="eyebrow" class="eyebrow back"><a href={url(index)} class="soft">{indexHeading}</a></p>}
+  <p slot="meta" class="meta">
+    <time datetime={isoDate(date)}>{postDate(date, locale)}</time>
+    {updated && <span> · updated <time datetime={isoDate(updated)}>{postDate(updated, locale)}</time></span>}
+    <span> · {postMinutes(post)} {site.advanced.labels.minRead}</span>
+  </p>
+  <article class="prose post">
+    <Content components={{ Note, Terminal }} />
+  </article>
+  <PostFooter index={index} />
+</Page>
+
+<style>
+  .back a {
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .post {
+    max-width: 41.25rem;
+  }
+</style>

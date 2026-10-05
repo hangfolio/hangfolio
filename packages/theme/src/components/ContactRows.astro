@@ -1,0 +1,66 @@
+---
+// The contact page's rows (lib/contact.ts): a small-caps label in the margin and the value
+// beside it; links that leave the site carry the external-link arrow.
+import ExternalIcon from './ExternalIcon.astro';
+import type { ContactRow } from '../lib/contact.ts';
+import { url } from '../lib/url.ts';
+
+interface Props {
+  rows: ContactRow[];
+}
+
+const { rows } = Astro.props;
+---
+<dl class="rows">
+  {rows.map((row) => (
+    <div class="hang row">
+      <dt class="m label">{row.label}</dt>
+      <dd>{row.href ? <a href={url(row.href)}>{row.text}{row.external && <ExternalIcon />}</a> : row.text}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+  }
+
+  .rows > .row > .m {
+    line-height: 1.9;
+  }
+
+  .rows dd {
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .rows dd a {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    min-height: 2rem;
+  }
+
+  .rows dd a :global(svg) {
+    flex: none;
+  }
+
+  /* Mid-size screens: label and value side by side inside the column */
+  @media (min-width: 560px) and (max-width: 1119px) {
+    .rows > .row {
+      grid-template-columns: 8rem minmax(0, 1fr);
+      column-gap: 1.5rem;
+      align-items: baseline;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .rows dd a {
+      min-height: 2.75rem;
+    }
+  }
+</style>

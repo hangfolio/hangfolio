@@ -19,7 +19,8 @@ import Base from '../layouts/Base.astro';
 import type { BibEntry } from '../lib/bib.ts';
 import { citationView, type Extras } from '../lib/citation.ts';
 import { homeEducation, homeJobs, homeNews, homePosts, planSections, showsResearch } from '../lib/home.ts';
-import { availablePages } from '../lib/nav.ts';
+import { pageContent } from '../lib/collections.ts';
+import { availablePages, pagePath } from '../lib/nav.ts';
 import { localeTag, pageTitle } from '../lib/site.ts';
 import { featuredProjects, resolveHeadingLink, workView } from '../lib/work.ts';
 import { home as homeSchema } from '../schema/home.ts';
@@ -28,11 +29,12 @@ const home = (await getEntry('home', 'home'))?.data ?? homeSchema.parse({});
 const anchors = site.advanced.anchors;
 const locale = localeTag(site);
 const research = showsResearch(home) ? home.research : undefined;
-const available = availablePages(site, { research: Boolean(research) });
+const available = availablePages(site, { ...(await pageContent()), research: Boolean(research) });
 /** A section heading's link to one of the site's pages, once that page exists. */
 const pageLink = (key: 'projects' | 'publications' | 'experience' | 'writing', label: string) => {
   const page = site.pages[key];
-  return available.has(key) && page ? { label, href: page.path } : undefined;
+  if (!available.has(key) || !page) return undefined;
+  return { label, href: key === 'publications' ? page.path : pagePath(site, key)! };
 };
 
 const featured = featuredProjects(await getCollection('projects'));

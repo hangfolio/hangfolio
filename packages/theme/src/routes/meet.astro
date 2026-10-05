@@ -1,0 +1,120 @@
+---
+// The booking page (SPEC 5.3 `booking`), at booking.path or pages.meet.path (/meet by default):
+// - calcom: the Cal.com calendar inline, in the visitor's theme, with brand colours from the
+//   accent tokens; a click on the theme toggle reloads it in the new theme (an OS or other-tab
+//   change does not, so a booking in progress is kept), and a fallback line links to Cal.com;
+// - link: a button to the booking page, with no third-party script;
+// - demo mode: a static stand-in, so Cal.com never loads with the example's fictional name;
+// - off (keepPageWhenOff, with neither calcom nor link): the page stays and points to email.
+import { demo, site } from 'virtual:hangfolio/site';
+import ExternalIcon from '../components/ExternalIcon.astro';
+import Page from '../layouts/Page.astro';
+import tokensCss from '../styles/tokens.css?raw';
+import { bookingHost, bookingMode, calConfig } from '../lib/booking.ts';
+import { mailto } from '../lib/hero.ts';
+import { pagePath } from '../lib/nav.ts';
+import { pageTitle } from '../lib/site.ts';
+import { parseTokens } from '../lib/tokens.ts';
+
+const booking = site.booking!;
+const page = site.pages.meet || { path: booking.path };
+const mode = bookingMode(site)!;
+const heading = page.heading ?? booking.label;
+const lede = mode === 'off' ? undefined : (page.lede ?? booking.lede);
+const mail = mailto(site.email, booking.emailSubject);
+const { light, dark } = parseTokens(tokensCss);
+const cal = booking.calcom && calConfig(booking.calcom, { light: light.accent, dark: dark.accent });
+---
+<Page title={pageTitle(site, page.title ?? heading)} description={page.description} path={pagePath(site, 'meet')!} nav="booking" section="meet" heading={heading} lede={lede}>
+  {mode === 'off' ? (
+    <p>Online booking isn’t open right now. Email me at <a href={mail}>{site.email}</a> and we’ll find a time.</p>
+  ) : mode === 'link' ? (
+    <section class="booking" aria-label="Booking">
+      <p><a class="btn" href={booking.link}>{booking.label}<ExternalIcon /></a></p>
+      <p class="fallback">Booking is on {bookingHost(booking.link!)}. Or email <a href={mail}>{site.email}</a>.</p>
+    </section>
+  ) : demo ? (
+    <section class="booking" aria-label="Booking calendar">
+      <div class="cal mock">
+        <p>The booking calendar appears here.</p>
+        <p class="fallback">This example site doesn’t load Cal.com. Put your own Cal.com name in site.yaml to show yours.</p>
+      </div>
+    </section>
+  ) : (
+    <section class="booking" aria-label="Booking calendar">
+      <div id="cal-inline" class="cal"></div>
+      <p class="fallback">Calendar not loading? Book at <a href={`https://cal.com/${booking.calcom}`}>cal.com/{booking.calcom}</a> or email <a href={mail}>{site.email}</a>.</p>
+      <script is:inline define:vars={{ cal }}>
+        (function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var d = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://app.cal.com/embed/embed.js", "init");
+        var calTheme = document.documentElement.getAttribute("data-theme");
+        if (calTheme !== "light" && calTheme !== "dark") {
+          calTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        Cal("init", "meet", { origin: "https://app.cal.com" });
+        var calInline = { layout: cal.ui.layout, theme: calTheme };
+        Cal.ns.meet("inline", { elementOrSelector: "#cal-inline", calLink: cal.calLink, config: calInline });
+        Cal.ns.meet("ui", Object.assign({ theme: calTheme }, cal.ui));
+        /* Cal.com ignores live theme changes sent through "ui", so reload the calendar frame in the
+           new theme, but only when the visitor clicked the toggle here: an OS or other-tab change
+           shouldn't wipe a booking in progress. */
+        document.addEventListener("themechange", function (e) {
+          var frame = document.querySelector("#cal-inline iframe");
+          if (!frame) { calInline.theme = e.detail.theme; return; }
+          if (e.detail.source !== "toggle") { return; }
+          var url = new URL(frame.src);
+          if (url.searchParams.get("theme") === e.detail.theme) { return; }
+          url.searchParams.set("theme", e.detail.theme);
+          url.searchParams.set("ui.color-scheme", e.detail.theme);
+          frame.src = url.toString();
+        });
+      </script>
+    </section>
+  )}
+</Page>
+
+<style>
+  .booking {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .cal {
+    width: 100%;
+    min-height: 640px;
+    overflow: auto;
+  }
+
+  /* The example's stand-in: an empty calendar-sized frame with a note in the middle */
+  .cal.mock {
+    min-height: 22rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: 2rem 1.5rem;
+    border: 1px dashed var(--rule-strong);
+    border-radius: 6px;
+    background: var(--tint);
+    text-align: center;
+  }
+
+  /* On wide screens let the calendar break out of the text column so Cal.com can show its side-by-side month view */
+  @media (min-width: 1120px) {
+    .cal:not(.mock) {
+      --cal-w: min(64rem, calc(100vw - 4rem));
+      width: var(--cal-w);
+      margin-left: calc((100% - var(--cal-w)) / 2);
+    }
+  }
+
+  .fallback {
+    font-size: .9375rem;
+    color: var(--muted);
+  }
+
+  .btn :global(svg) {
+    flex: none;
+  }
+</style>

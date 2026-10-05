@@ -1,0 +1,23 @@
+---
+title: "Reading a cache trace"
+date: 2023-02-10
+updated: 2023-03-01
+description: "What each line of a Shoal trace means, with the two MDX components."
+tags: [builds, tracing]
+minutes: 4
+---
+A trace has one line per build action. The first column is the action, the second the input that changed.
+
+<Note>
+  Traces are written next to the build log, so a CI run keeps both.
+</Note>
+
+<Note title="Tip">
+  Sort by the second column to see which input causes the most misses.
+</Note>
+
+<Terminal label="A short trace" lines={["$ shoal explain //app:server", "# 2 misses traced", "[HIGH] CI_RUN_ID leaks into the cache key", "[LOW] unused input: docs/notes.md"]} />
+
+## How it works {#architecture}
+
+Each action's inputs are hashed once, and the hashes are compared run to run.

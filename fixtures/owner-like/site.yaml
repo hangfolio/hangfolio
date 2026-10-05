@@ -28,14 +28,18 @@ availability:
 
 booking:
   link: "https://example.org/book/kmorrow"
+  lede: "Half-hour calls, usually on Tuesdays, about the testbed or edge scheduling."
   keepPageWhenOff: true
 
 nav: [research, projects, writing, cv, booking]
 
 pages:
-  experience: { path: "/work-experience" }
+  projects: { lede: "Mostly scheduler tooling from the testbed, plus one dataset and a small library." }
+  experience: { path: "/work-experience", heading: "Work Experience", lede: "Industry roles, lab work and teaching, most recent first." }
+  writing: { lede: "Field notes from the testbed, mostly about radios and flaky tests." }
 
 redirects:
+  - { from: "/about.html", to: "/" }
   - { from: "/about/", to: "/" }
 
 seo:

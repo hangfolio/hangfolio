@@ -3,6 +3,7 @@
 // calls to action and the profile links.
 import type { Home } from '../schema/home.ts';
 import { escapeHtml, inlineMd } from './inline-md.ts';
+import { pageUrl } from './paths.ts';
 import type { SiteYaml } from './site.ts';
 
 type Availability = NonNullable<SiteYaml['availability']>;
@@ -57,7 +58,7 @@ export function isPdf(path: string): boolean {
 export function bookingHref(site: SiteYaml, pageExists: boolean, demo: boolean): string | undefined {
   const booking = site.booking;
   if (!booking) return undefined;
-  if (pageExists && site.pages.meet) return site.pages.meet.path;
+  if (pageExists && site.pages.meet) return pageUrl(site.pages.meet.path, site.advanced.urlFormat);
   if (booking.link) return booking.link;
   if (booking.calcom && !demo) return `https://cal.com/${booking.calcom}`;
   return undefined;

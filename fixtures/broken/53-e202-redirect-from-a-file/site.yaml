@@ -1,0 +1,6 @@
+name: "Juniper Ash"
+email: "juniper@ash.test"
+booking: { label: "Talk to me" }
+redirects:
+  - { from: "/files/old-cv.pdf", to: "/files/cv.pdf" }
+  - { from: "/about.htm", to: "/" }

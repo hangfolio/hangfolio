@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { inferLabel, slug } from '../src/lib/links.ts';
 import { navItems, availablePages } from '../src/lib/nav.ts';
 import type { SiteYaml } from '../src/lib/site.ts';
+import { site as siteSchema } from '../src/schema/site.ts';
+import { parseOk } from './helpers.ts';
 
 test('labels are inferred from the host (SPEC 5.1)', () => {
   assert.equal(inferLabel('https://github.com/someone'), 'GitHub');
@@ -27,7 +29,7 @@ test('slugs: lowercase letters and digits joined by dashes', () => {
 });
 
 test('nav: only pages that exist, in order, plus explicit {label, href} items', () => {
-  const site = { name: 'A', email: 'a@b.test', cv: '/files/cv.pdf' } as SiteYaml;
+  const site = parseOk(siteSchema, { name: 'A', email: 'a@b.test', cv: '/files/cv.pdf', pages: { contact: false } });
   assert.deepEqual(navItems(site, availablePages(site)), [{ key: 'cv', label: 'CV', href: '/files/cv.pdf' }]);
   assert.deepEqual(navItems({ ...site, cv: undefined }, availablePages({ ...site, cv: undefined })), []);
   const explicit = { ...site, nav: ['projects', { label: 'Notes', href: '/notes' }, 'cv'] } as SiteYaml;

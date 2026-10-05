@@ -10,7 +10,7 @@ import { AstroError } from 'astro/errors';
 import { exampleBanner } from './lib/banner.ts';
 import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
-import { ROUTES } from './lib/routes.ts';
+import { pageRoutes, ROUTES, type Route } from './lib/routes.ts';
 import type { SiteYaml } from './lib/site.ts';
 import { terminalReport, wantsColor } from './validate/format.ts';
 import { counts, docsUrl, severity, validateSite, type Report } from './validate/index.ts';
@@ -29,6 +29,7 @@ const ICONS = [
 export default function hangfolio({ root, site, siteFile, urlFormat }: Options): AstroIntegration {
   let publicDir: URL;
   let report: Report | undefined;
+  let routes: Route[] = [];
   const print = (r: Report) => process.stdout.write(`\n${terminalReport(r, { color: wantsColor(process.stdout, process.env) })}\n`);
 
   return {
@@ -36,9 +37,6 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
     hooks: {
       'astro:config:setup': async ({ command, config, injectRoute, addWatchFile, updateConfig }) => {
         addWatchFile(siteFile);
-        for (const { pattern, entry } of ROUTES) {
-          injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
-        }
         if (command !== 'preview') {
           report = await validateSite(root, { mode: command === 'dev' ? 'dev' : 'build' });
           print(report);
@@ -59,7 +57,13 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
             setDevState(devStateOf(report), refresh);
           }
         }
-        const icons = ICONS.filter((icon) => existsSync(new URL(icon.file, config.publicDir)));
+        // The pages follow the site as it shows (an example booking block that is hidden adds no /meet).
+        const inPublic = (file: string) => existsSync(new URL(file, config.publicDir));
+        routes = [...ROUTES, ...pageRoutes(report?.visible ?? site, inPublic)];
+        for (const { pattern, entry } of routes) {
+          injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
+        }
+        const icons = ICONS.filter((icon) => inPublic(icon.file));
         const values = {
           site: report?.visible ?? site,
           build: { urlFormat, icons },
@@ -77,6 +81,16 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
                 load: (id: string) => (id === '\0' + VIRTUAL_ID ? source : undefined),
               },
             ],
+            // Every MDX post makes the bundler warn about a directive Astro adds itself
+            // ("use astro:head-inject"); it is harmless, and a site owner can do nothing about it.
+            build: {
+              rolldownOptions: {
+                onLog(level: string, log: { code?: string; message: string }, handler: (level: string, log: unknown) => void) {
+                  if (log.code === 'MODULE_LEVEL_DIRECTIVE' && log.message.includes('astro:head-inject')) return;
+                  handler(level, log);
+                },
+              },
+            },
           },
         });
       },
@@ -103,7 +117,7 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
         // Example files leave the build once site.yaml is the owner's (SPEC 5.2 rule 4).
         if (report && !report.demo) await rm(fileURLToPath(new URL('example/', dir)), { recursive: true, force: true });
         if (urlFormat !== 'preserve') return;
-        const patterns = ROUTES.filter((route) => route.dir).map((route) => route.pattern);
+        const patterns = routes.filter((route) => route.dir).map((route) => route.pattern);
         await relocateDirRoutes({ patterns, assets, dir, publicDir, logger });
       },
     },

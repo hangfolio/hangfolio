@@ -1,3 +1,4 @@
 name: "Juniper Ash"
 email: "juniper@ash.test"
 avatar: "/images/portrait.heic"
+pages: { card: true }

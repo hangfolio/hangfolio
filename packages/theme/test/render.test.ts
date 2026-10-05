@@ -52,7 +52,7 @@ describe('render: a full site at base /hangfolio', () => {
         '<div class="actions"><div class="cta">' +
         '<a href="/hangfolio/files/cv.pdf" class="btn"><svg/><span>Résumé</span><span class="pdf">PDF</span></a>' +
         '<a href="mailto:wren@halloway.test?subject=Summer%202027">Email</a>' +
-        '<a href="https://example.org/book">Book a call</a>' +
+        '<a href="/hangfolio/meet">Book a call</a>' +
         '</div>' +
         '<ul class="prof" aria-label="Profiles"><li><a class="soft" href="https://github.com/hangfolio">GitHub<svg class="ext"/></a></li><li><a class="soft" href="mailto:lab@x.test">Lab</a></li></ul>' +
         '</div></section>',
@@ -274,8 +274,9 @@ describe('render: the demo site', () => {
   });
   after(() => r?.close());
 
-  test('Hero: no Cal.com link for the fictional booking name before the booking page exists', async () => {
+  test('Hero: booking goes to the booking page (its stand-in), never to Cal.com with the fictional name', async () => {
     const html = await r.render('Hero', {});
-    assert.doesNotMatch(html, /cal\.com|Book a 1:1/);
+    assert.doesNotMatch(html, /cal\.com/);
+    assert.match(html, /<a href="\/meet">Book a 1:1<\/a>/);
   });
 });

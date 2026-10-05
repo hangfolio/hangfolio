@@ -73,9 +73,19 @@ export const booking = z
     path: pagePath.default('/meet'),
     lede: md.optional(),
     emailSubject: text.default('Meeting request'),
-    keepPageWhenOff: bool(false),
+    keepPageWhenOff: bool(false).describe('true: with neither calcom nor link (booking paused), the page stays and points to email.'),
   })
-  .check(exactlyOne(['calcom', 'link']));
+  .check((ctx) => {
+    // Neither calcom nor link means booking is paused; that is allowed only to keep the page.
+    if (ctx.value.calcom === undefined && ctx.value.link === undefined) {
+      if (ctx.value.keepPageWhenOff) return;
+      const message =
+        'needs one of calcom or link. To pause booking but keep the page (it then points to email), ' +
+        'add keepPageWhenOff: true; to turn booking off, delete the whole booking block';
+      return void fail(ctx, ctx.value, 'E202', message);
+    }
+    exactlyOne(['calcom', 'link'])(ctx);
+  });
 
 const pageFields = { title: text.optional(), description: text.optional(), heading: text.optional(), lede: md.optional() };
 const page = (extra: Record<string, z.ZodType> = {}) =>
@@ -90,12 +100,25 @@ export const pages = z
     writing: page(),
     contact: page(),
     meet: page(),
-    card: page().describe('The phone-friendly card with a QR code to your site; on at /card.'),
+    card: page().describe('Reserved for a later version; leave it out.'),
     notFound: z.union([z.boolean(), z.strictObject(pageFields)]).optional(),
   })
   .prefault({});
 
-export const redirect = z.strictObject({ from: pagePath, to: href });
+// A redirect is an HTML page with a refresh, so it can only stand where a page is read:
+// /about, /about/ or /about.html. Written into old-cv.pdf or feed.xml it would break that file.
+const redirectFrom = pagePath.check((ctx) => {
+  if (typeof ctx.value !== 'string') return; // pagePath has reported it
+  const last = ctx.value.slice(ctx.value.lastIndexOf('/') + 1);
+  const extension = /\.([A-Za-z0-9]+)$/.exec(last)?.[1];
+  if (extension === undefined || /^html?$/i.test(extension)) return;
+  const message =
+    `must be a page address like /about, /about/ or /about.html, because a redirect can't stand in for a .${extension} file. ` +
+    `To keep an old file's address working, put the file itself at that path in public/ (you wrote ${show(ctx.value)})`;
+  fail(ctx, ctx.value, 'E202', message);
+});
+
+export const redirect = z.strictObject({ from: redirectFrom, to: href });
 
 export const seo = z.strictObject({
   description: text.optional(),
