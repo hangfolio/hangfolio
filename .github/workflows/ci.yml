@@ -1,0 +1,234 @@
+# Engine CI (SPEC 10.2): every pull request and every push to main runs each gate as its own job,
+# so a red check names what broke. Actions are pinned to full commit SHAs (the tag is in the
+# comment); Dependabot's github-actions ecosystem can bump them.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update-screenshots:
+        description: Take new screenshot baselines on the CI runner and upload them as an artifact
+        type: boolean
+        default: false
+
+# No job needs more than to read the repository.
+permissions: {}
+
+# A new push to a pull request replaces its running checks; runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Google Chrome as installed on GitHub's Ubuntu runners; the tests never download a browser.
+  CHROME_PATH: /usr/bin/google-chrome
+  NO_COLOR: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+
+jobs:
+  unit:
+    name: Unit and golden tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: Build the package (JSON Schemas, starter-values.json) and check nothing changed
+        run: |
+          npm run build -w packages/theme
+          git diff --exit-code -- packages/theme/schema packages/theme/starter-values.json
+      # unit tests, render tests and the golden messages of every fixtures/broken case
+      - run: npm test
+
+  tokens:
+    name: Token contrast and frozen tokens
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      # Both files import only node: modules and the theme's own source, so no npm ci is needed.
+      - name: Every text and background pair meets 4.5:1, and tokens.css equals the frozen snapshot
+        working-directory: packages/theme
+        run: node --test --test-reporter=spec test/token-contrast.test.ts test/tokens.test.ts
+
+  matrix:
+    name: Build matrix and hangfolio verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # the starter and every fixture x base / and /hangfolio x urlFormat preserve and directory
+      - run: npm run test:matrix
+
+  no-network:
+    name: Build with the network blocked
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      # Every request goes to a proxy on a closed port. NODE_USE_ENV_PROXY makes Node's own fetch
+      # and https use it too (Node 22.21 and later).
+      HTTP_PROXY: http://127.0.0.1:9
+      HTTPS_PROXY: http://127.0.0.1:9
+      ALL_PROXY: http://127.0.0.1:9
+      http_proxy: http://127.0.0.1:9
+      https_proxy: http://127.0.0.1:9
+      all_proxy: http://127.0.0.1:9
+      NO_PROXY: ''
+      no_proxy: ''
+      NODE_USE_ENV_PROXY: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: npm ci (the one step allowed to use the network)
+        run: npm ci
+        env:
+          HTTP_PROXY: ''
+          HTTPS_PROXY: ''
+          ALL_PROXY: ''
+          http_proxy: ''
+          https_proxy: ''
+          all_proxy: ''
+          NODE_USE_ENV_PROXY: ''
+      - name: Check that the network is blocked
+        run: |
+          node -e "fetch('https://registry.npmjs.org/').then(() => { console.error('The network is reachable; this job would prove nothing.'); process.exit(1); }, (e) => console.log('blocked:', e.cause?.code ?? e.message))"
+      - name: Build every site offline
+        run: npm run build
+        env:
+          SITE_PAGES_URL: https://u.github.io/hangfolio
+          npm_config_offline: 'true'
+
+  e2e:
+    name: End-to-end and theme behaviour
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The browser tests skip when Chrome is missing, so make sure it is there.
+      - run: '"$CHROME_PATH" --version'
+      # builds at both bases, the starter scenario, theme toggle, dev overlay, home page layout,
+      # reduced motion and text contrast in both themes
+      - run: npm run test:e2e
+
+  a11y:
+    name: axe in light and dark
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: '"$CHROME_PATH" --version'
+      - run: npm run test:a11y
+
+  screenshots:
+    name: Screenshots
+    # The baselines are taken on macOS (test/screenshots/baseline/taken-with.json); text renders
+    # differently on Linux.
+    runs-on: macos-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      CHROME_PATH: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+      UPDATE_SCREENSHOTS: ${{ inputs.update-screenshots && '1' || '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: '"$CHROME_PATH" --version'
+      - run: npm run test:screenshots
+      - name: Upload the new screenshots and diffs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshot-diffs
+          path: .tmp/screenshots/
+          include-hidden-files: true
+          retention-days: 14
+      - name: Upload the new baselines
+        if: inputs.update-screenshots
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: screenshot-baselines
+          path: packages/theme/test/screenshots/baseline/
+          retention-days: 14
+
+  docs:
+    name: Docs links and error-code anchors
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      # Reads only Markdown and the theme's error catalogue, so no npm ci is needed.
+      - name: Every error code has a troubleshooting anchor, and every docs link resolves
+        working-directory: packages/theme
+        run: node --test --test-reporter=spec test/docs/*.test.ts
