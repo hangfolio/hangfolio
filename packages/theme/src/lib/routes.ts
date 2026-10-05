@@ -45,3 +45,14 @@ export function pageRoutes(site: SiteYaml, inPublic: (file: string) => boolean =
   }
   return routes;
 }
+
+/**
+ * The publications page at pages.publications.path, while it is on and `show` (there is
+ * something on it, or it is dev). A path ending in / is written as <path>/index.html.
+ */
+export function publicationsRoute(site: SiteYaml, show: boolean): Route[] {
+  const papers = site.pages.publications;
+  if (!papers || !show) return [];
+  const { route, dir } = routeShape(papers.path);
+  return [{ pattern: route, entry: 'publications.astro', dir }];
+}

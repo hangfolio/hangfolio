@@ -4,12 +4,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findAvatar } from '../lib/avatar.ts';
+import { readBib as parseBibFile } from '../lib/bib.ts';
 import { resolveSiteUrl } from '../lib/site-url.ts';
 import { isDemoIdentity, starterValues, type StarterValues } from '../lib/starter-values.ts';
 import { absUrl } from '../lib/url.ts';
 import { checkPlumbing } from '../schema/plumbing.ts';
 import type { Site } from '../schema/site.ts';
 import { baseLinkIssues } from './base-links.ts';
+import { bibIssues } from './bib-checks.ts';
 import { scanBib } from './bib-keys.ts';
 import { cardPath, hasSharp, localQrNotice, photoIssue, qrIssue } from './card.ts';
 import { loadContent, loadSite, readBib, type Loaded } from './content-files.ts';
@@ -61,6 +63,8 @@ export async function validateSite(root: string, options: Options = {}): Promise
   const bibText = readBib(root);
   const bib = bibText && { file: bibText.file, entries: scanBib(bibText.text) };
   issues.push(...siteResult.issues, ...content.issues, ...plumbing(root));
+  const parsedBib = bibText && parseBibFile(bibText.text);
+  if (bibText && parsedBib) issues.push(...parsedBib.problems.map((problem) => ({ code: 'W301' as const, file: bibText.file, line: problem.line, col: problem.col, message: problem.message })));
 
   const { origin, base } = resolveSiteUrl(site?.url, env);
   const home = absUrl('/', origin, base);
@@ -93,6 +97,10 @@ export async function validateSite(root: string, options: Options = {}): Promise
   const fileTargets = shown.filter((f) => f.raw).map((loaded) => ({ loaded, data: withoutHiddenItems(loaded, !demo) }));
   if (siteFile && visible) fileTargets.unshift({ loaded: siteFile, data: visible });
   issues.push(...missingFiles(root, fileTargets, base), ...largeFiles(root));
+  if (bibText && parsedBib && visible) {
+    const featured = shown.find((file) => file.kind === 'home')?.data?.research?.featured;
+    issues.push(...bibIssues({ root, bib: bibText, entries: parsedBib.entries, loaded: content.loaded, hiddenFiles, demo, pageOn: Boolean(visible.pages.publications), featured }));
+  }
 
   for (const file of [siteFile, ...content.loaded]) {
     if (file) issues.push(...baseLinkIssues(file.file, file.source.text, base));

@@ -1,0 +1,4 @@
+# The publications page is off, so only the paper the home page features is checked.
+name: "Juniper Ash"
+email: "juniper@ash.test"
+pages: { publications: false }

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseBib } from '../src/lib/bib.ts';
-import { citationView, isOwner, linkHref, ownerNames, personOf } from '../src/lib/citation.ts';
+import { citationView, isOwner, isUnsafeHref, linkHref, ownerNames, personOf } from '../src/lib/citation.ts';
 import { publication } from '../src/schema/publication.ts';
 import { site as siteSchema } from '../src/schema/site.ts';
 import { parseOk } from './helpers.ts';
@@ -38,6 +38,43 @@ test('accents and case are set aside, and advanced.nameParts sets the family nam
   assert.equal(isOwner({ given: 'Zoë Núñez', family: 'García' }, names), false);
 });
 
+test('author matching: "Last, First" or "First Last", initials, accents and letters such as ø and ß', () => {
+  const names = ownerNames(parseOk(siteSchema, { name: 'Søren Straßer', email: 's@s.test' }));
+  for (const author of [
+    { given: 'Søren', family: 'Straßer' },
+    { given: 'Soren', family: 'Strasser' },
+    { given: 'S.', family: 'STRASSER' },
+    { literal: 'Søren Straßer' },
+    { literal: 'Strasser, S.' },
+  ]) {
+    assert.equal(isOwner(author, names), true, JSON.stringify(author));
+  }
+  assert.equal(isOwner({ given: 'Sara', family: 'Strasser' }, names), false);
+});
+
+test('author matching: a family name of several words, a prefix and a suffix', () => {
+  const garcia = ownerNames(parseOk(siteSchema, { name: 'Gabriel García Márquez', email: 'g@g.test' }));
+  assert.equal(isOwner({ given: 'Gabriel', family: 'García Márquez' }, garcia), true);
+  assert.equal(isOwner({ given: 'G.', family: 'Garcia Marquez' }, garcia), true);
+  assert.equal(isOwner({ given: 'Gabriel García', family: 'Márquez' }, garcia), true);
+  assert.equal(isOwner({ given: 'Ana', family: 'García Márquez' }, garcia), false);
+
+  const berg = ownerNames(parseOk(siteSchema, { name: 'Lotte van der Berg', email: 'l@b.test' }));
+  assert.equal(isOwner({ given: 'Lotte', prefix: 'van der', family: 'Berg' }, berg), true);
+  assert.equal(isOwner({ given: 'L.', family: 'Berg' }, berg), true);
+
+  const junior = ownerNames(parseOk(siteSchema, { name: 'Anders Berg Jr.', email: 'a@b.test' }));
+  assert.equal(isOwner({ given: 'Anders', family: 'Berg', suffix: 'Jr.' }, junior), true);
+});
+
+test('author matching: nameVariants add other spellings', () => {
+  const names = ownerNames(parseOk(siteSchema, { name: 'Mei Tanabe', email: 'm@t.test', nameVariants: ['Tanabe-Ross, Mei', 'M. Ross'] }));
+  assert.equal(isOwner({ given: 'Mei', family: 'Tanabe-Ross' }, names), true);
+  assert.equal(isOwner({ given: 'M', family: 'Ross' }, names), true);
+  assert.equal(isOwner({ given: 'Mei', family: 'Tanabe' }, names), true);
+  assert.equal(isOwner({ given: 'Mei', family: 'Rossi' }, names), false);
+});
+
 test('link fields: a DOI goes to doi.org, a bare file name to /files/, anything else as written', () => {
   assert.equal(linkHref('doi', '10.5555/x'), 'https://doi.org/10.5555/x');
   assert.equal(linkHref('doi', 'doi:10.5555/x'), 'https://doi.org/10.5555/x');
@@ -46,6 +83,13 @@ test('link fields: a DOI goes to doi.org, a bare file name to /files/, anything 
   assert.equal(linkHref('pdf', '/papers/paper.pdf'), '/papers/paper.pdf');
   assert.equal(linkHref('pdf', 'files/paper.pdf'), 'files/paper.pdf');
   assert.equal(linkHref('code', 'https://example.org/code'), 'https://example.org/code');
+  assert.equal(linkHref('code', 'www.example.org/code'), 'https://www.example.org/code');
+});
+
+test('a link field with a scheme that runs code is left out', () => {
+  const [bad] = parseBib('@misc{k, title = {T}, url = {javascript:alert(1)}, code = {https://example.org/code}, slides = { JavaScript:x}}');
+  assert.equal(isUnsafeHref('data:text/html,x'), true);
+  assert.deepEqual(citationView(bad, undefined, site).links, [{ label: 'Code', href: 'https://example.org/code' }]);
 });
 
 const [entry, scholar] = parseBib(String.raw`

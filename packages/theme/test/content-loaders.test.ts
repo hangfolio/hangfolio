@@ -155,6 +155,9 @@ test('publications.bib: one entry per BibTeX entry, by key; example entries only
     type: 'article',
     fields: { title: 'Mine', year: '2024' },
     names: { author: [{ given: 'Wren', family: 'Halloway' }] },
+    raw: '@article{mine2024, title={Mine}, author={Halloway, Wren}, year={2024}}',
+    line: 1,
+    endLine: 1,
   });
   writeFileSync(file, '@misc{later, title={Later}}\n');
   await owner.fire('change', file);

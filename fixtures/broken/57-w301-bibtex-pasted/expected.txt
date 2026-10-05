@@ -1,0 +1,3 @@
+content/publications.bib:8:1 W301 Line 8 looks like the start of the entry ash2025tides, but it has no @ in front, so the entry is left out. Write it as @article{ash2025tides,
+content/publications.bib:14:1 W301 Couldn't read the entry ash2025buoys (line 15 uses curly quotes “ ”, which BibTeX doesn't read; write title = {…} instead). It's skipped; the rest of the file is fine.
+content/publications.bib:26:1 W301 Line 26 starts a reference in RIS format, not BibTeX, so it is left out. Copy it as BibTeX instead (in Google Scholar: Cite, then BibTeX).

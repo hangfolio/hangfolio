@@ -16,8 +16,9 @@ import ResultsStrip from '../components/ResultsStrip.astro';
 import SectionHead from '../components/SectionHead.astro';
 import WorkItem from '../components/WorkItem.astro';
 import Base from '../layouts/Base.astro';
-import type { BibEntry } from '../lib/bib.ts';
-import { citationView, type Extras } from '../lib/citation.ts';
+import { publicationsContent } from '../lib/bib-content.ts';
+import { bibtexAnchor, featuredKeys } from '../lib/bib-page.ts';
+import { citationView } from '../lib/citation.ts';
 import { homeEducation, homeJobs, homeNews, homePosts, planSections, showsResearch } from '../lib/home.ts';
 import { pageContent } from '../lib/collections.ts';
 import { availablePages, pagePath } from '../lib/nav.ts';
@@ -28,13 +29,25 @@ import { home as homeSchema } from '../schema/home.ts';
 const home = (await getEntry('home', 'home'))?.data ?? homeSchema.parse({});
 const anchors = site.advanced.anchors;
 const locale = localeTag(site);
-const research = showsResearch(home) ? home.research : undefined;
-const available = availablePages(site, { ...(await pageContent()), research: Boolean(research) });
+const content = await pageContent();
+const publications = await publicationsContent();
+const papersPage = content.publications ? pagePath(site, 'publications') : undefined;
+
+// The featured papers: research.featured, then those marked selected = {true} or featured: true.
+// Each gets a [BibTeX] link to its block on the publications page.
+const papers = featuredKeys(publications.entries, publications.extrasData, home.research?.featured).map((key) => {
+  const entry = publications.entries.find((e) => e.key === key)!;
+  const extras = publications.extrasData.get(key);
+  const view = citationView(entry, extras, site);
+  return papersPage ? { ...view, links: [...view.links, { label: 'BibTeX', href: `${papersPage}#${bibtexAnchor(key, extras)}` }] } : view;
+});
+// Papers alone are enough for a research section.
+const research = showsResearch(home) ? home.research : papers.length > 0 && home.sections.includes('research') ? { approach: [] } : undefined;
+const available = availablePages(site, { ...content, research: Boolean(research) });
 /** A section heading's link to one of the site's pages, once that page exists. */
 const pageLink = (key: 'projects' | 'publications' | 'experience' | 'writing', label: string) => {
-  const page = site.pages[key];
-  if (!available.has(key) || !page) return undefined;
-  return { label, href: key === 'publications' ? page.path : pagePath(site, key)! };
+  const href = available.has(key) ? pagePath(site, key) : undefined;
+  return href ? { label, href } : undefined;
 };
 
 const featured = featuredProjects(await getCollection('projects'));
@@ -44,12 +57,6 @@ const education = homeEducation(experience);
 const news = homeNews((await getEntry('news', 'news'))?.data.items ?? [], home.counts.news);
 // Posts exist only while the writing pages are on.
 const posts = site.pages.writing ? homePosts(await getCollection('writing'), home.counts.writing) : [];
-
-// The featured paper: its BibTeX entry, and its extras file if it has one
-const key = research?.featured;
-const entry = key ? ((await getEntry('bib', key))?.data as BibEntry | undefined) : undefined;
-const extras = key ? (await getEntry('publications', key))?.data : undefined;
-const paper = entry && citationView(entry, extras?.status === 'in-preparation' ? undefined : (extras as Extras | undefined), site);
 
 const plan = planSections(home.sections, anchors, {
   highlights: Boolean(home.highlights),
@@ -80,7 +87,7 @@ const plan = planSections(home.sections, anchors, {
     }
     if (section === 'research' && research) {
       const link = resolveHeadingLink(research.link, site) ?? pageLink('publications', 'Publications');
-      return <ResearchBlock id={id} research={research} link={link} paper={paper} />;
+      return <ResearchBlock id={id} research={research} link={link} papers={papers} />;
     }
     if (section === 'experience') {
       return (

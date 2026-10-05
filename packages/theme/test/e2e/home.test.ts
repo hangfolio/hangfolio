@@ -94,6 +94,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       assert.deepEqual(nav, [
         `Research ${base}/#research`,
         `Projects ${base}/projects`,
+        `Publications ${base}/publications`,
         `Experience ${base}/experience`,
         `Writing ${base}/writing/`,
         `CV ${base}/files/cv.pdf`,
@@ -119,7 +120,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       assert.equal(
         links,
         `<a href="${base}/files/driftnet.pdf">[PDF]</a><a href="https://doi.org/10.5555/exsb24.0042">[DOI]</a><a href="https://github.com/hangfolio/hangfolio">[Code]</a>` +
-          '<a href="https://example.org/driftnet">[Dataset]</a><a href="https://hangfolio.github.io/">[Talk notes]</a>',
+          `<a href="https://example.org/driftnet">[Dataset]</a><a href="https://hangfolio.github.io/">[Talk notes]</a><a href="${base}/publications#bibtex-rook2024driftnet">[BibTeX]</a>`,
       );
       assert.match(main, /<div class="m label">Teaching<\/div><p class="small-text">TA, Operating Systems \(Fall 2024\) and Compilers \(Spring 2025\)\.<\/p>/);
     });

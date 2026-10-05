@@ -35,6 +35,7 @@ nav: [research, projects, writing, cv, booking]
 
 pages:
   projects: { lede: "Mostly scheduler tooling from the testbed, plus one dataset and a small library." }
+  publications: { prepAside: "Both drafts grew out of the edge lab's power-metered testbed. Preprints will be linked here once they are out." }
   experience: { path: "/work-experience", heading: "Work Experience", lede: "Industry roles, lab work and teaching, most recent first." }
   writing: { lede: "Field notes from the testbed, mostly about radios and flaky tests." }
 

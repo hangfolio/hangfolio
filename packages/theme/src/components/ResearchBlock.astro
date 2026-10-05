@@ -1,8 +1,8 @@
 ---
 // The home page's research section (home.yaml `research`, SPEC 5.4), each part under a label
 // that hangs in the margin: the problem, the approach (numbered steps, each with an optional
-// chip), the status, then the featured paper (a Citation) and teaching. The section carries the
-// anchor (advanced.anchors.research) and its heading the anchor plus "-h"; the paper is
+// chip), the status, then the featured papers (Citations) and teaching. The section carries the
+// anchor (advanced.anchors.research) and its heading the anchor plus "-h"; the first paper is
 // #publication, so links into the research section keep working.
 import Citation from './Citation.astro';
 import Hang from './Hang.astro';
@@ -19,9 +19,12 @@ interface Props {
   link?: { label: string; href: string };
   /** The featured paper (research.featured) */
   paper?: CitationView;
+  /** The featured papers (research.featured, then those marked selected or featured); replaces `paper` */
+  papers?: CitationView[];
 }
 
 const { id, research, link, paper } = Astro.props;
+const papers = Astro.props.papers ?? (paper ? [paper] : []);
 const { problem, approach, status, teaching } = research;
 ---
 <section id={id} class="block" aria-labelledby={`${id}-h`} data-section="research">
@@ -47,14 +50,14 @@ const { problem, approach, status, teaching } = research;
       {status && <Hang label="Status"><p class="essay" set:html={inlineMd(status)} /></Hang>}
     </div>
   )}
-  {paper && (
-    <Hang class="pub" id="publication">
+  {papers.map((paper, i) => (
+    <Hang class="pub" id={i === 0 ? 'publication' : undefined}>
       {paper.year && <span slot="m">{paper.year}</span>}
       <div class="pub-body">
-        <h3 class="eyebrow faint">Publication</h3>
+        {i === 0 && <h3 class="eyebrow faint">{papers.length === 1 ? 'Publication' : 'Publications'}</h3>}
         <Citation view={paper} />
       </div>
     </Hang>
-  )}
+  ))}
   {teaching && <Hang label="Teaching"><p class="small-text" set:html={inlineMd(teaching)} /></Hang>}
 </section>

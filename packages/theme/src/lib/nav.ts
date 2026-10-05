@@ -9,12 +9,13 @@ export type NavItem = { key?: string; label: string; href: string };
 
 /**
  * What the content folder holds, as far as pages depend on it (lib/collections.ts pageContent):
- * `research` is the home page's research section (lib/home.ts showsResearch); the others are
- * listed projects, experience entries and published posts.
+ * `research` is the home page's research section (lib/home.ts showsResearch); `publications`
+ * that the publications page has a paper or an in-preparation item (lib/bib-content.ts); the
+ * others are listed projects, experience entries and published posts.
  */
-export type PageContent = { research?: boolean; projects?: boolean; experience?: boolean; writing?: boolean };
+export type PageContent = { research?: boolean; projects?: boolean; publications?: boolean; experience?: boolean; writing?: boolean };
 
-type PageKey = 'projects' | 'experience' | 'writing' | 'contact' | 'meet';
+type PageKey = 'projects' | 'publications' | 'experience' | 'writing' | 'contact' | 'meet';
 
 /** The address of one of site.yaml's pages, as links and canonical URLs write it; undefined when it is off. */
 export function pagePath(site: SiteYaml, key: PageKey): string | undefined {
@@ -25,12 +26,11 @@ export function pagePath(site: SiteYaml, key: PageKey): string | undefined {
 /**
  * The keys whose page exists: a content page while it is on and has content, the CV, the
  * booking page while booking is open (not paused), and the contact page while it is on.
- * TODO(M5): publications.
  */
 export function availablePages(site: SiteYaml, content: PageContent = {}): Set<string> {
   const keys = new Set<string>();
   if (content.research) keys.add('research');
-  for (const key of ['projects', 'experience', 'writing'] as const) if (content[key] && site.pages[key]) keys.add(key);
+  for (const key of ['projects', 'publications', 'experience', 'writing'] as const) if (content[key] && site.pages[key]) keys.add(key);
   if (site.cv) keys.add('cv');
   const booking = bookingMode(site);
   if (site.pages.meet && booking && booking !== 'off') keys.add('booking');
@@ -38,13 +38,13 @@ export function availablePages(site: SiteYaml, content: PageContent = {}): Set<s
   return keys;
 }
 
-const LABELS = { projects: 'Projects', experience: 'Experience', writing: 'Writing', contact: 'Contact' };
+const LABELS = { projects: 'Projects', publications: 'Publications', experience: 'Experience', writing: 'Writing', contact: 'Contact' };
 
 function itemFor(key: string, site: SiteYaml): NavItem | undefined {
   if (key === 'research') return { key, label: 'Research', href: `/#${site.advanced.anchors.research}` };
   if (key === 'cv' && site.cv) return { key, label: 'CV', href: site.cv };
   if (key === 'booking' && site.booking && site.pages.meet) return { key, label: site.booking.label, href: pagePath(site, 'meet')! };
-  if (key === 'projects' || key === 'experience' || key === 'writing' || key === 'contact') {
+  if (key === 'projects' || key === 'publications' || key === 'experience' || key === 'writing' || key === 'contact') {
     const href = pagePath(site, key);
     return href ? { key, label: LABELS[key], href } : undefined;
   }

@@ -9,8 +9,9 @@ import type { AstroIntegration } from 'astro';
 import { AstroError } from 'astro/errors';
 import { exampleBanner } from './lib/banner.ts';
 import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
+import { hasPublicationContent } from './lib/bib-file.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
-import { pageRoutes, ROUTES, type Route } from './lib/routes.ts';
+import { pageRoutes, publicationsRoute, ROUTES, type Route } from './lib/routes.ts';
 import type { SiteYaml } from './lib/site.ts';
 import { terminalReport, wantsColor } from './validate/format.ts';
 import { counts, docsUrl, severity, validateSite, type Report } from './validate/index.ts';
@@ -58,8 +59,11 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
           }
         }
         // The pages follow the site as it shows (an example booking block that is hidden adds no /meet).
+        // The publications page exists only with something on it; in dev it is always there.
+        const visible = report?.visible ?? site;
         const inPublic = (file: string) => existsSync(new URL(file, config.publicDir));
-        routes = [...ROUTES, ...pageRoutes(report?.visible ?? site, inPublic)];
+        const papers = command === 'dev' || hasPublicationContent(root, report?.demo ?? false);
+        routes = [...ROUTES, ...pageRoutes(visible, inPublic), ...publicationsRoute(visible, papers)];
         for (const { pattern, entry } of routes) {
           injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
         }

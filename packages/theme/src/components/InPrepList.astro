@@ -1,0 +1,86 @@
+---
+// Papers in preparation (content/publications/<id>.md with status: in-preparation), numbered in
+// the margin with the optional margin text, each with its title, chip, authors and text exactly
+// as written; then the optional aside (pages.publications.prepAside).
+import type { PrepView } from '../lib/bib-page.ts';
+import { inlineMd } from '../lib/inline-md.ts';
+import { contentUrl } from '../lib/url.ts';
+
+interface Props {
+  items: PrepView[];
+  /** Markdown */
+  aside?: string;
+}
+
+const { items, aside } = Astro.props;
+---
+<ol class="prep">
+  {items.map((item) => (
+    <li class="hang">
+      <div class="m"><span class="n">{item.number}</span>{item.margin && <span>{item.margin}</span>}</div>
+      <div class="item">
+        <div class="title-row">
+          <h3>{item.title}</h3>
+          {item.chip && <span class="chip">{item.chip}</span>}
+        </div>
+        {item.authors.length > 0 && (
+          <p class="authors">{item.authors.map((author, i) => {
+            const name = author.me ? <span class="me">{author.name}</span> : author.name;
+            return <>{i > 0 && ', '}{author.url ? <a href={contentUrl(author.url)}>{name}</a> : name}</>;
+          })}</p>
+        )}
+        <p set:html={inlineMd(item.text)} />
+      </div>
+    </li>
+  ))}
+</ol>
+{aside && <p class="aside" set:html={inlineMd(aside)} />}
+
+<style>
+  .prep {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .item {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 0;
+  }
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .25rem .75rem;
+  }
+
+  .title-row h3 {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  .item p {
+    font-size: .9375rem;
+    line-height: 1.6;
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .item .authors {
+    color: var(--fg);
+  }
+
+  .aside {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-size: .875rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+</style>
