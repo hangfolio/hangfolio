@@ -11,8 +11,6 @@ const { version } = require('../package.json');
 const [command, ...args] = process.argv.slice(2);
 
 const ASTRO_COMMANDS = new Set(['dev', 'build', 'preview']);
-// TODO(M7): verify checks dist/.
-const STUBS = new Set(['verify']);
 const USAGE = `hangfolio ${version}
 
 Usage: hangfolio <command> [options]
@@ -22,7 +20,8 @@ Usage: hangfolio <command> [options]
   preview   Serve the built dist/ folder
   check     Check site.yaml and content/ for mistakes (--github: annotations
             and a job summary on GitHub Actions)
-  verify    Check the links and files in dist/`;
+  verify    Check the links, files and addresses in the built site (dist/;
+            --github: annotations and a job summary)`;
 
 if (command === '--version' || command === '-v') {
   console.log(version);
@@ -33,15 +32,16 @@ if (command === '--version' || command === '-v') {
 } else if (command === 'check') {
   const { runCheck } = await importTs('../src/validate/cli.ts');
   process.exitCode = await runCheck({ root: process.cwd(), args, env: process.env, out: process.stdout, err: process.stderr });
-} else if (STUBS.has(command)) {
-  console.log(`hangfolio ${command}: not available yet in ${version}; nothing was checked.`);
+} else if (command === 'verify') {
+  const { runVerify } = await importTs('../src/lib/verify-cli.ts');
+  process.exitCode = await runVerify({ root: process.cwd(), args, env: process.env, out: process.stdout, err: process.stderr });
 } else {
   console.error(command ? `hangfolio: unknown command '${command}'\n\n${USAGE}` : USAGE);
   process.exit(1);
 }
 
-// The theme ships TypeScript, and Node can't strip types from files under node_modules, so the
-// check loads through Vite's module runner, from the Vite that the theme's Astro uses.
+// The theme ships TypeScript, and Node can't strip types from files under node_modules, so check
+// and verify load through Vite's module runner, from the Vite that the theme's Astro uses.
 async function importTs(path) {
   const astro = createRequire(require.resolve('astro/package.json'));
   const { runnerImport } = await import(pathToFileURL(astro.resolve('vite')).href);

@@ -8,7 +8,10 @@ Test sites that CI builds against the theme. Each fixture is a folder with its o
 - `owner-like`: a fictional site with the same home page shape as the reference design the theme comes from: the same sections in the same order, the same item counts (four results, four featured projects with a terminal, metrics and bars, a research block with three approach steps and a featured paper, five jobs, three education lines, four news items, two posts) and about the same text lengths. It also sets the generic options that site needs (pinned anchors, the publication's anchors, a `/work-experience` path with its own heading, the redirects `about.html` and `about/`, a time zone, a title suffix, a Google verification file, `booking.keepPageWhenOff`, a `minutes` pin, and its own `robots.txt` and `images/manifest.json`). `npm run test:e2e` checks it and builds it at both bases, and `npm run test:a11y` runs axe on it. The owner's local fidelity check compares its home page with the reference design.
 - `broken`: not a site but 30+ small cases, each with one mistake and its exact expected messages (`npm run test:golden`; see `broken/README.md`).
 
-Planned: `project-site` and `user-site`.
+- `user-site`: a site in a `<owner>.github.io` repository, served at the root of `https://u.github.io/`, that links to one of the owner's project sites with its full address.
+- `project-site`: a site in an ordinary repository, served at `https://u.github.io/field-notes/`, that links to the owner's user site and to a sibling project with full addresses.
+
+`npm run test:matrix` builds the starter and every fixture with a `package.json` at base `/` and `/hangfolio`, in both URL formats, and runs `hangfolio verify` on each build. It also builds `user-site` and `project-site` the way GitHub does before Pages is set up, with the address taken from the repository name.
 
 Each site uses the same plumbing files as `starter/` (`astro.config.mjs` and `src/content.config.ts`). The sites use none of the starter's example values, so example mode (SPEC 5.2) hides nothing in them; only some `broken` cases use them on purpose.
 

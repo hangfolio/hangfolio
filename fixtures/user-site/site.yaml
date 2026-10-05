@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
+# fixtures/user-site: a site in the repository <owner>.github.io, served at the root of
+# https://u.github.io/ beside the owner's project sites (SPEC 3.3). It links to one of them with its
+# full address, which hangfolio verify must accept as another site. Juno Halvorsen is invented.
+name: "Juno Halvorsen"
+tagline: "I measure how tides reshape small harbours."
+role: "Coastal engineer"
+email: "juno@halvorsen.test"
+links:
+  - { url: "https://u.github.io/tide-tables/", label: "Tide tables" }
+  - "https://github.com/hangfolio/hangfolio"

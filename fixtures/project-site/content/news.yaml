@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/news.json
+items:
+  - { date: 2026-07, text: "Moved the [log reader](https://u.github.io/log-reader/) to its own site." }
+  - { date: 2026-02, text: "Gave a [talk](/files/slides.pdf) on sensor clocks." }
