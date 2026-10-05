@@ -1,0 +1,19 @@
+# Keeps your site up to date: once a month, a pull request for a new theme release and one for the
+# deploy workflow. Each one builds your site first; merging it publishes the update.
+# hangfolio-plumbing: 1
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    allow: [{ dependency-name: hangfolio }]
+    open-pull-requests-limit: 1
+    commit-message: { prefix: "Update site theme" }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    # build.yml and deploy.yml move to a new major together, in one pull request (S7).
+    groups:
+      engine:
+        patterns: ["hangfolio/hangfolio/*"]
+    commit-message: { prefix: "Update site engine" }
