@@ -40,8 +40,8 @@ const PENDING: Record<string, string[]> = {
   'fixtures/owner-like': ['/writing/idle-radio-drain/', '/writing/pondskip-flaky-tests/'],
 };
 
-function run(cwd: string, args: string[], base: string) {
-  const env = { ...process.env, SITE_PAGES_URL: `${ORIGIN}${base === '/' ? '' : base}`, NO_COLOR: '1' };
+function run(cwd: string, args: string[], base: string, extra: Record<string, string | undefined> = { SITE_PAGES_URL: `${ORIGIN}${base === '/' ? '' : base}` }) {
+  const env = { ...process.env, GITHUB_ACTIONS: undefined, GITHUB_REPOSITORY: undefined, SITE_PAGES_URL: undefined, NO_COLOR: '1', ...extra };
   const result = spawnSync(process.execPath, [BIN, ...args], { cwd, env, encoding: 'utf8' });
   return { status: result.status, output: `${result.stdout}${result.stderr}` };
 }
@@ -90,3 +90,33 @@ for (const dir of SITES) {
     });
   }
 }
+
+// A validation build on GitHub before Pages is set up (SPEC 7.1, source 3): no SITE_PAGES_URL, so
+// build and verify both take the address from the repository name. The two fixtures named for
+// these cases link to their neighbours on https://u.github.io with full addresses.
+describe('the address from the repository name, as on GitHub before Pages is set up', () => {
+  const cases = [
+    { dir: 'fixtures/user-site', repository: 'u/u.github.io', home: `${ORIGIN}/` },
+    { dir: 'fixtures/project-site', repository: 'u/field-notes', home: `${ORIGIN}/field-notes/` },
+  ];
+  for (const { dir, repository, home } of cases) {
+    test(`${dir} as ${repository}: built and verified for ${home}`, (t) => {
+      if (!existsSync(join(REPO, dir))) return t.skip(`${dir} does not exist`);
+      const site = join(OUT, `${basename(dir)}-repository`);
+      rmSync(site, { recursive: true, force: true });
+      cpSync(join(REPO, dir), site, { recursive: true, filter: (src) => !['dist', 'node_modules', '.astro'].includes(basename(src)) });
+      try {
+        const github = { GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: repository };
+        const build = run(site, ['build'], '/', github);
+        assert.equal(build.status, 0, `hangfolio build failed:\n${build.output}`);
+        assert.match(readFileSync(join(site, 'dist/index.html'), 'utf8'), new RegExp(`<link rel="canonical" href="${home.replace(/\./g, '\\.')}">`));
+        const verify = run(site, ['verify'], '/', github);
+        assert.equal(verify.status, 0, verify.output);
+        assert.equal(verify.output.split('\n')[0], `hangfolio verify: dist/ for ${home} (urlFormat preserve)`);
+        assert.match(verify.output, /\nNo problems\.\n$/);
+      } finally {
+        rmSync(site, { recursive: true, force: true });
+      }
+    });
+  }
+});

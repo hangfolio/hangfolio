@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/news.json
+items:
+  - { date: 2026-08, text: "Published the [tide tables](https://u.github.io/tide-tables/) as their own site." }
+  - { date: 2026-03, text: "Showed a [poster](/files/poster.pdf) on harbour silting." }

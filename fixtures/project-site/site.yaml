@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=../../packages/theme/schema/site.json
+# fixtures/project-site: a site in an ordinary repository, served under its name
+# (https://u.github.io/field-notes/) beside the owner's user site at https://u.github.io/. It links
+# to that site and to a sibling project with full addresses, which hangfolio verify must accept.
+# Pell Arvanitis is invented.
+name: "Pell Arvanitis"
+tagline: "I build small tools for reading sensor logs."
+role: "Research software engineer"
+email: "pell@arvanitis.test"
+links:
+  - { url: "https://u.github.io/", label: "Main site" }
