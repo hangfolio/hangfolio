@@ -94,13 +94,8 @@ export function readBib(source: string): { entries: BibEntry[]; problems: BibPro
     if (starts.has(entry.key)) continue;
     starts.set(entry.key, start);
 
-    // A } too many inside a field ends the entry early, and the fields after it read as free text.
-    const next = source.indexOf('@', end);
-    const after = source.slice(end, next < 0 ? source.length : next).replace(/%[^\n]*/g, '');
-    if (/[A-Za-z][\w:.+-]*\s*=\s*[{"\w]/.test(after)) {
-      const message = `The entry ${entry.key} ends early: line ${lineAt(end - 1)} has one } too many, so the fields after it are left out. Remove the extra }.`;
-      problems.push({ line, col: 1, key: entry.key, skipped: false, message });
-    }
+    const stray = strayText(source, end, lineAt, { key: entry.key, line });
+    if (stray) problems.push(stray);
 
     const fields: Record<string, string> = {};
     const names: Record<string, BibName[]> = {};
@@ -122,8 +117,63 @@ export function readBib(source: string): { entries: BibEntry[]; problems: BibPro
   }
 
   problems.push(...errorProblems(source, library.errors, lineAt));
+  // Text before the first @ is free text too.
+  const before = strayText(source, 0, lineAt);
+  if (before) problems.push(before);
+  if (entries.length === 0 && problems.length === 0) {
+    const text = /^[ \t]*[^\s%][^\n]*/m.exec(source);
+    if (text) {
+      const message = 'This file has text but no BibTeX entries, so no papers show. Each entry starts with @, like @article{key, … }. In Google Scholar, click Cite, then BibTeX, and paste what it shows.';
+      problems.push({ line: lineAt(text.index), col: 1, skipped: false, message });
+    }
+  }
   problems.sort((a, b) => a.line - b.line);
   return { entries, problems };
+}
+
+/** The next @ at or after `from` that is not inside a % comment, or -1. */
+function nextAt(source: string, from: number): number {
+  for (let at = source.indexOf('@', from); at >= 0; at = source.indexOf('@', at + 1)) {
+    if (!source.slice(source.lastIndexOf('\n', at) + 1, at).includes('%')) return at;
+  }
+  return -1;
+}
+
+const ENTRY_HEAD = /^[ \t]*([A-Za-z]+)[ \t]*[{(][ \t]*([^\s,={}()"]+)[ \t]*,/m;
+const FIELD_LINE = /^[ \t]*[A-Za-z][\w:.+-]*[ \t]*=[ \t]*[{"\w]/m;
+const RIS_LINE = /^(?:TY|AU|A1|TI|T1|PY|ER) {2}- /m;
+
+/**
+ * BibTeX ignores the text between entries. This reports the text from `from` to the next @
+ * when it looks like part of an entry: an entry pasted without its @, a reference in RIS
+ * format, or fields left over after `after` (an entry that ended early at a } too many).
+ */
+function strayText(source: string, from: number, lineAt: (offset: number) => number, after?: { key: string; line: number }): BibProblem | undefined {
+  const next = nextAt(source, from);
+  // Comments become spaces, so offsets stay the file's.
+  const text = source.slice(from, next < 0 ? source.length : next).replace(/%[^\n]*/g, (comment) => ' '.repeat(comment.length));
+  const lineOf = (match: RegExpExecArray) => lineAt(from + match.index + match[0].search(/\S/));
+  const head = ENTRY_HEAD.exec(text);
+  if (head) {
+    const line = lineOf(head);
+    const message = `Line ${line} looks like the start of the entry ${head[2]}, but it has no @ in front, so the entry is left out. Write it as @${head[1]}{${head[2]},`;
+    return { line, col: 1, key: head[2], skipped: true, message };
+  }
+  const ris = RIS_LINE.exec(text);
+  if (ris) {
+    const line = lineOf(ris);
+    const message = `Line ${line} starts a reference in RIS format, not BibTeX, so it is left out. Copy it as BibTeX instead (in Google Scholar: Cite, then BibTeX).`;
+    return { line, col: 1, skipped: true, message };
+  }
+  const field = FIELD_LINE.exec(text);
+  if (!field) return undefined;
+  if (after) {
+    const message = `The entry ${after.key} ends early: line ${lineAt(from - 1)} has one } too many, so the fields after it are left out. Remove the extra }.`;
+    return { line: after.line, col: 1, key: after.key, skipped: false, message };
+  }
+  const line = lineOf(field);
+  const message = `Line ${line} looks like a BibTeX field, but it isn't inside an entry, so it is left out. Each entry starts with @, like @article{key, and ends with }.`;
+  return { line, col: 1, skipped: false, message };
 }
 
 /** The parser's errors as problems, each on the line where its entry starts. */
@@ -168,6 +218,9 @@ function errorProblem(input: string, error: string, line: number): BibProblem {
   else if (/^Unterminated quote-value/.test(error)) reason = 'a " is never closed';
   else if (/^Unclosed math section/.test(error)) reason = `a $ on line ${found} is never closed`;
   else if (/equals sign missing/.test(error)) reason = `a field on line ${found} has no = after its name`;
+  // Curly quotes, as word processors and web pages write them, aren't BibTeX quotes.
+  const curly = /([A-Za-z][\w:.+-]*)\s*=\s*[“”„‘’«]/.exec(input.split('\n')[found - line] ?? '');
+  if (curly) reason = `line ${found} uses curly quotes “ ”, which BibTeX doesn't read; write ${curly[1]} = {…} instead`;
   const message = `Couldn't read ${key ? `the entry ${key}` : 'this entry'} (${reason}). It's skipped; the rest of the file is fine.`;
   return { line, col: 1, key, skipped: true, message };
 }
