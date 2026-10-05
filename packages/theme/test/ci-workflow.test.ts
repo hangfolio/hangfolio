@@ -96,12 +96,22 @@ test('the tests that build sites run without the GitHub variables that would mov
 });
 
 test('the no-network build blocks requests and checks that it does', () => {
-  const job = workflow.jobs['no-network'] as Job & { env: Record<string, string> };
-  for (const key of ['http_proxy', 'https_proxy', 'all_proxy']) assert.equal(job.env[key], 'http://127.0.0.1:9', key);
-  // Workflow env keys are case-insensitive: HTTP_PROXY next to http_proxy would be a duplicate.
-  const keys = Object.keys(job.env).map((key) => key.toLowerCase());
-  assert.equal(new Set(keys).size, keys.length, 'an env key appears twice in different case');
-  assert.equal(job.env.NODE_USE_ENV_PROXY, '1');
-  const runs = job.steps.map((s) => s.run ?? '');
-  assert.ok(runs.findIndex((r) => r.includes('fetch(')) < runs.findIndex((r) => r.includes('npm run build')));
+  type Step = Job['steps'][number] & { env?: Record<string, string> };
+  const job = workflow.jobs['no-network'] as Job;
+  // Checkout, setup-node and npm ci need the network, so the proxy is set only on the steps after them.
+  assert.equal((job as { env?: unknown }).env, undefined, 'a job-level proxy would also block checkout');
+  const steps = job.steps as Step[];
+  const check = steps.findIndex((s) => (s.run ?? '').includes('fetch('));
+  const build = steps.findIndex((s) => (s.run ?? '').includes('npm run build'));
+  assert.ok(check >= 0 && check < build, 'the network check runs before the offline build');
+  for (const step of [steps[check], steps[build]]) {
+    const env = step.env ?? {};
+    for (const key of ['http_proxy', 'https_proxy', 'all_proxy']) assert.equal(env[key], 'http://127.0.0.1:9', key);
+    assert.equal(env.NODE_USE_ENV_PROXY, '1');
+    // Env keys are case-insensitive: HTTP_PROXY next to http_proxy would be a duplicate.
+    const keys = Object.keys(env).map((key) => key.toLowerCase());
+    assert.equal(new Set(keys).size, keys.length, 'an env key appears twice in different case');
+  }
+  const npmCi = steps.findIndex((s) => (s.run ?? '').trim() === 'npm ci');
+  assert.ok(npmCi >= 0 && npmCi < check, 'npm ci runs before the network is blocked');
 });
