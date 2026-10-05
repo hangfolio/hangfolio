@@ -21,9 +21,9 @@ const SKIP = new Set(['pages.card']);
 // Words for the docs. A note replaces the schema's description.
 const NOTES = {
   name: 'Required. Your name, as the page heading, in titles and in the footer.',
-  tagline: 'Required. *Markdown.* The big sentence under your name. Reads best under 220 characters.',
-  role: 'Required. Your position, for example "PhD student in Computer Science". Also the default page description.',
-  affiliation: 'Required. Your university or employer: `"Harbor University"` or `{ name, url }`.',
+  tagline: 'Recommended. *Markdown.* The big sentence under your name. Reads best under 220 characters.',
+  role: 'Recommended. Your position, for example "PhD student in Computer Science". Also the default page description.',
+  affiliation: 'Recommended. Your university or employer: `"Harbor University"` or `{ name, url }`.',
   'affiliation.name': 'The name.',
   'affiliation.url': 'Its website; the name links to it.',
   email: 'Required. Your email address, shown as a link.',

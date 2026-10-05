@@ -114,17 +114,15 @@ with a lone `'` or `’` at one end. YAML keeps them as part of the text, so the
 that isn't what you want, use straight quotes: `role: "Marine ecologist"`. To keep curly quotes on
 purpose, wrap the value in straight ones: `tagline: "“Measure twice.”"`.
 
-### E301
-
-**BibTeX file unreadable.** Nothing in `content/publications.bib` could be read, so the site would have
-no papers. Check that the file is plain text and that each entry starts with `@type{key,`. Paste one
-entry at a time from Google Scholar (*Cite → BibTeX*) to find the one at fault.
-
 ### W301
 
 **BibTeX entry skipped.** One entry couldn't be read, for example because a comma is missing after a
 field or a brace isn't closed. That entry is left out and listed; the rest of the file is fine. The
 message gives the entry's first line. See [Publications](publications.md#when-an-entry-is-skipped).
+
+The same code covers a file with no BibTeX in it at all, such as a reference copied as plain text or
+in RIS format: the site builds without papers, and the message says how to copy BibTeX instead
+(Google Scholar: *Cite → BibTeX*). Each entry starts with `@type{key,`.
 
 ### E302
 
@@ -145,8 +143,8 @@ anchor. Rename one of them.
 
 ### E401
 
-**Example value.** A required field in `site.yaml` (`tagline`, `role`, `affiliation` or `email`) still
-has the template's example text, after you changed `name` and `email`. The build stops so that the
+**Example value.** One of the main fields in `site.yaml` (`tagline`, `role`, `affiliation` or `email`)
+still has the template's example text, after you changed `name` and `email`. The build stops so that the
 made-up person's details never appear under your name. Write your own. An email address at
 `example.com`, `example.org`, `example.net` or `example.edu` is only allowed in the demo.
 
@@ -259,7 +257,8 @@ all.
 ### N702
 
 **Renamed field.** A field you use has a new name. The old one keeps working until the next major
-version; the message gives the new spelling to switch to when convenient.
+version; the message gives the new spelling to switch to when convenient. No field has been renamed
+yet, so you won't see this notice in version 0.1.
 
 ## GitHub Pages and the deploy
 

@@ -1,8 +1,10 @@
 # The site.yaml reference
 
-`site.yaml`, at the top of your repository, says who you are and how your site is set up. Only five
-fields are required: `name`, `tagline`, `role`, `affiliation` and `email`. Everything else is
-optional, and a feature you don't configure simply doesn't appear.
+`site.yaml`, at the top of your repository, says who you are and how your site is set up. Only `name`
+and `email` are required. `tagline`, `role` and `affiliation` are what visitors read first, so the
+template marks them `required` too: replace their example text (the build stops while it is still
+there, [E401](troubleshooting.md#e401)) or delete the line. Everything else is optional, and a feature
+you don't configure simply doesn't appear.
 
 ```yaml
 name: "Mara Quill"
@@ -39,9 +41,9 @@ with the YAML extension), the first line of `site.yaml` gives you the same infor
 | Field | Value | Default | What it does |
 |---|---|---|---|
 | `name` | text |  | Required. Your name, as the page heading, in titles and in the footer. |
-| `tagline` | text |  | Required. *Markdown.* The big sentence under your name. Reads best under 220 characters. |
-| `role` | text |  | Required. Your position, for example "PhD student in Computer Science". Also the default page description. |
-| `affiliation` | text or block |  | Required. Your university or employer: `"Harbor University"` or `{ name, url }`. |
+| `tagline` | text |  | Recommended. *Markdown.* The big sentence under your name. Reads best under 220 characters. |
+| `role` | text |  | Recommended. Your position, for example "PhD student in Computer Science". Also the default page description. |
+| `affiliation` | text or block |  | Recommended. Your university or employer: `"Harbor University"` or `{ name, url }`. |
 | `affiliation.name` | text |  | The name. |
 | `affiliation.url` | text |  | Its website; the name links to it. |
 | `email` | text |  | Required. Your email address, shown as a link. |

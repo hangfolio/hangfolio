@@ -23,15 +23,15 @@ It is not the hangfolio project. Work only on this site, for its owner.
 
 ## How the content works
 
-- `site.yaml` holds the identity and settings. Only `name`, `tagline`, `role`, `affiliation` and
-  `email` are required.
+- `site.yaml` holds the identity and settings. Only `name` and `email` are required; the template
+  also marks `tagline`, `role` and `affiliation` as required because visitors read them first.
 - Text values are written in double quotes, so a `: ` inside the text is safe.
 - Internal links and file paths are written from the site root (`/projects`, `/files/cv.pdf`); the
   theme adds the base path. Never write the repository name into a link.
 - Lines marked `# example` and entries with `example: true` (or `example = {true}` in BibTeX) are the
   starter's demo content. While `name` and `email` are both still the demo person's, the whole demo
   shows with a banner. After that, example entries are hidden until their marker line is deleted,
-  and required fields that still hold example values fail the check (E401).
+  and `tagline`, `role`, `affiliation` or `email` still holding example values fail the check (E401).
 - Papers are BibTeX in `content/publications.bib`; optional extras go in
   `content/publications/<key>.md`.
 - Posts are `content/writing/<slug>.md`, published at `/writing/<slug>/`. Use `.md`, not `.mdx`,

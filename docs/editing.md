@@ -54,8 +54,8 @@ marker alone decides ([W403](troubleshooting.md#w403)).
 ## `site.yaml`
 
 Who you are and how the site is set up: name, tagline, role, affiliation, email, location, photo, CV,
-profile links, the availability box, the booking link, and which pages exist. Only `name`, `tagline`,
-`role`, `affiliation` and `email` are needed. Every field is described in
+profile links, the availability box, the booking link, and which pages exist. Only `name` and `email`
+are required; `tagline`, `role` and `affiliation` are what visitors read first. Every field is described in
 [The site.yaml reference](site-yaml.md).
 
 ## `content/home.yaml`

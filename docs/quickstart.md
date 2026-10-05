@@ -53,8 +53,8 @@ GitHub doesn't let a workflow change this setting, so it is the one click you ha
 
 ## 4. Make it yours
 
-Open `site.yaml` and click the pencil icon. Replace the five required values (`name`, `tagline`,
-`role`, `affiliation`, `email`) and the `links`. Every other line marked `# example` is optional:
+Open `site.yaml` and click the pencil icon. Replace the five values marked `required` (`name`,
+`tagline`, `role`, `affiliation`, `email`) and the `links`. Every other line marked `# example` is optional:
 change it or delete it. Keep the quotes and the spacing.
 
 Click **Commit changes…**, choose **Commit directly to the main branch**, and click **Commit changes**.
