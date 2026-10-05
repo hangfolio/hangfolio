@@ -1,0 +1,152 @@
+# Releases the hangfolio package from main (docs/maintaining.md). On every push to main:
+#
+# - while .changeset/ holds changesets, `version` opens or updates the "Version packages" pull
+#   request, which bumps the version, the starter's and fixtures' exact dependency on it, the
+#   lockfile and CHANGELOG.md;
+# - once that pull request is merged, packages/theme/package.json has a version npm doesn't have
+#   yet, so `pack` tests and packs it and `publish` publishes it with npm trusted publishing: npm
+#   swaps this run's OIDC token for a one-time credential (there is no NPM_TOKEN), and
+#   --provenance links the package to this workflow run. It then pushes the hangfolio@<version>
+#   tag that error messages link their docs to, and creates the GitHub release.
+#
+# Syncing the starter repository, the canary and moving the v1 tag stay manual for 0.1.x.
+# Actions are pinned to full commit SHAs (the tag is in the comment).
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Each job asks for what it needs; only `publish` can mint an OIDC token.
+permissions: {}
+
+# One release at a time. A publish that has started always finishes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+
+jobs:
+  select-mode:
+    name: Version or publish
+    # npm trusts only this repository's release.yml; a fork has nothing to release.
+    if: github.repository == 'hangfolio/hangfolio'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.select-mode.outputs.mode }}
+      publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      # mode: version (changesets are waiting), publish (a version npm doesn't have) or none
+      - id: select-mode
+        uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+
+  version:
+    name: Version packages pull request
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'version'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # commit the bump to the changeset-release/main branch
+      pull-requests: write # open and update the pull request
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts
+      # `npm run version-packages` is `changeset version` plus a lockfile update, so `npm ci`
+      # keeps working on the pull request.
+      - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          script: npm run version-packages
+          commit-message: Version packages
+          pr-title: Version packages
+
+  pack:
+    name: Test and pack
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'publish'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci
+      - name: Build the package (JSON Schemas, starter-values.json) and check nothing changed
+        shell: bash
+        run: |
+          npm run build -w packages/theme
+          git diff --exit-code
+      # unit tests, render tests and the golden messages, like CI's unit job
+      - run: npm test
+      - id: pack
+        uses: changesets/action/pack@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
+
+  publish:
+    name: Publish to npm
+    needs: pack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # npm's trusted publisher names this environment; it can also require an approval.
+    environment: npm
+    permissions:
+      contents: write # push the hangfolio@<version> tag and create the GitHub release
+      id-token: write # trusted publishing and the provenance statement
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Check that npm can use trusted publishing (11.5.1 or later)
+        id: npm-version
+        shell: bash
+        run: |
+          version=$(npm --version)
+          IFS=. read -r major minor patch <<<"${version%%-*}"
+          if (( major < 11 || (major == 11 && (minor < 5 || (minor == 5 && patch < 1))) )); then
+            echo "::error title=npm is too old::npm $version can't publish with trusted publishing; it needs 11.5.1 or later."
+            exit 1
+          fi
+          echo "npm $version"
+      # Only @changesets/cli is needed here, so no package runs an install script next to the token.
+      - run: npm ci --ignore-scripts
+      # Runs `npm publish <tarball> --access public --tag latest` for the tarball `pack` made;
+      # NPM_CONFIG_PROVENANCE makes that `npm publish --provenance`.
+      - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
+        env:
+          NPM_CONFIG_PROVENANCE: 'true'

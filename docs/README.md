@@ -23,4 +23,5 @@ These pages are versioned with the theme: links in error messages open the docs 
 version your site uses. Questions go to the
 [discussions](https://github.com/hangfolio/hangfolio/discussions).
 
-[`decisions/`](decisions/README.md) holds the project's design notes, for contributors.
+For contributors: [`decisions/`](decisions/README.md) holds the project's design notes, and
+[Maintaining](maintaining.md) describes how a release is made.

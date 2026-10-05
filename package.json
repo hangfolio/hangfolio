@@ -22,7 +22,7 @@
     "docs:check": "node tools/docs-check.mjs && npm run docs:check -w packages/theme",
     "test:starter-scenario": "npm run test:starter-scenario -w packages/theme",
     "changeset": "changeset",
-    "version-packages": "changeset version"
+    "version-packages": "changeset version && npm install --package-lock-only --ignore-scripts"
   },
   "devDependencies": {
     "@changesets/cli": "3.0.3",
