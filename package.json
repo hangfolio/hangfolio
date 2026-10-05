@@ -21,6 +21,7 @@
     "test:matrix": "npm run test:matrix -w packages/theme",
     "docs:check": "npm run docs:check -w packages/theme",
     "test:starter-scenario": "npm run test:starter-scenario -w packages/theme",
+    "docs:check": "node tools/docs-check.mjs",
     "changeset": "changeset",
     "version-packages": "changeset version"
   },

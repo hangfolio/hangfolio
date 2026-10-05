@@ -40,7 +40,7 @@ test('exit codes: 0 without errors, 1 with an error, 2 for an unknown option', a
   };
   const starter = await run(join(REPO, 'starter'));
   assert.equal(starter.code, 0);
-  assert.match(starter.out, /^hangfolio check: site\.yaml and 7 files in content\/\n\nDemo mode: /);
+  assert.match(starter.out, /^hangfolio check: site\.yaml and 11 files in content\/\n\nDemo mode: /);
   assert.match(starter.out, /\nNo errors\.\n$/);
 
   const broken = await run(caseSite('13-e201-unknown-field').root);

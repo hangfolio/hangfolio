@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://unpkg.com/hangfolio@1/schema/projects-groups.json
+# Optional: the order and titles of the groups on /projects. Without it, groups show in the order
+# your projects first use them (each project names its group with group: "…").
+# To use it, remove the # in front of "groups:" and the lines under it, and change the titles.
+# Help: https://github.com/hangfolio/hangfolio/blob/v1/docs/editing.md#contentprojectsyaml
+
+# groups:
+#   - { title: "Research artifacts" }
+#   - { title: "Developer tools", headingId: "tools" }
+#   - { title: "Teaching" }
