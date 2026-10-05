@@ -34,7 +34,7 @@ nav: [research, projects, writing, cv, booking]
 
 pages:
   experience: { path: "/work-experience" }
-  publications: { prepAside: "PhD research at Northlake Institute of Technology, with support from the edge lab. No public link yet." }
+  publications: { prepAside: "Both drafts grew out of the edge lab's power-metered testbed. Preprints will be linked here once they are out." }
 
 redirects:
   - { from: "/about/", to: "/" }

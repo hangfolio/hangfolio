@@ -95,16 +95,16 @@ describe('render: publications at base /hangfolio', () => {
 
   test('InPrepList: numbered, margin, chip, authors, Markdown text, and the aside', async () => {
     const items = [
-      { id: 'a', number: '01', margin: 'Go · Java', title: 'Reordering layer', chip: 'Venue 2027 · in preparation', authors: [{ name: 'Wren Halloway', me: true }, { name: 'Ada Advisor', url: '/people/ada', me: false }], text: 'See [the data](/files/x.pdf).' },
+      { id: 'a', number: '01', margin: 'Rust · C', title: 'Lease renewal batching', chip: 'Venue 2027 · in preparation', authors: [{ name: 'Wren Halloway', me: true }, { name: 'Ada Advisor', url: '/people/ada', me: false }], text: 'See [the data](/files/x.pdf).' },
       { id: 'b', number: '02', title: 'Second', authors: [], text: 'Plain & simple.' },
     ];
     assert.equal(
-      await r.render('InPrepList', { items, aside: 'No *public* link yet.' }),
+      await r.render('InPrepList', { items, aside: 'Drafts on *request*.' }),
       '<ol class="prep">' +
-        '<li class="hang"><div class="m"><span class="n">01</span><span>Go · Java</span></div><div class="item"><div class="title-row"><h3>Reordering layer</h3><span class="chip">Venue 2027 · in preparation</span></div>' +
+        '<li class="hang"><div class="m"><span class="n">01</span><span>Rust · C</span></div><div class="item"><div class="title-row"><h3>Lease renewal batching</h3><span class="chip">Venue 2027 · in preparation</span></div>' +
         '<p class="authors"><span class="me">Wren Halloway</span>, <a href="/hangfolio/people/ada">Ada Advisor</a></p><p>See <a href="/hangfolio/files/x.pdf">the data</a>.</p></div></li>' +
         '<li class="hang"><div class="m"><span class="n">02</span></div><div class="item"><div class="title-row"><h3>Second</h3></div><p>Plain &amp; simple.</p></div></li>' +
-        '</ol><p class="aside">No <em>public</em> link yet.</p>',
+        '</ol><p class="aside">Drafts on <em>request</em>.</p>',
     );
     assert.doesNotMatch(await r.render('InPrepList', { items }), /class="aside"/);
   });

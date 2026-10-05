@@ -59,7 +59,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       assert.deepEqual(items, ['01 | Rust | Batched fsync for multi-tenant stores | 2027 venue · in preparation', '02 | Rust · Go | Explaining every remote cache miss | Workshop 2027 · in preparation']);
       assert.match(main, /<p class="authors"><span class="me">Tamsin Rook<\/span>, <a href="https:\/\/example\.org\/okonkwo">Adaeze Okonkwo<\/a><\/p><p>Groups <code>fsync<\/code> calls across tenants without breaking any tenant's <strong>durability<\/strong> promise\.<\/p>/);
       assert.match(main, new RegExp(`using the <a href="${base}/files/driftnet.pdf">Driftnet traces</a>\\.</p>`));
-      assert.match(main, /<\/ol><p class="aside">Both drafts use the <a href="https:\/\/example\.org\/shoal">Shoal<\/a> traces\. No public link yet\.<\/p><\/section>/);
+      assert.match(main, /<\/ol><p class="aside">Both drafts use the <a href="https:\/\/example\.org\/shoal">Shoal<\/a> traces\. Preprints will follow\.<\/p><\/section>/);
     });
 
     test('a paper: margin, title, authors with marks, note, venue and place, DOI line, links, summary and BibTeX', () => {
@@ -122,7 +122,7 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       for (const id of ['papers', 'nsx24', 'nsx24-title', 'bibtex', 'prep']) assert.ok(ids.includes(id), `#${id} in ${ids.join(' ')}`);
       assert.equal(new Set(ids).size, ids.length, 'ids are unique');
       assert.match(main, /<a href="#bibtex">\[BibTeX\]<\/a>/);
-      assert.match(main, /<p class="aside">PhD research at Northlake Institute of Technology, with support from the edge lab\. No public link yet\.<\/p>/);
+      assert.match(main, /<p class="aside">Both drafts grew out of the edge lab's power-metered testbed\. Preprints will be linked here once they are out\.<\/p>/);
       // The technical report is a report, with its venue from howpublished
       assert.match(main, /<h2 id="preprints" class="eyebrow">Preprints and reports<\/h2>.*<em class="venue">Technical report, Northlake Institute of Technology<\/em>/s);
     });
