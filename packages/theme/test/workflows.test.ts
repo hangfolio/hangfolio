@@ -552,7 +552,7 @@ describe('preflight: messages for each case', () => {
   test('the first run is a green Welcome with direct links (SPEC 3.1)', async () => {
     const { outputs, summary, stdout } = await report({ FIRST_RUN: 'true', BUILD_TYPE: 'none' });
     assert.equal(outputs.ready, 'false');
-    assert.match(summary, /^## Welcome: 2 steps left\n\nYour copy works: this run built the example site\. Nothing is published yet\. Your site will be at https:\/\/rowan-vale\.github\.io\/website\/\./);
+    assert.match(summary, /^## Welcome: 2 steps left\n\nThis run builds the example site to check your copy; nothing is published yet\. Your site will be at https:\/\/rowan-vale\.github\.io\/website\/\./);
     assert.ok(summary.includes(`1. **Turn on GitHub Pages.** Open [Settings → Pages](${SETTINGS})`));
     assert.ok(summary.includes(`2. **Make it yours.** Open [site.yaml](https://github.com/${REPOSITORY}/edit/main/site.yaml)`));
     assert.ok(summary.includes(`[Actions → Deploy site](https://github.com/${REPOSITORY}/actions/workflows/deploy.yml)`));
@@ -569,7 +569,7 @@ describe('preflight: messages for each case', () => {
     assert.ok(user.summary.includes('https://github.com/rowan-vale/rowan-vale.github.io/edit/master/site.yaml'));
     const ready = await report({ FIRST_RUN: 'true', BUILD_TYPE: 'workflow' });
     assert.equal(ready.outputs.ready, 'true');
-    assert.match(ready.summary, /^## Welcome: 1 step left\n\nYour copy works, and GitHub Pages is already set up: this run publishes the example site at/);
+    assert.match(ready.summary, /^## Welcome: 1 step left\n\nGitHub Pages is already set up, so this run builds the example site and publishes it at/);
     assert.match(ready.summary, /1\. \*\*Make it yours\.\*\*.*That commit replaces the example about 2 minutes later\./);
   });
 

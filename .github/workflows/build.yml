@@ -455,15 +455,16 @@ jobs:
           }
           if (!firstRun) return;
 
-          // First run: the same information as a green Welcome summary (SPEC 3.1, step 2).
+          // First run: the same information as a green Welcome summary (SPEC 3.1, step 2). It is
+          // written before the build job runs, so the build's own summary says how the build went.
           const edit = `${server}/${repository}/edit/${branch}/site.yaml`;
           const todo = [];
           if (!ready) todo.push(`**${steps.title}.** ${steps.fix.join('\n\n   ')}`);
           todo.push(`**Make it yours.** Open [site.yaml](${edit}), replace the example name, tagline, role, affiliation, email and links, and click **Commit changes**. That commit ${ready ? 'replaces the example' : 'publishes your site'} about 2 minutes later.`);
           const left = todo.length === 1 ? '1 step left' : '2 steps left';
           const intro = ready
-            ? `Your copy works, and GitHub Pages is already set up: this run publishes the example site at ${siteUrl}.`
-            : `Your copy works: this run built the example site. Nothing is published yet. Your site will be at ${siteUrl}.`;
+            ? `GitHub Pages is already set up, so this run builds the example site and publishes it at ${siteUrl}.`
+            : `This run builds the example site to check your copy; nothing is published yet. Your site will be at ${siteUrl}.`;
           const summary = paragraphs(
             `## Welcome: ${left}`,
             intro,
