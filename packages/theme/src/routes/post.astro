@@ -12,7 +12,7 @@ import { posts } from '../lib/collections.ts';
 import { isoDate, postDate } from '../lib/dates.ts';
 import { pagePath } from '../lib/nav.ts';
 import { localeTag, pageTitle, postPath } from '../lib/site.ts';
-import { absUrl, url } from '../lib/url.ts';
+import { url } from '../lib/url.ts';
 import { postMinutes } from '../lib/writing.ts';
 
 export async function getStaticPaths() {
@@ -27,23 +27,6 @@ const path = postPath(site, post.id);
 const index = pagePath(site, 'writing');
 const indexHeading = (site.pages.writing && site.pages.writing.heading) || 'Writing';
 const locale = localeTag(site);
-const home = absUrl('/');
-
-const schema = [
-  {
-    '@type': 'BlogPosting',
-    '@id': `${absUrl(path)}#article`,
-    headline: title,
-    description,
-    datePublished: isoDate(date),
-    ...(updated ? { dateModified: isoDate(updated) } : {}),
-    author: { '@id': `${home}#person` },
-    publisher: { '@id': `${home}#person` },
-    mainEntityOfPage: absUrl(path),
-    ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
-    inLanguage: locale,
-  },
-];
 ---
 <Page
   title={pageTitle(site, title)}
@@ -52,8 +35,7 @@ const schema = [
   nav="writing"
   section="post"
   ogType="article"
-  article={{ published: date, modified: updated, tags }}
-  schema={schema}
+  article={{ published: date, modified: updated, tags, headline: title }}
   heading={title}
 >
   {index && <p slot="eyebrow" class="eyebrow back"><a href={url(index)} class="soft">{indexHeading}</a></p>}

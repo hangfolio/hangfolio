@@ -682,6 +682,7 @@
           "type": "object",
           "properties": {
             "path": {
+              "pattern": "\\.xml$",
               "type": "string",
               "minLength": 1
             },
@@ -700,6 +701,7 @@
         "sitemapAliases": {
           "type": "array",
           "items": {
+            "pattern": "\\.xml$",
             "type": "string",
             "minLength": 1
           }
@@ -710,7 +712,7 @@
             "file": {
               "type": "string",
               "minLength": 1,
-              "pattern": "^[\\w.-]+$"
+              "pattern": "^google[0-9a-z]+(\\.html)?$"
             },
             "meta": {
               "type": "string",

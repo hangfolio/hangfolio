@@ -15,7 +15,6 @@ import { byYear, listedEntries, paperGroups, prepViews, scholarlyArticle } from 
 import { inlineMd } from '../lib/inline-md.ts';
 import { pagePath } from '../lib/nav.ts';
 import { pageTitle } from '../lib/site.ts';
-import { absUrl } from '../lib/url.ts';
 
 const page = site.pages.publications || { path: '/publications' };
 const path = pagePath(site, 'publications') ?? page.path;
@@ -29,8 +28,7 @@ for (const [key, file] of extras) {
   if (file.body?.trim()) summaries.set(key, (await render(file)).Content);
 }
 
-const urls = { page: absUrl(path), home: absUrl('/') };
-const schema = byYear(listedEntries(entries, site)).map((entry) => scholarlyArticle(entry, extrasData.get(entry.key), site, urls));
+const schema = byYear(listedEntries(entries, site)).map((entry) => scholarlyArticle(entry, extrasData.get(entry.key), site, path));
 ---
 <Page
   title={pageTitle(site, page.title ?? 'Publications')}

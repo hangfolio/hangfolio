@@ -4,7 +4,11 @@ declare module 'virtual:hangfolio/site' {
   export const site: import('./lib/site.ts').SiteYaml;
   export const build: {
     urlFormat: 'preserve' | 'directory';
-    icons: { file: string; rel: string; type?: string; sizes?: string }[];
+    /** What every page's head links to: icons, manifest, feed and sitemap (lib/endpoints.ts) */
+    head: import('./lib/endpoints.ts').SeoPlan['head'];
+    /** The theme's version and the commit being built, for the generator meta */
+    version: string;
+    sha?: string;
   };
   /** name and email are still the starter's: the example banner and noindex (SPEC 5.2) */
   export const demo: boolean;

@@ -49,6 +49,7 @@
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.2",
     "@astrojs/mdx": "8.0.2",
+    "@astrojs/rss": "4.0.19",
     "@fontsource-variable/newsreader": "5.3.0",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/ibm-plex-sans": "5.3.0",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "axe-core": "4.13.0",
+    "fast-xml-parser": "5.11.2",
     "playwright-core": "1.63.0"
   }
 }

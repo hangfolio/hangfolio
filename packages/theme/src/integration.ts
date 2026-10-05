@@ -1,7 +1,7 @@
 // The hangfolio Astro integration: checks site.yaml and content/ before every build and dev
 // session, injects every page, gives pages the site settings as virtual:hangfolio/site, restarts
 // dev when site.yaml changes, and tidies the output (file names, example files).
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,9 +10,14 @@ import { AstroError } from 'astro/errors';
 import { exampleBanner } from './lib/banner.ts';
 import { currentDevState, markDevStateStale, setDevState } from './lib/dev-checks.ts';
 import { hasPublicationContent } from './lib/bib-file.ts';
+import { planSeo, SITEMAP, type SeoPlan } from './lib/endpoints.ts';
+import { buildSha } from './lib/head.ts';
+import { pageUrl } from './lib/paths.ts';
 import { relocateDirRoutes } from './lib/relocate.ts';
 import { pageRoutes, publicationsRoute, ROUTES, type Route } from './lib/routes.ts';
 import type { SiteYaml } from './lib/site.ts';
+import { writeSitemaps } from './lib/sitemap.ts';
+import { absUrl } from './lib/url.ts';
 import { terminalReport, wantsColor } from './validate/format.ts';
 import { counts, docsUrl, severity, validateSite, type Report } from './validate/index.ts';
 
@@ -20,15 +25,12 @@ type Options = { root: string; site: SiteYaml; siteFile: string; urlFormat: 'pre
 
 const VIRTUAL_ID = 'virtual:hangfolio/site';
 
-// Icons the head links to when the file exists at the root of public/.
-const ICONS = [
-  { file: 'favicon.ico', rel: 'icon', sizes: 'any' },
-  { file: 'favicon.svg', rel: 'icon', type: 'image/svg+xml' },
-  { file: 'apple-touch-icon.png', rel: 'apple-touch-icon' },
-];
+const THEME_VERSION: string = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
 
 export default function hangfolio({ root, site, siteFile, urlFormat }: Options): AstroIntegration {
   let publicDir: URL;
+  let siteUrl = { origin: '', base: '/', home: '' };
+  let seo: SeoPlan | undefined;
   let report: Report | undefined;
   let routes: Route[] = [];
   const print = (r: Report) => process.stdout.write(`\n${terminalReport(r, { color: wantsColor(process.stdout, process.env) })}\n`);
@@ -64,13 +66,14 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
         const inPublic = (file: string) => existsSync(new URL(file, config.publicDir));
         const papers = command === 'dev' || hasPublicationContent(root, report?.demo ?? false);
         routes = [...ROUTES, ...pageRoutes(visible, inPublic), ...publicationsRoute(visible, papers)];
-        for (const { pattern, entry } of routes) {
+        // Feed, robots.txt, manifest and verification file; a file in public/ wins (lib/endpoints.ts).
+        seo = planSeo({ root, site: visible, demo: report?.demo ?? false, base: config.base, publicDir: config.publicDir });
+        for (const { pattern, entry } of [...routes, ...seo.routes]) {
           injectRoute({ pattern, entrypoint: `hangfolio/routes/${entry}` });
         }
-        const icons = ICONS.filter((icon) => inPublic(icon.file));
         const values = {
-          site: report?.visible ?? site,
-          build: { urlFormat, icons },
+          site: visible,
+          build: { urlFormat, head: seo.head, version: THEME_VERSION, sha: buildSha(root) },
           demo: report?.demo ?? false,
           banner: exampleBanner(process.env),
           help: docsUrl(),
@@ -100,6 +103,8 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
       },
       'astro:config:done': ({ config }) => {
         publicDir = config.publicDir;
+        const origin = config.site ?? 'http://localhost:4321';
+        siteUrl = { origin, base: config.base, home: absUrl('/', origin, config.base) };
       },
       // In dev, a change under content/ or public/ runs the checks again before the next page
       // render, and reloads the page if the result changed. A site.yaml change restarts dev.
@@ -120,6 +125,19 @@ export default function hangfolio({ root, site, siteFile, urlFormat }: Options):
       'astro:build:done': async ({ assets, dir, logger }) => {
         // Example files leave the build once site.yaml is the owner's (SPEC 5.2 rule 4).
         if (report && !report.demo) await rm(fileURLToPath(new URL('example/', dir)), { recursive: true, force: true });
+        if (seo) {
+          // The theme's pages, in their usual order, follow the home page in the sitemap.
+          const visible = report?.visible ?? site;
+          const { origin, base, home } = siteUrl;
+          const order = Object.values(visible.pages).flatMap((page) => (page && 'path' in page && page.path ? [absUrl(pageUrl(page.path, visible.advanced.urlFormat), origin, base)] : []));
+          const count = await writeSitemaps(fileURLToPath(dir), seo.sitemaps, home, order, (path) =>
+            logger.warn(
+              `${path.slice(1)} is already in the built site (another page or file writes it), so the sitemap was not written there.` +
+                (path === SITEMAP ? '' : ' Give advanced.sitemapAliases another path.'),
+            ),
+          );
+          if (seo.sitemaps.length > 0) logger.info(`${seo.sitemaps.map((path) => path.slice(1)).join(', ')}: ${count} pages`);
+        }
         if (urlFormat !== 'preserve') return;
         const patterns = routes.filter((route) => route.dir).map((route) => route.pattern);
         await relocateDirRoutes({ patterns, assets, dir, publicDir, logger });

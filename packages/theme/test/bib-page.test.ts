@@ -169,8 +169,8 @@ test('featured on the home page: research.featured first, then selected = {true}
 });
 
 test('ScholarlyArticle: from the BibTeX fields, the owner as the site Person, and extras.schema on top', () => {
-  const urls = { page: 'https://u.github.io/hangfolio/publications', home: 'https://u.github.io/hangfolio/' };
-  assert.deepEqual(scholarlyArticle(byKey.halloway2024drift, extras, site, urls), {
+  const abs = (path: string) => new URL(path.replace(/^\//, ''), 'https://u.github.io/hangfolio/').href;
+  assert.deepEqual(scholarlyArticle(byKey.halloway2024drift, extras, site, '/publications', abs), {
     '@type': 'ScholarlyArticle',
     '@id': 'https://u.github.io/hangfolio/publications#exs24',
     headline: 'Drift in Remote Caches',
@@ -183,7 +183,7 @@ test('ScholarlyArticle: from the BibTeX fields, the owner as the site Person, an
     sameAs: 'https://doi.org/10.5555/exs24.0042',
     url: 'https://u.github.io/hangfolio/publications',
   });
-  const plain = scholarlyArticle(byKey.halloway2022quay, parseOk(publication, { schema: { '@type': 'Article', inLanguage: 'en' } }) as never, site, urls);
+  const plain = scholarlyArticle(byKey.halloway2022quay, parseOk(publication, { schema: { '@type': 'Article', inLanguage: 'en' } }) as never, site, '/publications', abs);
   assert.deepEqual(plain, {
     '@type': 'Article',
     '@id': 'https://u.github.io/hangfolio/publications#halloway2022quay',

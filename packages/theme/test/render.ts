@@ -21,7 +21,7 @@ type Options = { site: Partial<SiteInput>; base?: string; demo?: boolean };
 /** A renderer for one site.yaml (name and email filled in) at one base path. Call close() when done. */
 export async function createRenderer({ site, base = '/', demo = false }: Options) {
   const parsed = parseOk(siteSchema, { name: 'Wren Halloway', email: 'wren@halloway.test', ...site });
-  const values = { site: parsed, demo, build: { urlFormat: 'preserve', icons: [] }, banner: { text: '' }, help: '' };
+  const values = { site: parsed, demo, build: { urlFormat: 'preserve', head: { icons: [], manifest: '/manifest.webmanifest', manifestIcons: [], sitemap: '/sitemap.xml' }, version: '0.0.0' }, banner: { text: '' }, help: '' };
   const source = Object.entries(values).map(([name, value]) => `export const ${name} = ${JSON.stringify(value)};\n`).join('');
   // Vite resolves the components' style modules against the root, so the root is this package;
   // only Vite's cache goes to a temporary folder.
@@ -32,7 +32,8 @@ export async function createRenderer({ site, base = '/', demo = false }: Options
     resolveId: (id: string) => (id === VIRTUAL_ID ? '\0' + VIRTUAL_ID : undefined),
     load: (id: string) => (id === '\0' + VIRTUAL_ID ? source : undefined),
   };
-  const astro = { root, base, devToolbar: { enabled: false }, logLevel: 'silent' } as Parameters<typeof getViteConfig>[1];
+  // `site` gives absUrl() an origin (canonical links, JSON-LD) in layouts rendered here.
+  const astro = { root, base, site: 'https://u.github.io', devToolbar: { enabled: false }, logLevel: 'silent' } as Parameters<typeof getViteConfig>[1];
   const config = await getViteConfig({ plugins: [plugin], cacheDir: cache }, astro)({ mode: 'test', command: 'serve' });
   const server = await createServer({
     ...config,

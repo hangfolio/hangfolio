@@ -5,8 +5,10 @@
 import type { Publication } from '../schema/publication.ts';
 import { bibHtml, displayName, isSelectedEntry, plain, type BibEntry } from './bib.ts';
 import { citationView, isOwner, linkHref, ownerNames, type CitationView, type Extras } from './citation.ts';
+import { scholarlyArticle as paperNode, type Node } from './jsonld.ts';
 import { pageUrl } from './paths.ts';
 import type { SiteYaml } from './site.ts';
+import { absUrl } from './url.ts';
 
 export type InPrep = Extract<Publication, { status: 'in-preparation' }>;
 
@@ -150,37 +152,30 @@ export function publicationsPath(site: SiteYaml, content: { papers: number; prep
   return page && content.papers + content.prep > 0 ? pageUrl(page.path, site.advanced.urlFormat) : undefined;
 }
 
-// Drops undefined values and empty arrays, so a missing field leaves no empty key.
-const compact = (node: Record<string, unknown>) =>
-  Object.fromEntries(Object.entries(node).filter(([, value]) => value !== undefined && !(Array.isArray(value) && value.length === 0)));
-
 /**
- * A paper as a schema.org ScholarlyArticle, from its BibTeX fields. The site owner among the
- * authors is the site's Person (<home>#person). Extras' `schema` replaces any of the fields.
+ * A paper as a schema.org ScholarlyArticle, from its BibTeX fields, in the site's JSON-LD graph
+ * (lib/jsonld.ts): its @id is the page it is listed on plus its anchor, and the site owner among
+ * the authors is the site's Person. Extras' `schema` replaces any of the fields.
  */
-export function scholarlyArticle(entry: BibEntry, extras: Extras | undefined, site: SiteYaml, urls: { page: string; home: string }): Record<string, unknown> {
+export function scholarlyArticle(entry: BibEntry, extras: Extras | undefined, site: SiteYaml, path: string, abs: (path: string) => string = absUrl): Node {
   const { fields } = entry;
   const owner = ownerNames(site);
-  const title = fields.title ? plain(fields.title).trim() : undefined;
   const month = /^\d{1,2}/.exec(fields.month?.trim() ?? '')?.[0];
   const year = fields.year?.trim();
-  const doi = doiOf(entry);
-  const url = fields.url?.trim();
   const publisher = fields.publisher ?? fields.organization;
-  const node = compact({
-    '@type': 'ScholarlyArticle',
-    '@id': `${urls.page}#${paperAnchor(entry.key, extras)}`,
-    headline: title,
-    name: title,
-    author: (entry.names.author ?? [])
-      .filter((author) => !author.others)
-      .map((author) => (isOwner(author, owner) ? { '@id': `${urls.home}#person` } : { '@type': 'Person', name: displayName(author) })),
-    datePublished: year && /^\d{4}$/.test(year) ? (month ? `${year}-${month.padStart(2, '0')}` : year) : undefined,
-    publisher: publisher ? { '@type': 'Organization', name: plain(publisher) } : undefined,
-    pagination: fields.pages?.replace(/[–—]/g, '-'),
-    identifier: doi && { '@type': 'PropertyValue', propertyID: 'DOI', value: doi.text },
-    sameAs: doi?.href ?? (url && /^https?:/i.test(url) ? url : undefined),
-    url: urls.page,
-  });
-  return { ...node, ...(extras?.schema ?? {}) };
+  return paperNode(
+    {
+      path,
+      anchor: paperAnchor(entry.key, extras),
+      title: fields.title ? plain(fields.title).trim() : undefined,
+      authors: (entry.names.author ?? []).filter((author) => !author.others).map((author) => ({ name: displayName(author), self: isOwner(author, owner) })),
+      date: year && /^\d{4}$/.test(year) ? (month ? `${year}-${month.padStart(2, '0')}` : year) : undefined,
+      publisher: publisher ? plain(publisher) : undefined,
+      pages: fields.pages,
+      doi: doiOf(entry)?.text,
+      url: fields.url?.trim(),
+      schema: extras?.schema,
+    },
+    abs,
+  );
 }
