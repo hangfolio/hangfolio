@@ -1,1 +1,0 @@
-site.yaml:3:1 W801 Your site address is 88 characters, so the QR code on /card is dense and harder to scan from a distance. A shorter custom domain or repository name gives a simpler code.

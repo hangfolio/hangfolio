@@ -16,6 +16,9 @@ message, `UPDATE_GOLDEN=1 npm run test:golden` rewrites every `expected.txt`; re
 before keeping it. W605 is judged as of 2026-10-04, so its case never ages.
 
 Everything here is fictional. Files under `public/` are stand-ins: their names matter, not their
-contents (`44-w802-vcard-photo/public/images/portrait.heic` is text, not a photo).
+contents.
+
+The /card page's codes (W801, W802, N803) have no cases while the page is deferred past v0.1;
+nothing reports them.
 
 This folder is not an npm workspace and is never built.

@@ -13,7 +13,7 @@ import type { Site } from '../schema/site.ts';
 import { baseLinkIssues } from './base-links.ts';
 import { bibIssues } from './bib-checks.ts';
 import { scanBib } from './bib-keys.ts';
-import { cardPath, hasSharp, localQrNotice, photoIssue, qrIssue } from './card.ts';
+import { CARD_CHECKS, cardPath, hasSharp, localQrNotice, photoIssue, qrIssue } from './card.ts';
 import { loadContent, loadSite, readBib, type Loaded } from './content-files.ts';
 import { staleResults, taglineIssue } from './content-checks.ts';
 import { exampleEntries } from './entries.ts';
@@ -111,7 +111,7 @@ export async function validateSite(root: string, options: Options = {}): Promise
 
   if (visible) {
     visible = { ...visible, avatar: visible.avatar ?? findAvatar(root) };
-    issues.push(...(await cardIssues(root, visible, site!, siteFile!, home, mode, options.sharp)));
+    if (CARD_CHECKS) issues.push(...(await cardIssues(root, visible, site!, siteFile!, home, mode, options.sharp)));
   }
 
   const files = [siteFile, ...content.loaded].filter(Boolean).map((file) => file!.file);

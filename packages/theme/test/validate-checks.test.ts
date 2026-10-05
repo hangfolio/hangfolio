@@ -1,5 +1,5 @@
 // The checks beyond the schemas: files in public/ (E501, W603), links that include the base
-// (W601), the /card messages (W801, W802, N803), and the report as a whole.
+// (W601), the deferred /card messages (W801, W802, N803: off in v0.1), and the report as a whole.
 import assert from 'node:assert/strict';
 import { cpSync, mkdirSync, mkdtempSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -87,24 +87,13 @@ test('W802: without sharp, only a JPEG or PNG of 64 KB or less goes into card.vc
   assert.match(photoIssue(dir, '/images/c.webp', false, undefined, false)[0].message, /^The avatar \(1 bytes WebP\) can't be embedded in card.vcf in that format/);
 });
 
-test('N803 shows only in dev, on the card page, and W801 counts the address', async () => {
-  // The card page is deferred past v0.1: off by default, and its checks run only when it is turned on.
+test('the card checks stay off while the /card page is deferred, even with pages.card set', async () => {
   assert.deepEqual((await validateSite(site({}), { mode: 'dev', env: {} })).issues, []);
-  const dir = site({ 'site.yaml': `${ID}pages: { card: true }\n` });
-  const dev = await validateSite(dir, { mode: 'dev', env: {} });
-  assert.deepEqual(dev.issues, [
-    { code: 'N803', message: 'In local preview the QR code on /card points to http://localhost:4321/. Your deployed card points to your real address.', page: '/card' },
-  ]);
-  assert.deepEqual((await validateSite(dir, { env: {} })).issues, []);
-  const off = site({ 'site.yaml': `${ID}pages: { card: false }\n` });
-  assert.deepEqual((await validateSite(off, { mode: 'dev', env: {} })).issues, []);
-  const moved = site({ 'site.yaml': `${ID}pages: { card: { path: "/qr" } }\n` });
-  assert.match((await validateSite(moved, { mode: 'dev', env: {} })).issues[0].message, /QR code on \/qr points/);
-  // On GitHub, before Pages is set up, the address comes from the repository name (SPEC 7.1).
+  const dir = site({ 'site.yaml': `${ID}pages: { card: true }\n`, 'public/images/avatar.heic': 'x' });
+  assert.deepEqual((await validateSite(dir, { mode: 'dev', env: {} })).issues, []);
+  // A long address from the repository name (SPEC 7.1) would be W801 with the card on.
   const github = { GITHUB_ACTIONS: 'true', GITHUB_REPOSITORY: 'a-research-group-with-a-long-name/tide-gauges-for-small-harbours-and-estuaries' };
-  const [long] = (await validateSite(dir, { env: github })).issues;
-  assert.equal(long.code, 'W801');
-  assert.equal(long.file, undefined);
+  assert.deepEqual((await validateSite(dir, { env: github })).issues, []);
 });
 
 test('a site without site.yaml gets one error that says what to add', async () => {

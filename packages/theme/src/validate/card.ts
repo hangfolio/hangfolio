@@ -1,6 +1,9 @@
 // Messages about the /card page (SPEC-card-wallet.md 3.9): a long site address makes a dense QR
 // code (W801), an avatar that can't go into card.vcf leaves the contact without a photo (W802),
 // and in local preview the QR points to localhost (N803, dev only).
+//
+// The /card page is deferred past v0.1, so no build has a card and these checks are off: a
+// message about a page that doesn't exist, with no troubleshooting entry, would only confuse.
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Site } from '../schema/site.ts';
@@ -57,6 +60,9 @@ export function photoIssue(root: string, avatar: string, sharp: boolean, site: S
   const at = written && site ? locate(site, ['avatar']) : null;
   return [{ code: 'W802', ...(at ? { file: 'site.yaml', line: at.line, col: at.col } : { file: `public${avatar}` }), message }];
 }
+
+/** Turn on with the /card page (W801, W802, N803). */
+export const CARD_CHECKS = false;
 
 /** The card page's path, or undefined when pages.card is false. */
 export const cardPath = (site: Site) => (site.pages.card === false ? undefined : site.pages.card.path);
