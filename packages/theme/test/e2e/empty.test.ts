@@ -1,5 +1,6 @@
 // fixtures/empty (SPEC 5.1): a site.yaml with only name and email passes the checks and builds
 // green at both bases, with every optional part hidden and an initials monogram for the avatar.
+// The contact page stays: its content, the email address, is never missing.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -26,8 +27,8 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       dist = buildFixture('empty', pagesUrl);
     });
 
-    test('builds the home and 404 pages, indexable, with no example banner', () => {
-      assert.deepEqual(listFiles(dist).filter((f) => f.endsWith('.html')), ['404.html', 'index.html']);
+    test('builds the home, contact and 404 pages, indexable, with no example banner', () => {
+      assert.deepEqual(listFiles(dist).filter((f) => f.endsWith('.html')), ['404.html', 'contact.html', 'index.html']);
       const html = readFileSync(join(dist, 'index.html'), 'utf8');
       assert.match(html, /<meta name="robots" content="index, follow/);
       assert.match(html, new RegExp(`<link rel="canonical" href="${pagesUrl}/">`));
@@ -38,8 +39,8 @@ for (const pagesUrl of ['https://u.github.io', 'https://u.github.io/hangfolio'])
       const html = readFileSync(join(dist, 'index.html'), 'utf8');
       assert.match(html, /<span class="monogram" aria-hidden="true"[^>]*>SB<\/span>/);
       assert.doesNotMatch(html, /<img /);
-      assert.doesNotMatch(html, /aria-label="Elsewhere"/);
-      assert.match(html, /<nav class="nav" aria-label="Primary"[^>]*><\/nav>/);
+      assert.match(html, new RegExp(`<nav aria-label="Elsewhere" class="row"[^>]*><a href="${base}/contact"[^>]*>Contact</a></nav>`));
+      assert.match(html, new RegExp(`<nav class="nav" aria-label="Primary"[^>]*><a href="${base}/contact" class="quiet"[^>]*>Contact</a></nav>`));
       assert.match(html, new RegExp(`<a href="${base}/" class="quiet home"`));
     });
   });

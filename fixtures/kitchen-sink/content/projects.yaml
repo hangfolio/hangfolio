@@ -1,0 +1,5 @@
+# yaml-language-server: $schema=../../../packages/theme/schema/projects-groups.json
+# The order of the groups on /projects; Libraries is left out, so it comes last, where it is first used.
+groups:
+  - { title: "Developer tools", link: { label: "GitHub", profile: "github" } }
+  - { title: "Research", id: "research-artifacts", headingId: "artifacts-h", link: { label: "All notes", profile: "notes" } }

@@ -24,7 +24,7 @@ for (const pagesUrl of SITES) {
     });
 
     test('writes the expected pages and public files', () => {
-      assert.deepEqual(pages, ['404.html', 'index.html']);
+      assert.deepEqual(pages, ['404.html', 'contact.html', 'index.html', 'writing/first-note/index.html', 'writing/index.html']);
       for (const file of ['favicon.svg', 'files/cv.pdf', 'colophon.txt']) assert.ok(listFiles(dist).includes(file), file);
     });
 
