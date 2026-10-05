@@ -29,7 +29,8 @@ shape before you write it. Then:
 2. Make the change, with a test. [AGENTS.md](AGENTS.md#commands) lists every command; at least
    `npm test`, `npm run build` and `npm run docs:check` must pass. CI also runs the browser,
    accessibility, screenshot and build-matrix tests on your pull request.
-3. If the change reaches sites (anything in `packages/theme`), add a changeset: `npx changeset`.
+3. If the change reaches sites (anything in `packages/theme`, `starter/` or the shared
+   `.github/workflows/build.yml` and `deploy.yml`), add a changeset for `hangfolio`: `npx changeset`.
    Write its summary for the people who run a site: what changes on their site, and whether they
    need to do anything. It becomes the release notes that Dependabot shows them.
 4. Use only made-up people in fixtures, examples and tests.

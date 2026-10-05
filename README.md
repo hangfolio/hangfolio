@@ -22,7 +22,7 @@ commit is checked, built and published for you. Nothing to install, no URLs to t
 - **Clear error messages.** A mistake stops the run with the file, the line and the fix, shown on
   the line itself in your commit. Your live site stays as it was until a run succeeds.
 - **Works at any GitHub Pages address:** `username.github.io`, `username.github.io/any-name/` or
-  your own domain, with nothing to configure.
+  your own domain. The site finds its own address, so there's no URL to set.
 - **Monthly one-click updates.** Dependabot opens a pull request when there's a new version. It
   builds your site first; if it's green, you click **Merge pull request**.
 
@@ -56,7 +56,8 @@ and it comes with your copy. It also covers moving from an existing `username.gi
 - [Quickstart](docs/quickstart.md): the 5 steps in detail
 - [Editing your site](docs/editing.md) and the [site.yaml reference](docs/site-yaml.md)
 - [Publications](docs/publications.md): BibTeX, Google Scholar, extras
-- [Custom domain](docs/custom-domain.md), [Updating](docs/updating.md), [Customizing](docs/customizing.md)
+- [Custom domain](docs/custom-domain.md), [Updating](docs/updating.md), [Customizing](docs/customizing.md),
+  [Local preview](docs/local-preview.md)
 - [Moving an existing site](docs/existing-site.md) from academicpages or al-folio
 - [Troubleshooting](docs/troubleshooting.md): every message code, and GitHub Pages problems
 - [FAQ](docs/faq.md)

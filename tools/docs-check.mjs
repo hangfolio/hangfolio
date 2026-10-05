@@ -1,6 +1,7 @@
 // The docs link check (SPEC 10.2, PLAN M9): `npm run docs:check`. No network; exits 1 on any problem.
 //
-// 1. Every relative link in docs/ and in the starter's README.md and AGENTS.md points at a file that
+// 1. Every relative link in docs/, in the starter's README.md and AGENTS.md, and in the repository's
+//    README.md, CONTRIBUTING.md and SECURITY.md and the package's README.md points at a file that
 //    exists, and at a heading or <a id> that exists when it has a #fragment.
 // 2. Every link to the docs on GitHub (https://github.com/hangfolio/hangfolio/blob/<ref>/docs/…), in
 //    those files and in the starter's comments (site.yaml's "Help:" lines), is checked the same way
@@ -91,6 +92,7 @@ const markdown = [
   ...walk(DOCS, (path) => path.endsWith('.md') && !path.includes(`${join('docs', 'decisions')}/S`)),
   join(STARTER, 'README.md'),
   join(STARTER, 'AGENTS.md'),
+  ...['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'packages/theme/README.md'].map((file) => join(ROOT, file)),
 ];
 for (const file of markdown) {
   if (!existsSync(file)) {

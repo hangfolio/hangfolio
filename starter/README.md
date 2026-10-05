@@ -106,9 +106,11 @@ Each change goes live about 2 minutes after you commit it.
 | `content/custom.css` | Optional CSS of your own. |
 | `public/` | Files published as they are: your photo in `public/images/`, CV and papers in `public/files/`. |
 
-Leave the rest alone: `package.json`, `astro.config.mjs`, `src/`, `.github/` and `.devcontainer/`
-connect your site to the theme, and updates arrive for them on their own. Every setting is described
-in the [docs](https://github.com/hangfolio/hangfolio/tree/v1/docs).
+Leave the rest alone: `package.json`, `package-lock.json`, `astro.config.mjs`, `src/`, `.github/`
+and `.devcontainer/` connect your site to the theme. Theme updates come as pull requests (see
+[How do I get updates?](#how-do-i-get-updates)), and if one of these files ever needs a change, the
+run summary says what to write. `index.html` and `.nojekyll` only matter until step 3; you can
+delete them after that. Every setting is described in the [docs](https://github.com/hangfolio/hangfolio/tree/v1/docs).
 
 ## FAQ
 
@@ -150,8 +152,11 @@ Keep it running while you build the new one:
 1. Do steps 1 to 5 with a temporary name, such as `new-site`. It goes live at
    `https://<username>.github.io/new-site/` with nothing to configure, and your old site keeps
    serving `https://<username>.github.io/`.
-2. Copy your old `files/` and `images/` folders into `public/` (**Add file → Upload files**, and drag a
-   whole folder). The addresses of your PDFs stay the same, so links from Google Scholar keep working.
+2. Copy your old site's file folders into `public/`, keeping their names: from academicpages,
+   `files/` and `images/` become `public/files/` and `public/images/`. Open `public/`, choose
+   **Add file → Upload files**, and drag a whole folder in. The addresses of your PDFs stay the same,
+   so links from Google Scholar keep working. Coming from al-folio, see
+   [where its `assets/` folders go](https://github.com/hangfolio/hangfolio/blob/v1/docs/existing-site.md#keep-your-files-at-the-same-addresses).
 3. When you're ready, swap the names in **Settings → General → Repository name**: rename the **old**
    repository to something like `old-site` first, then rename the **new** one to
    `<username>.github.io`. Then open **Actions → Deploy site → Run workflow**, because renaming
@@ -178,9 +183,11 @@ your site keeps working as it is. See [Updating](https://github.com/hangfolio/ha
 
 ### Where do I ask for help?
 
-In the [hangfolio discussions](https://github.com/hangfolio/hangfolio/discussions). Please don't
-open issues or pull requests about your own site on `hangfolio/starter`: this repository is now
-yours, and changes to it belong here.
+In the [hangfolio discussions](https://github.com/hangfolio/hangfolio/discussions), with a link to
+your repository. Please don't open issues or pull requests about your own site on
+`hangfolio/starter`: your copy is yours, so changes to your site belong in your own repository. If
+hangfolio itself does something wrong, open an [issue](https://github.com/hangfolio/hangfolio/issues/new/choose)
+with the bug form.
 
 ## License
 
