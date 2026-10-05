@@ -373,6 +373,21 @@ describe('the interior pages in Chrome', { skip: noChrome }, () => {
     await home.ctx.close();
   });
 
+  test("a contact link too long for a phone wraps with its arrow right after the last word", async () => {
+    const { ctx, page } = await open('contact', { width: 375 });
+    const gap = await page.$eval('.rows dd a:has(svg)', (link) => {
+      link.firstChild!.textContent = 'scholar.google.com/citations?user=AbCdEfGhIjkLmNo&hl=en';
+      const range = document.createRange();
+      range.selectNodeContents(link.firstChild!);
+      const lines = [...range.getClientRects()];
+      const arrow = link.querySelector('svg')!.getBoundingClientRect();
+      return { lines: new Set(lines.map((r) => Math.round(r.top))).size, gap: arrow.left - lines.at(-1)!.right };
+    });
+    await ctx.close();
+    assert.ok(gap.lines >= 2, 'the link should wrap at 375px');
+    assert.ok(gap.gap >= 0 && gap.gap <= 8, `the arrow is ${gap.gap}px after the text`);
+  });
+
   test('photos sit two to a row, one under 540px; dates and places hang in the margin on wide screens', async () => {
     const tops = (page: Page) => page.$$eval('.gallery .shots > a', (shots) => shots.map((shot) => Math.round(shot.getBoundingClientRect().top)));
     const wide = await open('experience', { width: 1440 });

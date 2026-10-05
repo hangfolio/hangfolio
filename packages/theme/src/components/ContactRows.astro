@@ -38,15 +38,16 @@ const { rows } = Astro.props;
     overflow-wrap: anywhere;
   }
 
+  /* An inline block, not a flex box, so a long address (a Scholar profile's ?user=…) wraps with
+     the arrow after its last word. The padding keeps one line 2rem tall with the text centred. */
   .rows dd a {
-    display: inline-flex;
-    align-items: center;
-    gap: .25rem;
-    min-height: 2rem;
+    display: inline-block;
+    padding-block: calc((2rem - 1.6em) / 2);
   }
 
   .rows dd a :global(svg) {
-    flex: none;
+    margin-left: .25rem;
+    vertical-align: -.0625em;
   }
 
   /* Mid-size screens: label and value side by side inside the column */
@@ -60,7 +61,7 @@ const { rows } = Astro.props;
 
   @media (max-width: 720px) {
     .rows dd a {
-      min-height: 2.75rem;
+      padding-block: calc((2.75rem - 1.6em) / 2);
     }
   }
 </style>
