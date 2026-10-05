@@ -9,6 +9,7 @@ import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 import { after, describe, test } from 'node:test';
 import { parse } from 'yaml';
+import { generatorContent } from '../src/lib/head.ts';
 import { cleanUp, fakeCommand, folder, readRepo, REPO, runStep, step, workflow, type Job, type Step } from './workflow-steps.ts';
 
 after(cleanUp);
@@ -838,6 +839,21 @@ describe('deploy: the live check (SPEC 8.3)', () => {
       assert.deepEqual(s.requests, ['/website/?hangfolio-check=0123456-1', '/website/_astro/Base.abc.css?hangfolio-check=0123456-1']);
     } finally {
       await s.close();
+    }
+  });
+
+  test("the theme's own generator tag (lib/head.ts) carries the SHA the check looks for", async () => {
+    const s = await site(generatorContent('1.0.0', 'Astro v7.3.5', SHA));
+    try {
+      assert.match((await run(s.url)).summary, /Checked build 0123456 and its stylesheet on the live site\./);
+    } finally {
+      await s.close();
+    }
+    const old = await site(generatorContent('1.0.0', 'Astro v7.3.5', 'fedcba9876543210fedcba9876543210fedcba98'));
+    try {
+      assert.match((await run(old.url)).stdout, /still shows build fedcba9876543210fedcba9876543210fedcba98, not 0123456\./);
+    } finally {
+      await old.close();
     }
   });
 
