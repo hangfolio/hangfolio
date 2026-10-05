@@ -43,6 +43,10 @@ Each page takes `path`, `title` (the browser tab), `description` (for search res
 `lede` (the sentence under the heading). `false` removes the page, its menu item and its sitemap
 entry. Two pages can't share a path ([E303](troubleshooting.md#e303)).
 
+`pages.writing.path` moves only the list of posts. To move the posts with it, so that they are at
+`/blog/<post>/`, set `advanced: { writingPath: "/blog" }` instead, and update any links you wrote to
+`/writing/…`: the deploy's link check lists them.
+
 To keep an old address working after a move, add a redirect:
 
 ```yaml

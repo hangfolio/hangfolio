@@ -102,14 +102,14 @@ with the YAML extension), the first line of `site.yaml` gives you the same infor
 | `advanced.timezone` | text | `UTC` | The time zone of the footer's "Last updated" date, such as `America/New_York`. |
 | `advanced.brand` | text |  | The header's home link text. Default: your site's host name. |
 | `advanced.titleSuffix` | text | ` — {name}` | Added after each page title in the browser tab. |
-| `advanced.writingPath` | text |  | Where posts live. Default: `/writing`. |
+| `advanced.writingPath` | text |  | Where your posts and their list live: `/blog` gives `/blog/` and `/blog/<post>/`. Default: `/writing`. (`pages.writing.path` moves only the list.) |
 | `advanced.feed` | block |  | The RSS feed of your posts. |
 | `advanced.feed.path` | text |  | The feed's address. Default: `/feed.xml`. |
 | `advanced.feed.title` | text | `{name} — Writing` | The feed's title. |
 | `advanced.feed.description` | text |  | The feed's description. |
 | `advanced.sitemapAliases` | list of text |  | Extra addresses that serve a copy of the sitemap, such as `/sitemap-static.xml`. |
 | `advanced.googleVerification` | block |  | Google Search Console verification: the token from the HTML file method (`file`) or the meta tag method (`meta`). |
-| `advanced.googleVerification.file` | text |  | The file method's token: the part between `google` and `.html`. |
+| `advanced.googleVerification.file` | text |  | The file method's file name, such as `google1234567890abcdef.html` (the `.html` is optional). The site then serves that file. |
 | `advanced.googleVerification.meta` | text |  | The meta tag method's `content` value. |
 | `advanced.anchors` | block |  | The anchors of the home page sections, as in `/#news`. |
 | `advanced.anchors.highlights` | text | `results` | The results section. |

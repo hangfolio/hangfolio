@@ -41,8 +41,9 @@ al-folio's `_bibliography/papers.bib` works as it is: the field names are the sa
 
 - **Shown:** `title`, `author`, the venue (`booktitle` or `journal`, or `school`, `institution`), and
   `year`. LaTeX accents such as `{\'e}` become é, and `@string` macros and `crossref` work.
-- **Links**, in this order: `pdf`, `doi` (as `https://doi.org/…`), `url`, `code`, `slides`, `poster`,
-  `video` and `website`. A bare file name such as `pdf = {quill2025gauges.pdf}` means a file you
+- **Links**, in this order: `pdf`, `doi` (as `https://doi.org/…`), `arxiv` (as
+  `https://arxiv.org/abs/…`), `url`, `code`, `slides`, `poster`, `video`, `website`, `html`, `supp`
+  and `blog`. A bare file name such as `pdf = {quill2025gauges.pdf}` means a file you
   uploaded to `public/files/`; a path such as `{/papers/x.pdf}` or a full `https://` address is used
   as it is.
 - **`abbr`**: a short venue label, such as "EXC ’25".
