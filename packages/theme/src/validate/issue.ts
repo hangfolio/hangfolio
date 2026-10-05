@@ -37,6 +37,9 @@ export const TITLES = {
 } as const;
 
 export type Code = keyof typeof TITLES;
+
+/** The /card page's codes. The page is deferred past v0.1, so their troubleshooting entries come with it. */
+export const DEFERRED_CODES: readonly Code[] = ['W801', 'W802', 'N803'];
 export type Severity = 'error' | 'warning' | 'notice';
 
 export type Issue = {

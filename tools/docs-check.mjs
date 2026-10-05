@@ -18,8 +18,6 @@ const DOCS = join(ROOT, 'docs');
 const STARTER = join(ROOT, 'starter');
 const ISSUES = join(ROOT, 'packages/theme/src/validate/issue.ts');
 const DOCS_ON_GITHUB = /https:\/\/github\.com\/hangfolio\/hangfolio\/(?:blob|tree)\/[^/\s]+\/docs(\/[^\s)"'<>`]*)?/g;
-// The /card page and its codes are not part of 0.1; their troubleshooting entries come with it.
-const DEFERRED = new Set(['W801', 'W802', 'N803']);
 
 const problems = [];
 const report = (file, message) => problems.push(`${relative(ROOT, file)}: ${message}`);
@@ -118,6 +116,8 @@ for (const file of walk(STARTER, (path) => /\.(ya?ml|bib|md|css|json|mjs|ts)$/.t
 // 3: one troubleshooting anchor per error code, in the form the validator links to.
 const issueSource = readFileSync(ISSUES, 'utf8');
 const codes = [...issueSource.matchAll(/^\s+([EWN]\d{3}): '/gm)].map((m) => m[1]);
+// The /card page and its codes are not part of 0.1 (DEFERRED_CODES); their entries come with it.
+const DEFERRED = new Set(/DEFERRED_CODES[^=]*=\s*\[([^\]]*)\]/.exec(issueSource)?.[1].match(/[EWN]\d{3}/g) ?? []);
 if (codes.length === 0) report(ISSUES, 'no codes found in TITLES; update tools/docs-check.mjs');
 if (!/docs\/troubleshooting\.md/.test(issueSource) || !/code\.toLowerCase\(\)/.test(issueSource)) {
   report(ISSUES, "docsUrl() no longer links to docs/troubleshooting.md#<code in lower case>; update tools/docs-check.mjs to match");

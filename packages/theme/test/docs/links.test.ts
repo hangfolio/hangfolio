@@ -9,7 +9,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { TITLES } from '../../src/validate/issue.ts';
+import { DEFERRED_CODES, TITLES, type Code } from '../../src/validate/issue.ts';
 
 const REPO = fileURLToPath(new URL('../../../../', import.meta.url));
 const TROUBLESHOOTING = join(REPO, 'docs/troubleshooting.md');
@@ -101,7 +101,8 @@ function brokenLink(file: string, target: string): string | undefined {
 test('docs/troubleshooting.md has an anchor for every error, warning and notice code', () => {
   assert.ok(existsSync(TROUBLESHOOTING), 'docs/troubleshooting.md does not exist; every message links to it');
   const anchors = anchorsOf(readFileSync(TROUBLESHOOTING, 'utf8'));
-  const missing = Object.keys(TITLES).filter((code) => !anchors.has(code.toLowerCase()));
+  // The deferred /card codes get their entries when the page comes back.
+  const missing = (Object.keys(TITLES) as Code[]).filter((code) => !DEFERRED_CODES.includes(code) && !anchors.has(code.toLowerCase()));
   assert.deepEqual(missing, [], `docs/troubleshooting.md needs a heading or <a id="…"> for: ${missing.map((code) => `#${code.toLowerCase()}`).join(', ')}`);
 });
 

@@ -233,7 +233,11 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
-      # Reads only Markdown and the theme's error catalogue, so no npm ci is needed.
+      # Both read only Markdown, the committed site schema and the theme's error catalogue, so no
+      # npm ci is needed. The first also checks the starter's Help: links and the site.yaml field
+      # reference.
+      - name: Docs, starter Help links and the site.yaml field reference
+        run: node tools/docs-check.mjs
       - name: Every error code has a troubleshooting anchor, and every docs link resolves
         working-directory: packages/theme
         run: node --test --test-reporter=spec test/docs/*.test.ts
