@@ -192,7 +192,7 @@ describe('preflight: what a run does', () => {
   const facts = (env: Record<string, string>, lock?: unknown) => {
     const cwd = folder('facts');
     if (lock !== undefined) writeFileSync(join(cwd, 'package-lock.json'), typeof lock === 'string' ? lock : JSON.stringify(lock));
-    return runStep(FACTS, { EVENT_NAME: 'push', REF: 'refs/heads/main', DEFAULT_BRANCH: 'main', RUN_NUMBER: '3', HAS_WALLET_KEY: 'false', ...env }, { cwd });
+    return runStep(FACTS, { EVENT_NAME: 'push', REF: 'refs/heads/main', DEFAULT_BRANCH: 'main', RUN_NUMBER: '3', RUN_ATTEMPT: '1', HAS_WALLET_KEY: 'false', ...env }, { cwd });
   };
 
   test('only a push or a manual run of the default branch publishes', async () => {
@@ -212,9 +212,10 @@ describe('preflight: what a run does', () => {
     const first = await facts({ RUN_NUMBER: '1', HAS_WALLET_KEY: 'true' });
     assert.equal(first.outputs['first-run'], 'true');
     assert.equal(first.outputs['wallet-key'], 'true');
-    const later = await facts({});
+    const later = await facts({ RUN_ATTEMPT: '2' });
     assert.equal(later.outputs['first-run'], 'false');
     assert.equal(later.outputs['wallet-key'], 'false');
+    assert.equal(later.outputs.attempt, '2', 'the attempt that read the settings, for "One step left"');
   });
 
   test("Node is the highest of 24 and 22 that the theme's engines.node allows", async () => {
@@ -545,6 +546,7 @@ describe('preflight: messages for each case', () => {
       ].join('\n\n'),
     );
     assert.equal(unescape(outputs['setup-error']), `GitHub Pages is not turned on. Open ${SETTINGS} and set Source to "GitHub Actions". Then click "Re-run all jobs".`);
+    assert.equal(outputs['setup-title'], 'One step left%3A turn on GitHub Pages');
   });
 
   test('the first run is a green Welcome with direct links (SPEC 3.1)', async () => {
@@ -586,8 +588,9 @@ describe('preflight: messages for each case', () => {
 
     const error = await report({ BUILD_TYPE: 'error', DETAIL: 'gh: Server Error (HTTP 502)' });
     assert.equal(error.outputs.state, 'error');
-    assert.match(error.outputs['setup-message'], /could not read the GitHub Pages settings \(gh: Server Error \(HTTP 502\)\)/);
-    assert.match(unescape(error.outputs['setup-error']), /Re-run all jobs/);
+    assert.match(error.outputs['setup-message'], /^## One step left: check the GitHub Pages settings\n\n\*\*Check the GitHub Pages settings\.\*\* This run could not read the GitHub Pages settings \(gh: Server Error \(HTTP 502\)\)\. Open \[Settings → Pages\]\(.*\) and check that \*Build and deployment → Source\* is \*\*GitHub Actions\*\*\. If it already is, GitHub had a temporary problem\./);
+    assert.match(unescape(error.outputs['setup-error']), /Check that Source is "GitHub Actions" in .*\. Then click "Re-run all jobs"\.$/);
+    assert.equal(error.outputs['setup-title'], 'One step left%3A check the GitHub Pages settings');
   });
 
   test('a competing workflow fails with a delete link, even when Pages is set up', async () => {
@@ -604,6 +607,7 @@ describe('preflight: messages for each case', () => {
       ].join('\n\n'),
     );
     assert.equal(unescape(outputs['setup-error']), `.github/workflows/static.yml also publishes to GitHub Pages and overwrites your site. Delete it: ${del}`);
+    assert.equal(outputs['setup-title'], 'One step left%3A delete the extra Pages workflow', 'the annotation names the real step, not "turn on"');
 
     const both = await report({ BUILD_TYPE: 'none', FINDINGS: JSON.stringify([{ kind: 'duplicate', path: '.github/workflows/deploy-copy.yml', label: '' }]) });
     assert.match(both.outputs['setup-message'], /deploy-copy\.yml` is a second copy of Deploy site/);
@@ -634,7 +638,7 @@ describe('preflight: the M8 scenarios, step by step', () => {
     mkdirSync(join(cwd, '.github/workflows'), { recursive: true });
     for (const [name, text] of Object.entries({ 'deploy.yml': CALLER_TEXT, ...o.workflows })) writeFileSync(join(cwd, '.github/workflows', name), text);
     const gh = fakeGh(o.answers);
-    const facts = await runStep(FACTS, { EVENT_NAME: o.event ?? 'push', REF: o.ref ?? `refs/heads/${branch}`, DEFAULT_BRANCH: branch, RUN_NUMBER: String(o.run), HAS_WALLET_KEY: 'false' }, { cwd });
+    const facts = await runStep(FACTS, { EVENT_NAME: o.event ?? 'push', REF: o.ref ?? `refs/heads/${branch}`, DEFAULT_BRANCH: branch, RUN_NUMBER: String(o.run), RUN_ATTEMPT: '1', HAS_WALLET_KEY: 'false' }, { cwd });
     const intent = facts.outputs.intent === 'true';
     const ref = `${repo}/.github/workflows/deploy.yml@refs/heads/${branch}`;
     const scan = intent ? await runStep(SCAN, { WORKFLOW_REF: ref }, { cwd }) : undefined;
@@ -700,13 +704,25 @@ describe('preflight: the M8 scenarios, step by step', () => {
 });
 
 describe('"One step left: turn on GitHub Pages"', () => {
+  const say = step(BUILD, 'setup-needed', 'Say what to do');
+  const message = '## One step left: turn on GitHub Pages\n\n**Turn on GitHub Pages.** …';
+
   test('writes the summary and one error, then fails', async () => {
-    const say = step(BUILD, 'setup-needed', 'Say what to do');
-    const message = '## One step left: turn on GitHub Pages\n\n**Turn on GitHub Pages.** …';
-    const result = await runStep(say, { MESSAGE: message, ERROR: 'GitHub Pages is not turned on. Open https://x%2540y' });
+    const result = await runStep(say, { MESSAGE: message, TITLE: 'One step left%3A turn on GitHub Pages', ERROR: 'GitHub Pages is not turned on. Open https://x%2540y', CHECKED_IN: '1', ATTEMPT: '1' });
     assert.equal(result.status, 1);
     assert.equal(result.summary, `${message}\n`);
     assert.equal(result.stdout, '::error title=One step left%3A turn on GitHub Pages::GitHub Pages is not turned on. Open https://x%2540y\n');
+    const competing = await runStep(say, { MESSAGE: message, TITLE: 'One step left%3A delete the extra Pages workflow', ERROR: 'x', CHECKED_IN: '1', ATTEMPT: '1' });
+    assert.equal(competing.stdout, '::error title=One step left%3A delete the extra Pages workflow::x\n');
+  });
+
+  test('"Re-run failed jobs" repeats an old answer, so it asks for Re-run all jobs', async () => {
+    const result = await runStep(say, { MESSAGE: message, TITLE: 'One step left%3A turn on GitHub Pages', ERROR: 'x', CHECKED_IN: '1', ATTEMPT: '2' });
+    assert.equal(result.status, 1);
+    assert.match(result.summary, /^## Choose Re-run all jobs\n\nOnly this job ran again, .* open \*\*Re-run jobs\*\* and choose \*\*Re-run all jobs\*\*: that checks the settings again\.\n\n## One step left/);
+    const [first, second] = annotationsIn(result.stdout);
+    assert.match(first, /^::error title=Choose Re-run all jobs::Only this job ran again/);
+    assert.equal(second, '::error title=One step left: turn on GitHub Pages::x');
   });
 });
 

@@ -43,6 +43,7 @@ jobs:
     outputs:
       intent: ${{ steps.facts.outputs.intent }}
       first-run: ${{ steps.facts.outputs.first-run }}
+      attempt: ${{ steps.facts.outputs.attempt }}
       node-version: ${{ steps.facts.outputs.node-version }}
       lockfile: ${{ steps.facts.outputs.lockfile }}
       wallet-key: ${{ steps.facts.outputs.wallet-key }}
@@ -51,6 +52,7 @@ jobs:
       ready: ${{ steps.report.outputs.ready }}
       site-url: ${{ steps.report.outputs.site-url }}
       setup-message: ${{ steps.report.outputs.setup-message }}
+      setup-title: ${{ steps.report.outputs.setup-title }}
       setup-error: ${{ steps.report.outputs.setup-error }}
     steps:
       # Cone mode also brings every file at the top of the repository (package-lock.json among them).
@@ -73,6 +75,7 @@ jobs:
           REF: ${{ github.ref }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
           # Only true or false ever leaves this step; the secret itself is never read here.
           HAS_WALLET_KEY: ${{ secrets.GOOGLE_WALLET_KEY != '' }}
         run: |
@@ -100,6 +103,7 @@ jobs:
 
           put('intent', intent);
           put('first-run', firstRun);
+          put('attempt', env.RUN_ATTEMPT || '');
           put('lockfile', lockfile);
           put('node-version', nodeVersion);
           put('wallet-key', env.HAS_WALLET_KEY === 'true');
@@ -414,7 +418,9 @@ jobs:
             }
           }
           if (buildType !== 'workflow') {
-            if (!steps.title) steps.title = buildType === 'legacy' ? 'Switch GitHub Pages to GitHub Actions' : 'Turn on GitHub Pages';
+            if (!steps.title) {
+              steps.title = buildType === 'legacy' ? 'Switch GitHub Pages to GitHub Actions' : buildType === 'error' ? 'Check the GitHub Pages settings' : 'Turn on GitHub Pages';
+            }
             if (env.FORK === 'true') {
               steps.fix.push(`This repository is a fork, and a fork stays linked to the repository it was copied from. Start over with your own copy instead: [Create your site](${create}). To keep this fork anyway, open [Settings → Pages](${settings}) and ${source}.`);
               steps.error.push(`This repository is a fork. Start over with your own copy: ${create} (or set Source to "GitHub Actions" in ${settings}).`);
@@ -425,8 +431,8 @@ jobs:
               steps.fix.push(`GitHub Pages is set to *Deploy from a branch*, which publishes your repository's files as they are, so ${siteUrl} shows an "Almost there" page instead of your site. Open [Settings → Pages](${settings}) and ${source} instead. ${noConfigure}`);
               steps.error.push(`GitHub Pages is set to "Deploy from a branch". Open ${settings} and set Source to "GitHub Actions".`);
             } else if (buildType === 'error') {
-              steps.fix.push(`This run could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Open [Settings → Pages](${settings}) and check that ${source}.`);
-              steps.error.push(`Could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Check Source in ${settings}.`);
+              steps.fix.push(`This run could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Open [Settings → Pages](${settings}) and check that *Build and deployment → Source* is **GitHub Actions**. If it already is, GitHub had a temporary problem.`);
+              steps.error.push(`Could not read the GitHub Pages settings (${env.DETAIL || 'no details'}). Check that Source is "GitHub Actions" in ${settings}.`);
             } else {
               steps.fix.push(`Open [Settings → Pages](${settings}) and ${source}. ${noConfigure}`);
               steps.error.push(`GitHub Pages is not turned on. Open ${settings} and set Source to "GitHub Actions".`);
@@ -442,8 +448,9 @@ jobs:
               : `Deleting the file is a commit, which runs ${wf} again and publishes your site at ${siteUrl}.${buildType !== 'workflow' ? ' Change the setting first.' : ''}`;
             const error = [...steps.error, settingsOnly ? 'Then click "Re-run all jobs".' : ''];
             if (misnamed) error.push(`Note: this repository is served at ${siteUrl}; rename it to ${host} for https://${host}/.`);
-            const heading = `## One step left: ${steps.title[0].toLowerCase()}${steps.title.slice(1)}`;
-            put('setup-message', paragraphs(heading, `**${steps.title}.** ${steps.fix.join('\n\n')}`, after, renameNote));
+            const heading = `One step left: ${steps.title[0].toLowerCase()}${steps.title.slice(1)}`;
+            put('setup-message', paragraphs(`## ${heading}`, `**${steps.title}.** ${steps.fix.join('\n\n')}`, after, renameNote));
+            put('setup-title', escProp(heading));
             put('setup-error', escData(error.filter(Boolean).join(' ')));
           }
           if (!firstRun) return;
@@ -586,8 +593,22 @@ jobs:
         shell: bash
         env:
           MESSAGE: ${{ needs.preflight.outputs.setup-message }}
+          TITLE: ${{ needs.preflight.outputs.setup-title }}
           ERROR: ${{ needs.preflight.outputs.setup-error }}
+          CHECKED_IN: ${{ needs.preflight.outputs.attempt }}
+          ATTEMPT: ${{ github.run_attempt }}
         run: |
+          # "Re-run failed jobs" (or this job's own re-run button) runs only this job again, with the
+          # answer the first attempt read, so it would repeat the same error after the fix.
+          if [ -n "$CHECKED_IN" ] && [ "$ATTEMPT" != "$CHECKED_IN" ]; then
+            {
+              echo "## Choose Re-run all jobs"
+              echo
+              echo "Only this job ran again, so it still shows what GitHub Pages looked like before. At the top of this page, open **Re-run jobs** and choose **Re-run all jobs**: that checks the settings again."
+              echo
+            } >>"$GITHUB_STEP_SUMMARY"
+            printf '::error title=Choose Re-run all jobs::%s\n' 'Only this job ran again, so it still shows what GitHub Pages looked like before. At the top of the page, open "Re-run jobs" and choose "Re-run all jobs".'
+          fi
           printf '%s\n' "$MESSAGE" >>"$GITHUB_STEP_SUMMARY"
-          printf '::error title=One step left%%3A turn on GitHub Pages::%s\n' "$ERROR"
+          printf '::error title=%s::%s\n' "${TITLE:-One step left%3A turn on GitHub Pages}" "$ERROR"
           exit 1
