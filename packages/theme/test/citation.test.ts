@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { parseBib } from '../src/lib/bib.ts';
-import { citationView, isOwner, linkHref, ownerNames, personOf } from '../src/lib/citation.ts';
+import { citationView, isOwner, isUnsafeHref, linkHref, ownerNames, personOf } from '../src/lib/citation.ts';
 import { publication } from '../src/schema/publication.ts';
 import { site as siteSchema } from '../src/schema/site.ts';
 import { parseOk } from './helpers.ts';
@@ -83,6 +83,13 @@ test('link fields: a DOI goes to doi.org, a bare file name to /files/, anything 
   assert.equal(linkHref('pdf', '/papers/paper.pdf'), '/papers/paper.pdf');
   assert.equal(linkHref('pdf', 'files/paper.pdf'), 'files/paper.pdf');
   assert.equal(linkHref('code', 'https://example.org/code'), 'https://example.org/code');
+  assert.equal(linkHref('code', 'www.example.org/code'), 'https://www.example.org/code');
+});
+
+test('a link field with a scheme that runs code is left out', () => {
+  const [bad] = parseBib('@misc{k, title = {T}, url = {javascript:alert(1)}, code = {https://example.org/code}, slides = { JavaScript:x}}');
+  assert.equal(isUnsafeHref('data:text/html,x'), true);
+  assert.deepEqual(citationView(bad, undefined, site).links, [{ label: 'Code', href: 'https://example.org/code' }]);
 });
 
 const [entry, scholar] = parseBib(String.raw`

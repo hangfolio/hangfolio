@@ -126,15 +126,19 @@ const LINKS: [string, string][] = [
 
 /**
  * A link field as an address: a DOI becomes https://doi.org/…, an arXiv id https://arxiv.org/abs/…,
- * and a bare file name a file in /files/.
+ * www.… a web address, and a bare file name a file in /files/.
  */
 export function linkHref(field: string, value: string): string {
   const text = value.trim();
   if (field === 'doi') return /^https?:/i.test(text) ? text : `https://doi.org/${text.replace(/^doi:\s*/i, '')}`;
   if (field === 'arxiv' && !/^https?:/i.test(text)) return `https://arxiv.org/abs/${text.replace(/^arxiv:\s*/i, '')}`;
+  if (/^www\./i.test(text)) return `https://${text}`;
   if (/^[a-z][a-z\d+.-]*:/i.test(text) || text.includes('/')) return text;
   return `/files/${text}`;
 }
+
+/** Schemes that run code: a link field with one is left out (pasted BibTeX is not always the owner's). */
+export const isUnsafeHref = (href: string) => /^\s*(?:javascript|vbscript|data):/i.test(href);
 
 const VENUE_FIELDS = ['journal', 'booktitle', 'school', 'institution', 'howpublished', 'publisher'];
 
@@ -154,7 +158,7 @@ export function citationView(entry: BibEntry, extras: Extras | undefined, site: 
   const venue = extras?.venueDetail ? escapeHtml(extras.venueDetail) : venueField && bibHtml(fields[venueField]);
 
   const links: CitationView['links'] = [];
-  const add = (label: string, href: string) => links.some((link) => link.href === href) || links.push({ label, href });
+  const add = (label: string, href: string) => isUnsafeHref(href) || links.some((link) => link.href === href) || links.push({ label, href });
   for (const [field, label] of LINKS) if (fields[field]?.trim()) add(label, linkHref(field, fields[field]));
   for (const link of resolveLinks((extras?.links ?? []) as Project['links'], site)) if ('href' in link) add(link.label, link.href);
 
